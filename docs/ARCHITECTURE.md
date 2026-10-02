@@ -218,7 +218,7 @@ Sentido único, de cima para baixo. Uma seta quebrada é erro de revisão.
 | `app/` | `components`, `hooks`, `providers`, `theme`, `i18n`, `types` | `services`, `stores`, `lib`, `domain` direto (passa por hook) |
 | `components/features/` | `components/ui`, `hooks`, `theme`, `i18n`, `types` | `services`, `lib`, outras `features/` |
 | `components/ui/` | `theme`, `i18n`, `types`, `utils` | `hooks` de domínio, `services`, `domain`, `features/` |
-| `hooks/` | `services`, `stores`, `domain`, `i18n`, `types`, `utils` | `components`, `app` |
+| `hooks/` | `services`, `stores`, `domain`, `i18n`, `theme`, `types`, `utils` | `components`, `app` |
 | `providers/` | `services`, `stores`, `lib` (só o necessário para iniciar), `i18n` | `components/features` |
 | `services/` | `lib`, `domain`, `types`, `utils` | `hooks`, `components`, `stores`, `app` |
 | `stores/` | `types`, `utils` | `services`, `components`, `hooks` |
