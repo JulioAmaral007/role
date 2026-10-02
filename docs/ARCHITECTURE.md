@@ -374,6 +374,7 @@ Regras:
 
 ### 5.4 Tabs
 
+- **Fase 15 (não criar agora):** o protótipo também tem **Criar conta** (`sign-up`) e **Entrar** (`sign-in`), decididas na D34 para a Fase 15. Quando existirem, entram no grupo `onboarding/` (Boas-vindas → Criar conta → Localização, e "Já tenho conta" → Entrar) e saem do gate junto com ele; uma linha nova no Perfil abre o `sign-up` para quem já usa o app anônimo. No MVP as duas rotas **não existem** e "Começar" vai direto para `location`.
 - Grupo `(tabs)` com **quatro** rotas, nesta ordem: `index` (Rolê), `passport`, `crew` (Turma) e `profile` (Perfil). Aba inicial: `index`.
 - A **Turma** é um placeholder "Em breve" no MVP (D4), já com dock e `useDockInset()`; a tela desenhada entra na Fase 17.
 - O **Perfil** concentra as preferências de recomendação e os Ajustes (D9): a linha "Idioma" abre a rota `language`. O Passaporte **não** tem mais botão de Ajustes.
@@ -435,7 +436,7 @@ Isso é a exceção já registrada à regra `navigation-native-navigators` (seç
 9. **Ícones por rota** ficam num mapa tipado no adaptador (`Record<'index' | 'passport' | 'crew' | 'profile', IconComponent>`), então uma rota nova sem ícone quebra o `tsc`.
 10. **Dock só nas quatro abas** (Rolê, Passaporte, Turma e Perfil). Push (`suggestion`, `place/[id]`, `on-the-way`...) e modais ficam no Stack raiz, acima de `(tabs)`, e cobrem o dock sem código extra (seção 5.2).
 
-11. **Revisão de 02/10/2026 (4 abas):** o item inativo passa de 64 para **60** de largura (`dock.inactiveItemWidth`), porque com 4 itens o ativo ficaria apertado; o passo da pílula vira `60 + 4 = 64`. Os números dos testes de `dockLayout` e `FloatingTabBar` são refeitos para 4 itens na tarefa de design system da Fase 3. O restante do ADR (camadas, `AppTabBar`, animação só em `transform`/`opacity`, `useDockInset`) não muda.
+11. **Revisão de 02/10/2026 (4 abas):** o item inativo passa de 64 para **60** de largura (`dock.inactiveItemWidth`), porque com 4 itens o ativo ficaria apertado; o passo da pílula vira `60 + 4 = 64`. Os testes de `dockLayout` e `FloatingTabBar` já foram refeitos para 4 itens (146 de largura ativa, passo de 64, label útil de 96). O restante do ADR (camadas, `AppTabBar`, animação só em `transform`/`opacity`, `useDockInset`) não muda.
 
 ### 6.3 Riscos e como foram tratados
 
@@ -1180,6 +1181,7 @@ O domínio precisa de datas **no fuso do usuário** (início da semana da ofensi
 | Sem internet | `offline` | | Ponto de partida | `startPoint` |
 | Distância máxima | `maxDistanceKm` | | "Não quero sugestões de" | `avoidTags` / `avoid_tags` |
 | Modo de transporte | `travelMode` | | Álbum da turma | `crewAlbum` |
+| Criar conta | `sign-up` / `signUp` | | Entrar | `sign-in` / `signIn` |
 
 Termos que surgiram nas decisões de arquitetura e passam a valer: sessão anônima = `anonymous session`; cidade = `city`; cache de servidor = `queryCache`; fuso do usuário = `timeZone`; instante da criação do carimbo = `stampedAt` / `stamped_at`; idioma efetivo = `locale`; escolha do usuário (`'system'` ou idioma) = `language`.
 

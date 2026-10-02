@@ -112,6 +112,8 @@ export default function CatalogScreen() {
     { key: 'index', label: t('tabs.home'), icon: Compass },
     { key: 'passport', label: t('tabs.passport'), icon: Passport },
     { key: 'crew', label: t('tabs.crew'), icon: Users },
+    // o ícone `Profile` chega na tarefa de ícones da Fase 3
+    { key: 'profile', label: t('tabs.profile'), icon: Settings },
   ];
 
   return (

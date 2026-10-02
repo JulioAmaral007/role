@@ -92,9 +92,10 @@ describe('catalog screen', () => {
     expect(screen.getByRole('button', { name: 'Idioma del dispositivo' })).toBeOnTheScreen();
   });
 
-  it('draws the dock with the three tabs, translated', async () => {
+  it('draws the dock with the four tabs, translated', async () => {
     await renderCatalog();
-    expect(screen.getAllByRole('tab')).toHaveLength(3);
+    expect(screen.getAllByRole('tab')).toHaveLength(4);
+    expect(screen.getByRole('tab', { name: 'Perfil' })).toBeOnTheScreen();
     expect(screen.getByRole('tab', { name: 'Passaporte' })).toBeOnTheScreen();
     await pickLanguage('English');
     expect(screen.getByRole('tab', { name: 'Passport' })).toBeOnTheScreen();

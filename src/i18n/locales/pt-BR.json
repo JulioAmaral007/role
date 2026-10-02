@@ -13,7 +13,8 @@
   "tabs": {
     "home": "Rolê",
     "passport": "Passaporte",
-    "crew": "Turma"
+    "crew": "Turma",
+    "profile": "Perfil"
   },
   "settings": {
     "languageSystem": "Idioma do aparelho"

@@ -13,7 +13,8 @@
   "tabs": {
     "home": "Rolê",
     "passport": "Pasaporte",
-    "crew": "Pandilla"
+    "crew": "Pandilla",
+    "profile": "Perfil"
   },
   "settings": {
     "languageSystem": "Idioma del dispositivo"
