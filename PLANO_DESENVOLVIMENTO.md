@@ -218,7 +218,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [x] Rodar `git init` e configurar o remote `origin` (feito pelo usuário; existe o commit `cc99286 Initial commit`).
 - [x] Criar a branch `fase/00-preparacao`, conferir o `.gitignore` (incluir `.env`, `.env.*` exceto `.env.example`, e `supabase/.temp`) e commitar com a skill `git-commit` o que está pendente: o plano, as skills (`.agents/`, `.claude/skills/`, `skills-lock.json`) e o protótipo atualizado. Commits separados por assunto (ex.: `docs(plan): ...`, `chore: adiciona skills do projeto`, `docs(design): atualiza protótipo com dock flutuante`).
 - [x] Adicionar os scripts `typecheck` (`tsc --noEmit`) e `test` no `package.json`.
-- [ ] Rodar `npx expo-doctor` e registrar o resultado.
+- [x] Rodar `npx expo-doctor` e registrar o resultado.
 - [ ] Remover o conteúdo de demonstração do template (`explore.tsx`, `animated-icon`, `hint-row`, `web-badge` e afins) sem quebrar o build. Usar o `reset-project` só se fizer sentido; olhar o script antes de rodar.
 - [ ] Conferir se o Supabase CLI e o Docker estão disponíveis (necessários para o Supabase local). Se não estiverem, registrar em Bloqueios com as instruções de instalação.
 
@@ -658,4 +658,5 @@ _(vazio)_
 | Data | Fase | Tarefa | Skills / regras aplicadas | Resultado | Commit |
 |---|---|---|---|---|---|
 | 2026-10-02 | 0 | Branch `fase/00-preparacao`, `.gitignore` e commits pendentes | `git-commit` (sem atribuição de IA, conforme o plano) | 3 commits: `84ce37b` (.gitignore), `63dfba6` (skills), `c48eb72` (protótipo); plano no commit seguinte | `84ce37b`..`c48eb72` |
-| 2026-10-02 | 0 | Scripts `typecheck` e `test` no `package.json` | `git-commit` | Scripts adicionados (`test` = `jest --passWithNoTests`; o jest só é instalado na Fase 2). `tsc` e `expo lint` já falhavam antes, só no demo do template (`animated-icon.web`, `constants/theme.ts`, `use-color-scheme.web.ts`); a próxima tarefa remove esse código | `27ae9df` registrado acima; este commit abaixo |
+| 2026-10-02 | 0 | Scripts `typecheck` e `test` no `package.json` | `git-commit` | Scripts adicionados (`test` = `jest --passWithNoTests`; o jest só é instalado na Fase 2). `tsc` e `expo lint` já falhavam antes, só no demo do template (`animated-icon.web`, `constants/theme.ts`, `use-color-scheme.web.ts`); a próxima tarefa remove esse código | `27ae9df` registrado acima; `7f55fa4` |
+| 2026-10-02 | 0 | `npx expo-doctor` | — | 21/21 checks passaram, nenhum problema detectado | este commit |
