@@ -1,0 +1,135 @@
+{
+  "app": {
+    "name": "Rolê Aleatório",
+    "wordmark": "rolê aleatório"
+  },
+  "a11y": {
+    "back": "Voltar",
+    "close": "Fechar",
+    "mainNav": "Principal",
+    "shareAlbum": "Compartilhar álbum com a turma",
+    "plansTable": "Grátis e Plus"
+  },
+  "tabs": {
+    "home": "Rolê",
+    "passport": "Passaporte",
+    "crew": "Turma"
+  },
+  "settings": {
+    "languageSystem": "Idioma do aparelho"
+  },
+  "mood": {
+    "curious": "Curioso",
+    "lazy": "Preguiçoso",
+    "romantic": "Romântico",
+    "restless": "Inquieto",
+    "chill": "Na paz",
+    "social": "Social"
+  },
+  "timeSlot": {
+    "1h": "1h",
+    "2h": "2h",
+    "half_day": "Meio dia",
+    "full_day": "Dia todo"
+  },
+  "budget": {
+    "free": "De graça",
+    "up_to_30": "Até R$30",
+    "up_to_80": "Até R$80",
+    "any": "Tanto faz"
+  },
+  "category": {
+    "viewpoint": "Mirante",
+    "used_bookstore": "Sebo",
+    "short_trail": "Trilha curta",
+    "hidden_cafe": "Café escondido",
+    "street_market": "Feira de bairro",
+    "small_museum": "Museu pequeno",
+    "street_cinema": "Cinema de rua",
+    "garden": "Jardim",
+    "open_studio": "Ateliê aberto",
+    "free_show": "Show grátis",
+    "new_square": "Praça nova",
+    "bookstore": "Livraria",
+    "neighborhood_bar": "Bar de bairro",
+    "rooftop": "Rooftop",
+    "library": "Biblioteca",
+    "lake": "Lago"
+  },
+  "goal": {
+    "title": "Meta de {{month}}",
+    "description_one": "{{count}} lugar onde você nunca foi",
+    "description_other": "{{count}} lugares onde você nunca foi"
+  },
+  "home": {
+    "streak_one": "{{count}} semana",
+    "streak_other": "{{count}} semanas",
+    "title": "Bora pra um lugar que não é o de sempre?",
+    "moodTitle": "01 · Como você tá?",
+    "timeTitle": "02 · Quanto tempo você tem?",
+    "budgetTitle": "03 · Quanto quer gastar?",
+    "cta": "Me tira da inércia",
+    "quota_one": "{{remaining}} de {{count}} sugestão grátis nesta semana",
+    "quota_other": "{{remaining}} de {{count}} sugestões grátis nesta semana"
+  },
+  "suggestion": {
+    "summary": "{{mood}} · {{time}} · {{budget}}",
+    "remaining_one": "{{count}} restante",
+    "remaining_other": "{{count}} restantes",
+    "photoPlaceholder": "Foto do lugar",
+    "neverStamped": "Nunca carimbado",
+    "whyTitle": "Por que pra você, agora",
+    "moodLead": "{{label}}.",
+    "budgetLead": "{{label}}.",
+    "timeLead": {
+      "1h": "1 hora.",
+      "2h": "2 horas.",
+      "half_day": "Meio dia.",
+      "full_day": "Dia todo."
+    },
+    "go": "Bora, tô indo",
+    "other": "Outra",
+    "reserve": "Reservar",
+    "directions": "Como chegar"
+  },
+  "stamp": {
+    "title": "Carimbo novo!",
+    "body_ordinal_other": "{{place}} entrou no seu passaporte. É a {{count}}ª semana seguida saindo da inércia.",
+    "sealBrand": "Rolê aleatório",
+    "sealNumber": "Nº {{number}}",
+    "goalReached": "Meta batida. Bingo da cidade: {{done}} de {{total}}.",
+    "share": "Mandar pro grupo",
+    "viewPassport": "Ver meu passaporte"
+  },
+  "passport": {
+    "title": "Passaporte",
+    "stampsLabel": "carimbos",
+    "streakValue": "{{count}} sem.",
+    "streakLabel": "de ofensiva",
+    "bingoLabel": "no bingo",
+    "streakTitle": "Ofensiva semanal",
+    "streakHint": "1 saída por semana basta",
+    "bingoTitle": "Bingo da cidade",
+    "bingoCount": "{{done}} de {{total}}"
+  },
+  "plus": {
+    "badge": "Rolê Plus",
+    "title": "Rolê sem limite.",
+    "body_one": "Sua sugestão grátis da semana acabou. Com o Plus você pede quantas quiser, até achar o rolê certo.",
+    "body_other": "Suas {{count}} sugestões grátis da semana acabaram. Com o Plus você pede quantas quiser, até achar o rolê certo.",
+    "free": "Grátis",
+    "plus": "Plus",
+    "suggestionsRow": "Sugestões",
+    "perWeek": "{{count}} por semana",
+    "unlimited": "Ilimitadas",
+    "passportBingoRow": "Passaporte e bingo",
+    "bookingRow": "Reserva no app",
+    "included": "Incluso",
+    "monthly": "Mensal",
+    "yearly": "Anual",
+    "pricePerMonth": "{{price}}/mês",
+    "pricePerYear": "{{price}}/ano",
+    "subscribe": "Assinar o Plus",
+    "wait": "Prefiro esperar: as grátis voltam segunda"
+  }
+}

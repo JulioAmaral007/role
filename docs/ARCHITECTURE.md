@@ -218,7 +218,7 @@ Sentido único, de cima para baixo. Uma seta quebrada é erro de revisão.
 | `app/` | `components`, `hooks`, `providers`, `theme`, `i18n`, `types` | `services`, `stores`, `lib`, `domain` direto (passa por hook) |
 | `components/features/` | `components/ui`, `hooks`, `theme`, `i18n`, `types` | `services`, `lib`, outras `features/` |
 | `components/ui/` | `theme`, `i18n`, `types`, `utils` | `hooks` de domínio, `services`, `domain`, `features/` |
-| `hooks/` | `services`, `stores`, `domain`, `i18n`, `types`, `utils` | `components`, `app` |
+| `hooks/` | `services`, `stores`, `domain`, `i18n`, `theme`, `types`, `utils` | `components`, `app` |
 | `providers/` | `services`, `stores`, `lib` (só o necessário para iniciar), `i18n` | `components/features` |
 | `services/` | `lib`, `domain`, `types`, `utils` | `hooks`, `components`, `stores`, `app` |
 | `stores/` | `types`, `utils` | `services`, `components`, `hooks` |
@@ -686,8 +686,8 @@ Alternativa descartada: `i18n-js` (a que o guia do Expo mostra). É menor, mas t
 escolha salva (preferencesStore.language) ─ se 'system' ─▶ idioma do aparelho ─ se não suportado ─▶ pt-BR
 ```
 
-- **Tipo:** `Locale = 'pt-BR' | 'en' | 'es'` e `LanguagePreference = Locale | 'system'` (a escolha; o efetivo é derivado, seção 7.3).
-- **Mapa do aparelho** por `languageCode` de `getLocales()` (mesmo critério para todas as regiões): `pt` (inclui `pt-PT`) → `pt-BR`; `en` (`en-GB`, `en-AU`...) → `en`; `es` (`es-MX`, `es-AR`...) → `es`; qualquer outro (ex.: `fr`) → **`pt-BR`**, porque o mercado inicial é o Brasil. Função pura em `i18n/resolveLocale.ts`, testada.
+- **Tipo:** `Locale = 'pt-BR' | 'en' | 'es'` e `LanguagePreference = Locale | 'system'` (a escolha; o efetivo é derivado, seção 7.3). Ficam em `src/types/language.ts` (com `LOCALES`, `DEFAULT_LOCALE` e o guard `isLanguagePreference`), e não em `i18n/`, porque `stores/` só pode importar `types` e `utils` (seção 4.2).
+- **Mapa do aparelho** por `languageCode` de `getLocales()` (mesmo critério para todas as regiões): `pt` (inclui `pt-PT`) → `pt-BR`; `en` (`en-GB`, `en-AU`...) → `en`; `es` (`es-MX`, `es-AR`...) → `es`; qualquer outro (ex.: `fr`) → **`pt-BR`**, porque o mercado inicial é o Brasil. `getLocales()` vem em ordem de preferência: vale o **primeiro idioma suportado da lista** (`['fr', 'es']` → `es`); `pt-BR` só quando nenhum serve. Função pura em `i18n/resolveLocale.ts`, testada.
 - **Acompanhar o aparelho:** com `language === 'system'`, o idioma efetivo segue `useLocales()`. No Android o usuário muda o idioma nas configurações sem reiniciar o app (e há idioma por app); por isso o `I18nProvider` também reavalia ao voltar ao primeiro plano (`AppState`), como a doc do Expo pede. No iOS o valor é constante durante a execução.
 - **Idioma por app do sistema:** o plugin `expo-localization` recebe `supportedLocales` (`ios` e `android`: `["pt-BR", "en", "es"]`), para o app aparecer nas configurações de idioma por app. Quando o usuário escolhe lá, `getLocales()` já devolve esse idioma e a opção "Idioma do aparelho" o segue.
 - **Perfil:** o idioma **efetivo** é gravado em `profiles.locale` (seção 8.5, o grant permite `update` de `locale`), pelo `services/account`, em segundo plano e sem tratar falha como erro. Se falhar, a divergência é corrigida na próxima abertura (compara o valor local com o do perfil). O dado serve para as notificações e comunicações futuras.
@@ -696,7 +696,7 @@ escolha salva (preferencesStore.language) ─ se 'system' ─▶ idioma do apare
 
 - **`src/i18n/index.ts`:** importa os polyfills (10.5) **antes** de tudo, cria a instância com os 3 JSON embutidos (`resources`), `fallbackLng: 'pt-BR'`, `interpolation: { escapeValue: false }` (não há HTML) e **init síncrono** (recursos locais; a opção se chama `initAsync` nas versões atuais, conferir na doc ao implementar). Começa com o idioma resolvido pelo aparelho, para o primeiro render nunca ficar sem texto.
 - **Aplicar a escolha salva:** o store de preferências hidrata de forma assíncrona (seção 7.5). Depois de hidratado, o `I18nProvider` chama `i18n.changeLanguage(effective)` **antes de a splash ser liberada** (acrescenta-se "idioma aplicado" à condição de pronto da seção 7.5). Assim o usuário nunca vê um idioma e depois outro.
-- **Troca:** `useLanguage().setLanguage(lang | 'system')` grava no store e o `I18nProvider` troca o idioma na hora; `react-i18next` re-renderiza só quem usa `t`. Sem reiniciar o app.
+- **Troca:** `useLanguage()` devolve `{ preference, locale, setLanguage }`. `setLanguage(lang | 'system')` grava no store **e** chama `i18n.changeLanguage` na mesma hora, então a troca não depende de nenhum provider; `locale` é derivado (`resolveLocale(preference, useLocales())`), nunca guardado. O `I18nProvider` (Fase 3) cuida só do que o hook não vê: aplicar a escolha já salva depois da hidratação e acompanhar o aparelho quando a escolha é `'system'`. `react-i18next` re-renderiza só quem usa `t`. Sem reiniciar o app.
 - **Efeitos que dependem do idioma ao trocar:** (a) as entradas de `places` do React Query de **outros** idiomas são removidas e a do novo é buscada (seção 9.3); (b) as notificações locais agendadas são **reagendadas** com o texto do novo idioma; (c) o rótulo do dock é remedido (Fase 2); (d) `profiles.locale` é atualizado.
 - **Sem RTL:** nenhum dos idiomas é RTL; `supportsRTL` fica como está.
 
@@ -704,7 +704,7 @@ escolha salva (preferencesStore.language) ─ se 'system' ─▶ idioma do apare
 
 - **Arquivos:** `src/i18n/locales/pt-BR.json` (base, texto igual ao do protótipo), `en.json` e `es.json`. **Um namespace só** (`translation`), porque são poucas telas.
 - **Estrutura:** objeto aninhado por tela/feature, nomes de chave em inglês `camelCase`: `home.title`, `suggestion.cta`, `plus.table.suggestions`, `common.cancel`. Textos de acessibilidade em `a11y.*` (ex.: `a11y.tab.passport`). Textos de notificação em `notifications.*`.
-- **Tipagem:** arquivo `src/i18n/i18next.d.ts` com a augmentation de `CustomTypeOptions` (`defaultNS: 'translation'`, `resources: { translation: typeof ptBR }`), tendo o **pt-BR como fonte dos tipos**. `resolveJsonModule` já vem ligado no `expo/tsconfig.base`. Resultado: `t('home.titulo')` não compila, e `t('suggestion.remaining', { count })` exige o `count`. A tipagem seletora nova (`enableSelector`) **não** entra agora; fica como evolução se o editor ficar lento.
+- **Tipagem:** arquivo `src/i18n/i18next.d.ts` com a augmentation de `CustomTypeOptions` (`defaultNS: 'translation'`, `resources: { translation: typeof ptBR }`), tendo o **pt-BR como fonte dos tipos**. `resolveJsonModule` já vem ligado no `expo/tsconfig.base`. Resultado: `t('home.titulo')` e `t('mood.bored')` não compilam. **Verificado na implementação:** na API por string o i18next **não** exige as variáveis de interpolação (`t('suggestion.remaining')` sem `count` compila); essa checagem só existe na API por seletor (`enableSelector`). Por isso a presença de `{{count}}`, `{{name}}` etc. é garantida pelo teste de paridade (10.9) e não pelo `tsc`. Ordinal (`ordinal: true`) e plural compilam normalmente. A tipagem seletora nova (`enableSelector`) **não** entra agora; fica como evolução se o editor ficar lento.
 - **Interpolação:** `{{name}}`, `{{count}}`; sempre por parâmetro, nunca concatenando string (regra do plano).
 - **Plurais:** formato JSON v4 do i18next (`_one`, `_other`, e as categorias extras do idioma). **Atenção:** os idiomas não têm as mesmas categorias (em pt-BR e es existe `_many`, em en não). O teste de paridade (10.7) compara as chaves **sem o sufixo de plural** e exige `_other` em todo plural, em vez de exigir sufixos idênticos.
 - **Ordinais:** pelo recurso nativo do i18next (`t('key', { count, ordinal: true })`, chaves `key_ordinal_one`...), que usa o mesmo `Intl.PluralRules` com `type: 'ordinal'`. Não se escreve função de ordinal à mão.
@@ -724,10 +724,10 @@ Funções puras que recebem o `Locale` (e não leem estado global), com testes. 
 
 | Helper | Saída (pt-BR) | Implementação |
 |---|---|---|
-| `formatStampDate(date, tz)` | `02 · 10 · 2026` | Partes numéricas montadas à mão (dia e mês com 2 dígitos, ano), independentes do `Intl`, para o carimbo ser idêntico em qualquer aparelho |
+| `formatStampDate(date, tz)` | `02 · 10 · 2026` | Texto montado à mão (dia e mês com 2 dígitos, ano). Os números do dia no fuso vêm de `Intl.DateTimeFormat('en-US', { timeZone })` lido por regex (sem `formatToParts`, opção (a) da seção 13.5); o formato `en-US` é estável, então o carimbo sai igual em qualquer idioma |
 | `formatWeekdayShort(date, locale, tz)` | `SEX · 02 OUT` | `Intl.DateTimeFormat` com `weekday: 'short'` e `month: 'short'`, em maiúsculas e sem o ponto final (`sex.` → `SEX`). **Não** usa `formatToParts`. Se aparelhos divergirem no 👀, os nomes curtos passam para o JSON |
 | `formatDate(date, locale, tz)` | `2 de outubro` | `Intl.DateTimeFormat` |
-| `formatCurrency(value, locale)` | `R$ 30,00` / `R$30.00` | `Intl.NumberFormat` com `currency: 'BRL'` sempre (D10); só o formato segue o idioma |
+| `formatCurrency(value, locale)` | `R$ 30,00` / `R$30.00` | Sempre BRL (D10). `Intl.NumberFormat` decimal com 2 casas e o prefixo `R$` montado à mão (espaço não separável em pt-BR e es, sem espaço em en). **Não** usa `style: 'currency'`: em `es` ele escreve `0,00 BRL` no lugar do símbolo (verificado), e `narrowSymbol` não é garantido no Hermes |
 | `formatDistance(meters, locale)` | `1,8 km` / `1.8 km`; abaixo de 1 km, `350 m` | `Intl.NumberFormat` decimal (1 casa) + símbolo `km`/`m`, sem `style: 'unit'` (suporte incerto no iOS) |
 | ordinais | `3ª` | `t(..., { ordinal: true })` (10.4) |
 

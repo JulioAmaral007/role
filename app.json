@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "role",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -31,6 +31,23 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": [
+              "pt-BR",
+              "en",
+              "es"
+            ],
+            "android": [
+              "pt-BR",
+              "en",
+              "es"
+            ]
+          }
         }
       ]
     ],

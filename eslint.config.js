@@ -2,6 +2,7 @@
 const path = require('node:path');
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
+const testingLibrary = require('eslint-plugin-testing-library');
 
 // Convenções de nomenclatura: docs/ARCHITECTURE.md, seção 14.
 // O nome do arquivo (sem a extensão final .ts/.tsx) precisa casar com o padrão da pasta.
@@ -67,6 +68,36 @@ const localPlugin = {
   },
 };
 
+// Seletores das regras de "nada solto" (ver o uso em `defineConfig` abaixo).
+const FONT_SIZE_RULE = {
+  selector: "Property[key.name='fontSize']",
+  message: 'Use as variantes de src/theme/typography.ts em vez de escrever fontSize.',
+};
+const COLOR_RULES = [
+  {
+    selector: String.raw`Literal[value=/^#[0-9a-fA-F]{3,8}$/]`,
+    message: 'Cor solta: use um token de src/theme/tokens.ts.',
+  },
+  {
+    selector: String.raw`Literal[value=/^(rgb|hsl)a?\(/]`,
+    message: 'Cor solta: use um token de src/theme/tokens.ts.',
+  },
+];
+const TEXT_ATTRIBUTES =
+  'label|title|message|placeholder|actionLabel|retryLabel|accessibilityLabel|accessibilityHint';
+const TEXT_MESSAGE = 'Texto solto na tela: use t() com uma chave de src/i18n/locales.';
+const TEXT_RULES = [
+  { selector: String.raw`JSXText[value=/\S/]`, message: TEXT_MESSAGE },
+  {
+    selector: String.raw`JSXElement > JSXExpressionContainer > Literal[value=/\S/]`,
+    message: TEXT_MESSAGE,
+  },
+  {
+    selector: `JSXAttribute[name.name=/^(${TEXT_ATTRIBUTES})$/] > Literal`,
+    message: TEXT_MESSAGE,
+  },
+];
+
 module.exports = defineConfig([
   expoConfig,
   {
@@ -91,6 +122,47 @@ module.exports = defineConfig([
         { selector: 'typeLike', format: ['PascalCase'] },
         { selector: 'enumMember', format: ['PascalCase', 'UPPER_CASE'] },
       ],
+    },
+  },
+  // Regras do design system e do i18n (plano, Fase 2, critérios de saída). Cada grupo de arquivos
+  // recebe uma lista só, porque no flat config uma regra repetida substitui a anterior.
+  {
+    // telas e componentes: sem fontSize, sem cor e sem texto soltos
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/theme/**',
+      'src/test/**',
+      'src/**/*.test.{ts,tsx}',
+      'src/app/catalog.tsx', // temporário: texto de desenvolvimento (sai na Fase 3)
+    ],
+    rules: {
+      'no-restricted-syntax': ['error', FONT_SIZE_RULE, ...COLOR_RULES, ...TEXT_RULES],
+    },
+  },
+  {
+    // o catálogo temporário pode ter texto de desenvolvimento, mas não cor nem fontSize soltos
+    files: ['src/app/catalog.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error', FONT_SIZE_RULE, ...COLOR_RULES],
+    },
+  },
+  {
+    // theme/: é onde as cores vivem; só o typography.ts pode escrever fontSize
+    files: ['src/theme/**/*.{ts,tsx}'],
+    ignores: ['src/theme/typography.ts', 'src/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': ['error', FONT_SIZE_RULE],
+    },
+  },
+  {
+    // docs/ARCHITECTURE.md, seção 11.4 (regra 9); os testes do banco não usam Testing Library
+    files: ['src/**/*.test.{ts,tsx}', 'tests/app/**/*.{ts,tsx}'],
+    ...testingLibrary.configs['flat/react'],
+    rules: {
+      ...testingLibrary.configs['flat/react'].rules,
+      // No Testing Library 14 `fireEvent` devolve Promise e PRECISA de `await` (sem ele os `act`
+      // se sobrepõem e contaminam os testes seguintes). A regra do plugin assume a API antiga.
+      'testing-library/no-await-sync-events': 'off',
     },
   },
   {
