@@ -1,5 +1,135 @@
 {
   "app": {
-    "name": "Rolê Aleatório"
+    "name": "Rolê Aleatório",
+    "wordmark": "rolê aleatório"
+  },
+  "a11y": {
+    "back": "Back",
+    "close": "Close",
+    "mainNav": "Main",
+    "shareAlbum": "Share album with the crew",
+    "plansTable": "Free and Plus"
+  },
+  "tabs": {
+    "home": "Rolê",
+    "passport": "Passport",
+    "crew": "Crew"
+  },
+  "mood": {
+    "curious": "Curious",
+    "lazy": "Lazy",
+    "romantic": "Romantic",
+    "restless": "Restless",
+    "chill": "Chill",
+    "social": "Social"
+  },
+  "timeSlot": {
+    "1h": "1h",
+    "2h": "2h",
+    "half_day": "Half day",
+    "full_day": "Full day"
+  },
+  "budget": {
+    "free": "Free",
+    "up_to_30": "Up to R$30",
+    "up_to_80": "Up to R$80",
+    "any": "Anything"
+  },
+  "category": {
+    "viewpoint": "Viewpoint",
+    "used_bookstore": "Used books",
+    "short_trail": "Short trail",
+    "hidden_cafe": "Hidden café",
+    "street_market": "Local market",
+    "small_museum": "Small museum",
+    "street_cinema": "Street cinema",
+    "garden": "Garden",
+    "open_studio": "Open studio",
+    "free_show": "Free show",
+    "new_square": "New square",
+    "bookstore": "Bookstore",
+    "neighborhood_bar": "Local bar",
+    "rooftop": "Rooftop",
+    "library": "Library",
+    "lake": "Lake"
+  },
+  "goal": {
+    "title": "{{month}} goal",
+    "description_one": "{{count}} place you've never been",
+    "description_other": "{{count}} places you've never been"
+  },
+  "home": {
+    "streak_one": "{{count}} week",
+    "streak_other": "{{count}} weeks",
+    "title": "Up for a place that's not your usual?",
+    "moodTitle": "01 · How are you feeling?",
+    "timeTitle": "02 · How much time do you have?",
+    "budgetTitle": "03 · How much do you want to spend?",
+    "cta": "Get me out of my rut",
+    "quota_one": "{{remaining}} of {{count}} free suggestion this week",
+    "quota_other": "{{remaining}} of {{count}} free suggestions this week"
+  },
+  "suggestion": {
+    "summary": "{{mood}} · {{time}} · {{budget}}",
+    "remaining_one": "{{count}} left",
+    "remaining_other": "{{count}} left",
+    "photoPlaceholder": "Photo of the place",
+    "neverStamped": "Never stamped",
+    "whyTitle": "Why for you, right now",
+    "moodLead": "{{label}}.",
+    "budgetLead": "{{label}}.",
+    "timeLead": {
+      "1h": "1 hour.",
+      "2h": "2 hours.",
+      "half_day": "Half a day.",
+      "full_day": "All day."
+    },
+    "go": "Let's go, I'm on my way",
+    "other": "Another",
+    "reserve": "Book",
+    "directions": "Get directions"
+  },
+  "stamp": {
+    "title": "New stamp!",
+    "body_ordinal_one": "{{place}} is now in your passport. That's your {{count}}st week in a row getting out of the rut.",
+    "body_ordinal_two": "{{place}} is now in your passport. That's your {{count}}nd week in a row getting out of the rut.",
+    "body_ordinal_few": "{{place}} is now in your passport. That's your {{count}}rd week in a row getting out of the rut.",
+    "body_ordinal_other": "{{place}} is now in your passport. That's your {{count}}th week in a row getting out of the rut.",
+    "sealBrand": "Rolê aleatório",
+    "sealNumber": "No. {{number}}",
+    "goalReached": "Goal reached. City bingo: {{done}} of {{total}}.",
+    "share": "Send to the group",
+    "viewPassport": "See my passport"
+  },
+  "passport": {
+    "title": "Passport",
+    "stampsLabel": "stamps",
+    "streakValue": "{{count}} wk",
+    "streakLabel": "streak",
+    "bingoLabel": "in bingo",
+    "streakTitle": "Weekly streak",
+    "streakHint": "1 outing a week is enough",
+    "bingoTitle": "City bingo",
+    "bingoCount": "{{done}} of {{total}}"
+  },
+  "plus": {
+    "badge": "Rolê Plus",
+    "title": "Rolê without limits.",
+    "body_one": "Your free suggestion this week is gone. With Plus you can ask for as many as you like, until you find the right outing.",
+    "body_other": "Your {{count}} free suggestions this week are gone. With Plus you can ask for as many as you like, until you find the right outing.",
+    "free": "Free",
+    "plus": "Plus",
+    "suggestionsRow": "Suggestions",
+    "perWeek": "{{count}} per week",
+    "unlimited": "Unlimited",
+    "passportBingoRow": "Passport and bingo",
+    "bookingRow": "Booking in the app",
+    "included": "Included",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "pricePerMonth": "{{price}}/month",
+    "pricePerYear": "{{price}}/year",
+    "subscribe": "Get Plus",
+    "wait": "I'd rather wait: free ones are back on Monday"
   }
 }
