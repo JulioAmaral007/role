@@ -220,7 +220,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [x] Adicionar os scripts `typecheck` (`tsc --noEmit`) e `test` no `package.json`.
 - [x] Rodar `npx expo-doctor` e registrar o resultado.
 - [x] Remover o conteúdo de demonstração do template (`explore.tsx`, `animated-icon`, `hint-row`, `web-badge` e afins) sem quebrar o build. Usar o `reset-project` só se fizer sentido; olhar o script antes de rodar.
-- [ ] Conferir se o Supabase CLI e o Docker estão disponíveis (necessários para o Supabase local). Se não estiverem, registrar em Bloqueios com as instruções de instalação.
+- [x] Conferir se o Supabase CLI e o Docker estão disponíveis (necessários para o Supabase local). Se não estiverem, registrar em Bloqueios com as instruções de instalação.
 
 **Critérios de saída**
 - [ ] App abre (`npx expo start`) com uma tela vazia sem erros.
@@ -651,7 +651,10 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 
 ## Bloqueios
 
-_(vazio)_
+- **Supabase local indisponível (aberto em 02/10/2026).** Necessário a partir da Fase 4; as Fases 0 a 3 não dependem disso.
+  1. Instalar o Supabase CLI. No Windows: `scoop bucket add supabase https://github.com/supabase/scoop-bucket.git` e `scoop install supabase` (o scoop também não está instalado: https://scoop.sh), ou baixar o binário em https://github.com/supabase/cli/releases. Conferir com `supabase --version`.
+  2. Abrir o Docker Desktop e esperar o daemon subir. Conferir com `docker info` (a seção Server precisa responder).
+  3. Avisar no chat para o loop retomar.
 
 ## Registro de iterações
 
@@ -660,4 +663,5 @@ _(vazio)_
 | 2026-10-02 | 0 | Branch `fase/00-preparacao`, `.gitignore` e commits pendentes | `git-commit` (sem atribuição de IA, conforme o plano) | 3 commits: `84ce37b` (.gitignore), `63dfba6` (skills), `c48eb72` (protótipo); plano no commit seguinte | `84ce37b`..`c48eb72` |
 | 2026-10-02 | 0 | Scripts `typecheck` e `test` no `package.json` | `git-commit` | Scripts adicionados (`test` = `jest --passWithNoTests`; o jest só é instalado na Fase 2). `tsc` e `expo lint` já falhavam antes, só no demo do template (`animated-icon.web`, `constants/theme.ts`, `use-color-scheme.web.ts`); a próxima tarefa remove esse código | `27ae9df` registrado acima; `7f55fa4` |
 | 2026-10-02 | 0 | `npx expo-doctor` | — | 21/21 checks passaram, nenhum problema detectado | `9280d1f` |
-| 2026-10-02 | 0 | Remover o demo do template | — | Removidos explore, animated-icon, app-tabs (+`.web`), hint-row, web-badge, themed-*, collapsible, external-link, constants/theme, global.css, hooks do template, imagens de demo e `scripts/reset-project.js` (+ script do `package.json`); `_layout` e `index` mínimos. `reset-project` não foi usado (apagaria `scripts/`). `expo lint` instalou `eslint` e `eslint-config-expo` e criou `eslint.config.js` (commit `build` separado). `tsc` e lint verdes; `expo export --platform android` gera o bundle. O item da Fase 3 "remover app-tabs" já está feito | este commit |
+| 2026-10-02 | 0 | Remover o demo do template | — | Removidos explore, animated-icon, app-tabs (+`.web`), hint-row, web-badge, themed-*, collapsible, external-link, constants/theme, global.css, hooks do template, imagens de demo e `scripts/reset-project.js` (+ script do `package.json`); `_layout` e `index` mínimos. `reset-project` não foi usado (apagaria `scripts/`). `expo lint` instalou `eslint` e `eslint-config-expo` e criou `eslint.config.js` (commit `build` separado). `tsc` e lint verdes; `expo export --platform android` gera o bundle. O item da Fase 3 "remover app-tabs" já está feito | `fa27e69` |
+| 2026-10-02 | 0 | Conferir Supabase CLI e Docker | — | Supabase CLI **não instalado**; Docker 29.8.1 instalado, mas o daemon (Docker Desktop) não está rodando. Registrado em Bloqueios; loop parado | este commit |
