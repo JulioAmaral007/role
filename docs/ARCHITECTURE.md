@@ -148,7 +148,7 @@ Divergências novas devem entrar nesta tabela e no Registro de iterações do pl
 
 ## 4. Estrutura de pastas
 
-Base da skill `react-native-architecture` (`app/`, `components/{ui,features}/`, `hooks/`, `services/`, `stores/`, `utils/`, `types/`), validada contra ela e acrescida de `domain/`, `lib/`, `providers/`, `theme/` e `i18n/` (seção 1). O grupo `(auth)` da skill **não existe** aqui: não há login (auth anônima). Hoje só existem `src/app/_layout.tsx` e `src/app/index.tsx`; as demais pastas são criadas na tarefa "Criar as pastas vazias" desta fase.
+Base da skill `react-native-architecture` (`app/`, `components/{ui,features}/`, `hooks/`, `services/`, `stores/`, `utils/`, `types/`), validada contra ela e acrescida de `domain/`, `lib/`, `providers/`, `theme/` e `i18n/` (seção 1). O grupo `(auth)` da skill **não existe** aqui: não há login (auth anônima). As pastas da árvore abaixo foram criadas (vazias, com `.gitkeep`) em 02/10/2026; dentro de `src/app/` só existem, por enquanto, `_layout.tsx` e `index.tsx`, e as demais rotas nascem nas fases 3 em diante. O `.gitkeep` é apagado quando o primeiro arquivo real entra na pasta.
 
 ### 4.1 Árvore
 
@@ -159,6 +159,7 @@ supabase/                          # SEM CLI: tudo aqui o usuário aplica no das
 ├── checks/                        # checagens SQL que devolvem (test, ok)
 └── APPLIED.md                     # script × projeto (role-dev / role-mvp) × data
 tests/
+├── app/                           # testes de rotas e navegação (renderRouter; nunca dentro de src/app)
 └── db/                            # integração contra o role-dev (npm run test:db)
 scripts/
 └── catalog/                       # template.csv, validate.ts, buildCsv.ts (sem service role)
@@ -196,6 +197,7 @@ src/
 │   └── location.ts  notifications.ts  share.ts  haptics.ts   # módulos nativos: um arquivo cada
 ├── stores/                        # Zustand + AsyncStorage: preferencesStore.ts, syncQueueStore.ts, suggestionSessionStore.ts (ver ADR da seção 7)
 ├── domain/                        # regras puras: recommend.ts, streak.ts, bingo.ts, monthlyGoal.ts, openingHours.ts, safety.ts
+├── test/                          # só para testes: setup.ts, renderWithProviders.tsx, fábricas, services em memória
 ├── theme/                         # tokens.ts, typography.ts, fonts.ts
 ├── i18n/
 │   ├── index.ts                   # init do i18next + idioma do aparelho
@@ -205,7 +207,7 @@ src/
 └── utils/                         # helpers genéricos sem domínio (ex.: uuid.ts, clamp.ts)
 ```
 
-Testes ficam **ao lado do arquivo testado** (`streak.test.ts`, `FloatingTabBar.test.tsx`); só a integração do banco fica em `tests/db/`. O alias `@/*` → `src/*` já existe no `tsconfig.json` (assim como `@/assets/*` → `assets/*`).
+Testes ficam **ao lado do arquivo testado** (`streak.test.ts`, `FloatingTabBar.test.tsx`); as exceções são as rotas, em `tests/app/`, e a integração do banco, em `tests/db/` (seção 11.3). O apoio dos testes (`setup.ts`, `renderWithProviders.tsx`, fábricas, services em memória) fica em `src/test/`. O alias `@/*` → `src/*` já existe no `tsconfig.json` (assim como `@/assets/*` → `assets/*`, que ganha por ser o prefixo mais específico) e foi **verificado de ponta a ponta**: um import `@/utils/...` temporário passou no `tsc` e entrou no bundle do `expo export --platform android` (o teste foi revertido).
 
 ### 4.2 Quem pode importar quem
 
