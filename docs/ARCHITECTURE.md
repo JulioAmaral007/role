@@ -1037,9 +1037,106 @@ O domínio precisa de datas **no fuso do usuário** (início da semana da ofensi
 | Dependência de terceiros abandonada | Preferir módulos do Expo; revisar na Fase 18 |
 | Fuso errado nas contas de semana | Utilitário único e testado (13.5) |
 
-## 14. Itens detalhados nas próximas tarefas da Fase 1
+## 14. Convenções de nomenclatura
+
+**Status:** aceito em 02/10/2026 (decisões do usuário no plano, adotando o padrão da skill `react-native-architecture`). Esta seção é a **fonte canônica**; o `PLANO_DESENVOLVIMENTO.md` repete a tabela e o glossário para consulta rápida, e quando houver divergência vale este documento.
+
+### 14.1 Regra geral
+
+- **Todo nome técnico é em inglês:** arquivos, pastas, rotas (e as URLs/deep links que elas geram), componentes, funções, hooks, variáveis, tipos, constantes, tokens do tema, chaves de i18n, IDs de domínio, tabelas, colunas, enums, RPCs, Edge Functions, scripts, eventos de analytics, query keys, stores, descrições de teste.
+- **Português só no que o usuário lê:** os textos de `src/i18n/locales/pt-BR.json`, a documentação e as mensagens de commit.
+- Nome fora do glossário (14.3): escolher o termo em inglês mais simples e **acrescentá-lo ao glossário na mesma iteração**.
+
+### 14.2 Padrões
+
+| O quê | Padrão | Exemplo |
+|---|---|---|
+| Componentes e providers (arquivo) | `PascalCase.tsx`, igual ao nome do componente (como na skill) | `FloatingTabBar.tsx`, `TicketCard.tsx`, `QueryProvider.tsx` |
+| Variantes de plataforma | `PascalCase.<plataforma>.tsx` | `Button.ios.tsx`, `FloatingTabBar.android.tsx` |
+| Demais `.ts` (domain, services, stores, utils, lib, i18n, theme, types) | `camelCase.ts` | `openingHours.ts`, `monthlyGoal.ts`, `syncQueue.ts`, `tokens.ts` |
+| Arquivos de classe e de implementação | `camelCase.ts` começando pela tecnologia ou papel | `supabasePlacesRepository.ts`, `inMemoryPlacesRepository.ts` |
+| Pastas | minúsculas, em `camelCase` quando houver mais de uma palavra | `components/ui/`, `features/suggestion/`, `syncQueue/` |
+| Rotas (`src/app/`) | **exceção:** minúsculas em `kebab-case`, porque o nome do arquivo vira a URL e o deep link | `suggestion.tsx` → `/suggestion`, `report-problem.tsx`, `place/[id].tsx` |
+| Arquivos especiais do Expo Router | como o Expo define | `_layout.tsx`, `+not-found.tsx`, `(tabs)/`, `[id].tsx` |
+| Hooks | arquivo `useCamelCase.ts` (ou `.tsx` se tiver JSX), igual ao nome do hook | `useDockInset.ts` → `useDockInset()` |
+| Componentes, tipos, interfaces, classes | `PascalCase` | `FloatingTabBar`, `PlacesRepository`, `QuotaStatus` |
+| Funções e variáveis | `camelCase`; funções começam com verbo | `formatDistance()`, `consumeSuggestion()`, `isOpenDuring()` |
+| Parâmetros | `camelCase` | `placeId`, `timeZone` |
+| Constantes | `UPPER_SNAKE_CASE` | `FREE_WEEKLY_QUOTA = 3`, `DOCK_BASE_INSET = 106` |
+| Tokens do tema | `camelCase` | `colors.yellow`, `colors.ink`, `shadow.dock` |
+| Banco (tabelas, colunas, enums, RPCs) | `snake_case` | `suggestion_events`, `consume_suggestion()` |
+| Scripts SQL do Supabase | `NNN_snake_case.sql` (sequencial) | `001_initial_schema.sql`, `003_quota.sql` |
+| Edge Functions | pasta em `kebab-case` (vira a URL) | `supabase/functions/delete-my-data/index.ts` |
+| Scripts Node | `camelCase.ts` | `scripts/catalog/validate.ts`, `scripts/catalog/buildCsv.ts` |
+| Chaves de i18n | `feature.camelCaseKey`, com sufixo de plural do i18next | `home.title`, `suggestion.remaining_one`, `a11y.tab.passport` |
+| Eventos de analytics | `snake_case` | `stamp_created`, `go_tapped` |
+| Variáveis de ambiente | `EXPO_PUBLIC_UPPER_SNAKE` (seção 12.2) | `EXPO_PUBLIC_SUPABASE_URL` |
+| Chaves de armazenamento local | `role.<store>` | `role.preferences`, `role.syncQueue`, `role.queryCache` |
+| Testes (arquivo) | `<Arquivo>.test.ts(x)` ao lado do testado, mantendo o case. **Exceções:** rotas em `tests/app/`, banco em `tests/db/` (seção 11.3) | `streak.test.ts`, `FloatingTabBar.test.tsx` |
+| Testes (descrição) | inglês, no presente | `it('blocks the 4th suggestion of the week')` |
+| Branches | `fase/NN-nome-da-fase` | `fase/02-design-system` |
+| Commits | `<tipo>(<escopo>): <descrição em pt-BR>`; escopo = módulo em inglês | `feat(stamp): adiciona o selo animado` |
+
+### 14.3 Glossário de domínio (PT → EN)
+
+| Produto (PT) | Código (EN) | | Produto (PT) | Código (EN) |
+|---|---|---|---|---|
+| Rolê (home) | `home` | | Ofensiva | `streak` |
+| Sugestão | `suggestion` | | Cota | `quota` |
+| Carimbo / selo | `stamp` | | Meta do mês | `monthlyGoal` / `monthly_goal` |
+| Passaporte | `passport` | | Bingo da cidade | `bingo` |
+| Turma | `crew` | | Lugar | `place` |
+| Ajustes | `settings` | | Motivo ("por que pra você") | `reason` |
+| "Como foi?" | `feedback` | | Humor | `mood` |
+| Informar problema | `report` / `report-problem` | | Tempo disponível | `timeSlot` / `time_slot` |
+| Fila offline | `syncQueue` | | Quanto quer gastar | `budget` |
+| Dock (tab bar) | `FloatingTabBar` / `dock` | | Primeira abertura | `onboarding` |
+| "Outra" | `other` | | "Bora, tô indo" | `go` |
+
+Termos que surgiram nas decisões de arquitetura e passam a valer: sessão anônima = `anonymous session`; cidade = `city`; cache de servidor = `queryCache`; fuso do usuário = `timeZone`; instante da criação do carimbo = `stampedAt` / `stamped_at`; idioma efetivo = `locale`; escolha do usuário (`'system'` ou idioma) = `language`.
+
+### 14.4 IDs de domínio
+
+Iguais no app, no banco e nas chaves de i18n; **nunca são traduzidos** (o rótulo vem do i18n: `mood.curious`, `budget.up_to_30`, `category.viewpoint`).
+
+- **mood:** `curious` (Curioso), `lazy` (Preguiçoso), `romantic` (Romântico), `restless` (Inquieto), `chill` (Na paz), `social` (Social)
+- **time_slot:** `1h`, `2h`, `half_day` (Meio dia), `full_day` (Dia todo)
+- **budget:** `free` (De graça), `up_to_30` (Até R$30), `up_to_80` (Até R$80), `any` (Tanto faz)
+- **category (bingo):** `viewpoint` (Mirante), `used_bookstore` (Sebo), `short_trail` (Trilha curta), `hidden_cafe` (Café escondido), `street_market` (Feira de bairro), `small_museum` (Museu pequeno), `street_cinema` (Cinema de rua), `garden` (Jardim), `open_studio` (Ateliê aberto), `free_show` (Show grátis), `new_square` (Praça nova), `bookstore` (Livraria), `neighborhood_bar` (Bar de bairro), `rooftop` (Rooftop), `library` (Biblioteca), `lake` (Lago)
+- **report_reason:** `closed`, `wrong_info`, `unsafe`, `other`
+- **suggestion action:** `shown`, `other`, `go`
+- **plan:** `free`, `plus`
+- **language preference:** `system`, `pt-BR`, `en`, `es` (o idioma efetivo, `Locale`, é só `pt-BR` \| `en` \| `es`)
+
+### 14.5 O que o lint já garante (`eslint.config.js`)
+
+Roda em `npx expo lint`, que o loop executa em **toda** iteração; erro bloqueia o commit.
+
+| Regra | O que verifica |
+|---|---|
+| `local/file-naming` (regra local, sem dependência nova) | nome do **arquivo** e das **pastas** conforme a pasta: `src/app/` kebab-case (com `_layout`, `+not-found`, `(grupo)`, `[param]`) e **sem arquivos de teste**; `src/components/` e `src/providers/` PascalCase (variantes `.ios`/`.android`/`.web` e `.test` aceitas); `src/hooks/` `useCamelCase`; todo o resto de `src/`, `tests/` e `scripts/` em camelCase (aceita `index` e `.d.ts`) |
+| `@typescript-eslint/naming-convention` | variáveis `camelCase`/`PascalCase`/`UPPER_CASE`; funções `camelCase`/`PascalCase` (componentes); parâmetros `camelCase`; tipos e interfaces `PascalCase`; membros de enum `PascalCase`/`UPPER_CASE` |
+
+- **Exceção por arquivo:** `src/types/database.ts` fica fora da regra de nomes, porque espelha as colunas do banco em `snake_case`. Propriedades de objeto **não** são checadas (acomodam o banco, o i18n e APIs externas).
+- **Fora do lint:** `supabase/functions/**` (roda em Deno, não no app).
+- **Verificado:** a configuração foi testada com arquivos temporários (certos e errados) e removidos em seguida: nome de arquivo e de pasta errados, função, variável, parâmetro e tipo fora do padrão geram erro; os nomes válidos passam.
+
+### 14.6 O que o lint não garante (revisão e testes)
+
+- Tudo estar **em inglês** (o lint não traduz) e o termo bater com o glossário.
+- Função **começar com verbo**; constante de verdade usar `UPPER_SNAKE_CASE`.
+- Chaves de i18n no formato `feature.camelCaseKey` (a tipagem das chaves, seção 10.4, já quebra o `tsc` para chave inexistente; o teste de paridade cobre os três idiomas).
+- Nomes de banco, scripts SQL, eventos de analytics e Edge Functions.
+- **Quem importa quem** entre camadas (seção 4.2): fica como regra de revisão; transformar em `no-restricted-imports` por pasta é uma evolução possível, a avaliar na Fase 18.
+
+### 14.7 Cuidados práticos
+
+- **Windows não diferencia maiúscula de minúscula** no sistema de arquivos. Trocar só o case (`button.tsx` → `Button.tsx`) precisa de `git mv`, senão o git e o Metro podem ficar com os dois nomes ou com o antigo. Em teste de lint, nunca criar `button.tsx` e `Button.tsx` na mesma pasta.
+- **Renomear** exige atualizar importações e rotas (um rename de rota muda o deep link; revisar `role://...` e os testes de `tests/app/`).
+- **Rota nova** em `src/app/` com nome fora do kebab-case é erro de lint; o **tipo das rotas** (`typedRoutes`) acompanha o nome do arquivo.
+
+## 15. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- Convenções de nomenclatura
 - Decisões em aberto
