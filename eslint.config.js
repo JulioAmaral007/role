@@ -95,6 +95,20 @@ module.exports = defineConfig([
     },
   },
   {
+    // Nenhum `fontSize` solto: os tamanhos vivem em src/theme/typography.ts (plano, Fase 2)
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/theme/typography.ts', 'src/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "Property[key.name='fontSize']",
+          message: 'Use as variantes de src/theme/typography.ts em vez de escrever fontSize.',
+        },
+      ],
+    },
+  },
+  {
     // docs/ARCHITECTURE.md, seção 11.4 (regra 9); os testes do banco não usam Testing Library
     files: ['src/**/*.test.{ts,tsx}', 'tests/app/**/*.{ts,tsx}'],
     ...testingLibrary.configs['flat/react'],
