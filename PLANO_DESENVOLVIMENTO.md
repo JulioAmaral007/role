@@ -42,24 +42,67 @@ Comando sugerido:
 6. **Marcar** a tarefa como `- [x]` e adicionar uma linha no **Registro de iterações** (fim do arquivo).
 7. **Commitar** a iteração invocando a skill **`git-commit`** (ver "Commits"). Um commit por tarefa, com o código, os testes, o plano atualizado e o registro juntos. Depois do commit, anotar o hash curto na linha do Registro, que vai junto no commit seguinte.
 8. **Fim de fase:** se todas as tarefas da fase estiverem `[x]`, verificar os "Critérios de saída", marcar cada um, commitar (skill `git-commit`) e integrar a branch da fase na `main` localmente (ver "Commits"). **Sem push.**
-9. **Bloqueio:** se depender de decisão do usuário (⛔), de conteúdo que só o usuário pode fornecer, ou falhar 2× seguidas, registrar em **Bloqueios**, commitar o plano atualizado (`docs(plano): ...`) e parar o loop. Não chutar decisões de produto. Nunca commitar código quebrado: se a validação falhar, não commitar.
+9. **Bloqueio:** se depender de decisão do usuário (⛔), de conteúdo que só o usuário pode fornecer, ou falhar 2× seguidas, registrar em **Bloqueios**, commitar o plano atualizado (`docs(plan): ...`) e parar o loop. Não chutar decisões de produto. Nunca commitar código quebrado: se a validação falhar, não commitar.
 10. **Marco MVP:** ao concluir a Fase 13, **parar o loop** e registrar o bloqueio "Aguardando validação do MVP". Só seguir para a Fase 14 com autorização explícita do usuário.
 
 ### Regras gerais
 
 - Uma tarefa por iteração, pequena e verificável.
 - Nada de código de feature antes da Fase 1 (arquitetura) estar aprovada.
-- Seguir a estrutura definida em `docs/ARQUITETURA.md` (gerada na Fase 1); se precisar mudá-la, atualizar o doc primeiro.
+- Seguir a estrutura definida em `docs/ARCHITECTURE.md` (gerada na Fase 1); se precisar mudá-la, atualizar o doc primeiro.
 - `StyleSheet.create` + tokens do tema; nada de cor/tamanho “mágico” solto nas telas.
-- **Skills durante todo o desenvolvimento:** `react-native-architecture` define *onde* e *como estruturar*; `vercel-react-native-skills` define *como implementar bem*. Quando as duas entrarem em conflito, prevalece o `docs/ARQUITETURA.md` aprovado. Registre a divergência no Registro de iterações.
+- **Skills durante todo o desenvolvimento:** `react-native-architecture` define *onde* e *como estruturar*; `vercel-react-native-skills` define *como implementar bem*. Quando as duas entrarem em conflito, prevalece o `docs/ARCHITECTURE.md` aprovado. Registre a divergência no Registro de iterações.
 - No Registro de iterações, anotar quais skills foram usadas e quais regras da `vercel-react-native-skills` foram aplicadas (pelo prefixo, ex.: `animation-`, `list-performance-`).
+
+**Nomenclatura — tudo em inglês**
+- **Todo nome técnico é em inglês:** arquivos, pastas, rotas (e as URLs/deep links que elas geram), componentes, funções, hooks, variáveis, tipos, constantes, tokens do tema, chaves de i18n, IDs de domínio, tabelas, colunas, enums, RPCs, Edge Functions, scripts, eventos de analytics, query keys e stores.
+- **Português só no que o usuário lê:** textos dentro de `src/i18n/locales/pt-BR.json`, documentação e mensagens de commit.
+- Se um nome não estiver no Glossário abaixo, escolher o termo em inglês mais simples e **acrescentá-lo ao Glossário** na mesma iteração, para manter a consistência.
+
+| O quê | Padrão | Exemplo |
+|---|---|---|
+| Arquivos e pastas | `kebab-case` (padrão já usado no template: `themed-text.tsx`, `use-color-scheme.ts`) | `floating-tab-bar.tsx`, `opening-hours.ts`, `monthly-goal.ts` |
+| Rotas (Expo Router) | `kebab-case` em inglês | `suggestion.tsx` → `/suggestion`, `report-problem.tsx` |
+| Hooks | arquivo `use-*.ts`, função `useCamelCase` | `use-dock-inset.ts` → `useDockInset()` |
+| Componentes, tipos, interfaces, classes | `PascalCase` | `FloatingTabBar`, `PlacesRepository`, `QuotaStatus` |
+| Funções e variáveis | `camelCase`, começando com verbo nas funções | `formatDistance()`, `consumeSuggestion()`, `isOpenDuring()` |
+| Constantes | `UPPER_SNAKE_CASE` | `FREE_WEEKLY_QUOTA = 3`, `DOCK_BASE_INSET = 106` |
+| Tokens do tema | `camelCase` | `colors.yellow`, `colors.ink`, `shadow.dock` |
+| Banco (tabelas, colunas, enums, RPCs) | `snake_case` | `suggestion_events`, `consume_suggestion()` |
+| Edge Functions e scripts | `kebab-case` | `delete-my-data`, `scripts/catalog/validate.ts` |
+| Chaves de i18n | `feature.camelCaseKey`, com sufixo de plural do i18next | `home.title`, `suggestion.remaining_one` |
+| Eventos de analytics | `snake_case` | `stamp_created`, `go_tapped` |
+| Testes | `<arquivo>.test.ts(x)` ao lado do arquivo testado | `streak.test.ts` |
+| Branches e escopo de commit | escopo = nome do módulo em inglês | `feat(stamp): ...` |
+
+**Glossário de domínio (PT → EN)**
+
+| Produto (PT) | Código (EN) | | Produto (PT) | Código (EN) |
+|---|---|---|---|---|
+| Rolê (home) | `home` | | Ofensiva | `streak` |
+| Sugestão | `suggestion` | | Cota | `quota` |
+| Carimbo / selo | `stamp` | | Meta do mês | `monthlyGoal` / `monthly_goal` |
+| Passaporte | `passport` | | Bingo da cidade | `bingo` |
+| Turma | `crew` | | Lugar | `place` |
+| Ajustes | `settings` | | Motivo ("por que pra você") | `reason` |
+| "Como foi?" | `feedback` | | Humor | `mood` |
+| Informar problema | `report` / `report-problem` | | Tempo disponível | `timeSlot` / `time_slot` |
+| Fila offline | `syncQueue` | | Quanto quer gastar | `budget` |
+| Dock (tab bar) | `FloatingTabBar` / `dock` | | Primeira abertura | `onboarding` |
+| "Outra" | `other` | | "Bora, tô indo" | `go` |
+
+**IDs de domínio** (iguais no app, no banco e nas chaves de i18n):
+- **mood:** `curious` (Curioso), `lazy` (Preguiçoso), `romantic` (Romântico), `restless` (Inquieto), `chill` (Na paz), `social` (Social)
+- **time_slot:** `1h`, `2h`, `half_day` (Meio dia), `full_day` (Dia todo)
+- **budget:** `free` (De graça), `up_to_30` (Até R$30), `up_to_80` (Até R$80), `any` (Tanto faz)
+- **category (bingo):** `viewpoint` (Mirante), `used_bookstore` (Sebo), `short_trail` (Trilha curta), `hidden_cafe` (Café escondido), `street_market` (Feira de bairro), `small_museum` (Museu pequeno), `street_cinema` (Cinema de rua), `garden` (Jardim), `open_studio` (Ateliê aberto), `free_show` (Show grátis), `new_square` (Praça nova), `bookstore` (Livraria), `neighborhood_bar` (Bar de bairro), `rooftop` (Rooftop), `library` (Biblioteca), `lake` (Lago)
 
 **Commits (git)**
 - Repositório já inicializado, com remote `origin` → `https://github.com/JulioAmaral007/role.git` e branch padrão `main`.
 - **Todo commit é feito pela skill `git-commit`**, que analisa o diff, faz o stage dos arquivos certos e gera a mensagem em Conventional Commits. Não escrever `git commit` "na mão" fora dela.
 - 🚫 **Nunca** adicionar `Co-Authored-By` (nem qualquer outra linha de atribuição ao Claude/IA) nas mensagens de commit. Conferir a mensagem antes de executar.
-- **Formato:** `<tipo>(<escopo>): <descrição>`, no imperativo, com até 72 caracteres, em **pt-BR** (ex.: `feat(sugestao): adiciona troca de card com animação`). Use como escopo a área tocada: `role`, `sugestao`, `carimbo`, `passaporte`, `plus`, `ajustes`, `onboarding`, `ui`, `theme`, `i18n`, `db`, `catalog`, `nav`, `notifications`, `plano`...
-- **Tipos mais usados:** `feat` (feature), `fix`, `test`, `refactor`, `docs` (ARQUITETURA, CURADORIA, plano), `build` (dependências, `app.json`, `eas.json`), `chore` (manutenção), `ci`. Para migrations do Supabase, usar `feat(db)` ou `fix(db)`.
+- **Formato:** `<tipo>(<escopo>): <descrição>`, no imperativo, com até 72 caracteres, em **pt-BR** (ex.: `feat(suggestion): adiciona troca de card com animação`). O escopo é o nome **em inglês** do módulo tocado: `home`, `suggestion`, `stamp`, `passport`, `plus`, `settings`, `feedback`, `onboarding`, `ui`, `theme`, `i18n`, `db`, `catalog`, `nav`, `notifications`, `plan`...
+- **Tipos mais usados:** `feat` (feature), `fix`, `test`, `refactor`, `docs` (ARCHITECTURE, CURATION, plano), `build` (dependências, `app.json`, `eas.json`), `chore` (manutenção), `ci`. Para migrations do Supabase, usar `feat(db)` ou `fix(db)`.
 - **Corpo do commit:** a fase e a tarefa do plano (ex.: `Fase 9 — Sugestão: "Outra"`) e as skills usadas.
 - **Branches:** uma por fase, criada a partir da `main` atualizada no início da fase (`fase/02-design-system`, `fase/04-supabase`...). Os commits de tarefa vão nessa branch.
 - **Fim de fase:** `git checkout main` → `git merge --no-ff fase/NN-...` (mensagem `chore(fase-NN): conclui <nome da fase>`) → apagar a branch local.
@@ -87,33 +130,35 @@ Comando sugerido:
 
 ### Tokens de design
 
+Os nomes dos tokens são em inglês (`colors.<token>` em `src/theme/tokens.ts`).
+
 | Token | Valor | Uso |
 |---|---|---|
-| `amarelo` | `#FFD43B` | fundo principal, destaques, texto sobre escuro |
-| `tinta` | `#141414` | texto, bordas 2px, botões primários, fundo do Plus |
-| `creme` | `#FFFBEF` | cards, fundo do Passaporte |
-| `azul` | `#2B3FD6` | tela de Carimbo, tags, células do bingo carimbadas |
-| `azulEscuro` | `#1E2DA6` | card de meta na tela de Carimbo |
-| `lavanda` | `#E6E9FF` | texto secundário sobre azul |
-| `oliva` | `#3A3200` | rótulos/legendas sobre amarelo |
-| `cinza` | `#55524A` | texto secundário sobre creme |
-| `cinzaClaro` | `#8C887C` | semana perdida (borda tracejada) |
-| `listra` | `#F0E8CF` | placeholder listrado da foto |
-| `areia` | `#D6D2C6` | ícones inativos da tab bar, texto secundário do Plus |
+| `yellow` | `#FFD43B` | fundo principal, destaques, texto sobre escuro |
+| `ink` | `#141414` | texto, bordas 2px, botões primários, fundo do Plus |
+| `cream` | `#FFFBEF` | cards, fundo do Passaporte |
+| `blue` | `#2B3FD6` | tela de Carimbo, tags, células do bingo carimbadas |
+| `blueDark` | `#1E2DA6` | card de meta na tela de Carimbo |
+| `lavender` | `#E6E9FF` | texto secundário sobre azul |
+| `olive` | `#3A3200` | rótulos/legendas sobre amarelo |
+| `gray` | `#55524A` | texto secundário sobre creme |
+| `grayLight` | `#8C887C` | semana perdida (borda tracejada) |
+| `stripe` | `#F0E8CF` | placeholder listrado da foto |
+| `sand` | `#D6D2C6` | ícones inativos da tab bar, texto secundário do Plus |
 | `plus.*` | `#222220`, `#4A4842`, `#2A2614` | paywall escuro |
 | `shadow.dock` | `0 12 32 rgba(20,20,20,.28)` + `0 2 6 rgba(20,20,20,.18)` | sombra da tab bar flutuante |
 
 - **Fontes:** Bricolage Grotesque 700/800 (títulos, CTAs, números), Instrument Sans 400–700 (corpo), DM Mono 400/500 (rótulos em CAIXA ALTA, letter-spacing 0.08em).
-- **Forma:** bordas sólidas de 2px na cor `tinta`; pílulas com raio 999; botões com raio 14/16/18; cards com raio 20/24.
+- **Forma:** bordas sólidas de 2px na cor `ink`; pílulas com raio 999; botões com raio 14/16/18; cards com raio 20/24.
 - **Layout:** padding de 52 em cima e 20 nas laterais; CTA principal com 58–62 de altura; alvos de toque ≥ 44.
 
 ### Tab bar — dock flutuante (revisão do protótipo em 02/10/2026)
 
 A tab bar **não é mais** a barra fixa com borda superior e três itens iguais com ícone e texto. Agora é uma **pílula flutuante**:
 
-- **Container:** `position: absolute`, a 20 das laterais e 22 da base (somar o safe area inferior no aparelho); fundo `tinta`; raio 999; padding 6; gap 4 entre os itens; sombra `shadow.dock`.
-- **Item ativo:** ocupa o espaço que sobra (`flex-grow`); altura 52; raio 999; fundo `amarelo`; **ícone (22) + label** lado a lado, com gap 8; texto `tinta`, 15/700.
-- **Itens inativos:** largura fixa de 64 e altura 52; **só o ícone** (22), na cor `areia`. O nome vai apenas no `accessibilityLabel`.
+- **Container:** `position: absolute`, a 20 das laterais e 22 da base (somar o safe area inferior no aparelho); fundo `ink`; raio 999; padding 6; gap 4 entre os itens; sombra `shadow.dock`.
+- **Item ativo:** ocupa o espaço que sobra (`flex-grow`); altura 52; raio 999; fundo `yellow`; **ícone (22) + label** lado a lado, com gap 8; texto `ink`, 15/700.
+- **Itens inativos:** largura fixa de 64 e altura 52; **só o ícone** (22), na cor `sand`. O nome vai apenas no `accessibilityLabel`.
 - **Conteúdo das telas com tabs:** padding inferior de **106** (52 do item + 12 de padding + 22 de margem + folga) somado ao safe area, para nada ficar escondido atrás do dock. Isso é necessário porque o dock fica **por cima** do conteúdo.
 - O mesmo dock escuro aparece em todas as tabs (fundo amarelo no Rolê, creme no Passaporte).
 
@@ -171,8 +216,8 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 ## Fase 0 — Preparação do repositório
 
 - [x] Rodar `git init` e configurar o remote `origin` (feito pelo usuário; existe o commit `cc99286 Initial commit`).
-- [x] Criar a branch `fase/00-preparacao`, conferir o `.gitignore` (incluir `.env`, `.env.*` exceto `.env.example`, e `supabase/.temp`) e commitar com a skill `git-commit` o que está pendente: o plano, as skills (`.agents/`, `.claude/skills/`, `skills-lock.json`) e o protótipo atualizado. Commits separados por assunto (ex.: `docs(plano): ...`, `chore: adiciona skills do projeto`, `docs(design): atualiza protótipo com dock flutuante`).
-- [ ] Adicionar os scripts `typecheck` (`tsc --noEmit`) e `test` no `package.json`.
+- [x] Criar a branch `fase/00-preparacao`, conferir o `.gitignore` (incluir `.env`, `.env.*` exceto `.env.example`, e `supabase/.temp`) e commitar com a skill `git-commit` o que está pendente: o plano, as skills (`.agents/`, `.claude/skills/`, `skills-lock.json`) e o protótipo atualizado. Commits separados por assunto (ex.: `docs(plan): ...`, `chore: adiciona skills do projeto`, `docs(design): atualiza protótipo com dock flutuante`).
+- [x] Adicionar os scripts `typecheck` (`tsc --noEmit`) e `test` no `package.json`.
 - [ ] Rodar `npx expo-doctor` e registrar o resultado.
 - [ ] Remover o conteúdo de demonstração do template (`explore.tsx`, `animated-icon`, `hint-row`, `web-badge` e afins) sem quebrar o build. Usar o `reset-project` só se fizer sentido; olhar o script antes de rodar.
 - [ ] Conferir se o Supabase CLI e o Docker estão disponíveis (necessários para o Supabase local). Se não estiverem, registrar em Bloqueios com as instruções de instalação.
@@ -188,9 +233,9 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 > **Obrigatório:** começar esta fase invocando a skill **`react-native-architecture`** (Skill tool, ou `/react-native-architecture`) e ler `.claude/skills/react-native-architecture/references/details.md`. Todas as decisões abaixo devem seguir os padrões dela (estrutura de pastas, Expo Router, React Query offline-first, separação entre `services` e `stores`, fluxo de auth, boas práticas de performance), adaptados para Expo SDK 57 e Supabase.
 > Esta fase produz **documentação e esqueleto de pastas**, não features.
 
-- [ ] 🧭 ARCH: invocar `react-native-architecture` e resumir em `docs/ARQUITETURA.md` os padrões adotados.
-- [ ] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARQUITETURA.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
-- [ ] Definir a **estrutura de pastas** em `docs/ARQUITETURA.md`. Proposta inicial, a validar com a skill:
+- [ ] 🧭 ARCH: invocar `react-native-architecture` e resumir em `docs/ARCHITECTURE.md` os padrões adotados.
+- [ ] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARCHITECTURE.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
+- [ ] Definir a **estrutura de pastas** em `docs/ARCHITECTURE.md`. Proposta inicial, a validar com a skill:
   ```
   supabase/
   ├── migrations/                # schema versionado (SQL)
@@ -205,24 +250,24 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   │   ├── onboarding.tsx         # primeira abertura
   │   ├── (tabs)/
   │   │   ├── _layout.tsx        # tab bar custom (Rolê · Passaporte · Turma)
-  │   │   ├── index.tsx          # Rolê
-  │   │   ├── passaporte.tsx
-  │   │   └── turma.tsx
-  │   ├── sugestao.tsx           # Stack push
-  │   ├── carimbo.tsx            # fullScreenModal
-  │   ├── como-foi.tsx           # modal: feedback pós-rolê
-  │   ├── informar-problema.tsx  # modal: report do lugar
+  │   │   ├── index.tsx          # Rolê (home)
+  │   │   ├── passport.tsx       # Passaporte
+  │   │   └── crew.tsx           # Turma
+  │   ├── suggestion.tsx         # Sugestão (Stack push)
+  │   ├── stamp.tsx              # Carimbo (fullScreenModal)
+  │   ├── feedback.tsx           # "Como foi?" (modal)
+  │   ├── report-problem.tsx     # "Informar problema" (modal)
   │   ├── plus.tsx               # modal (paywall / fake door)
-  │   └── ajustes.tsx            # modal: idioma, notificações, privacidade, apagar dados
+  │   └── settings.tsx           # Ajustes (modal): idioma, notificações, privacidade, apagar dados
   ├── components/
-  │   ├── ui/                    # Button, Chip, Pill, Card, SectionLabel, Icon...
-  │   └── features/              # role/, sugestao/, carimbo/, passaporte/, plus/, onboarding/
-  ├── hooks/                     # useQuota, useStreak, useSuggestion, useLanguage...
+  │   ├── ui/                    # button.tsx (Button), chip.tsx, pill.tsx, card.tsx, floating-tab-bar.tsx, icons/...
+  │   └── features/              # home/, suggestion/, stamp/, passport/, plus/, settings/, feedback/, onboarding/
+  ├── hooks/                     # use-quota.ts (useQuota), use-streak.ts, use-suggestion.ts, use-language.ts, use-dock-inset.ts...
   ├── lib/
   │   └── supabase.ts            # client único (sessão persistida)
   ├── services/                  # places, stamps, quota, feedback, reports, analytics, location, notifications, share
   ├── stores/                    # estado local persistido (preferências, fila offline, cache do passaporte)
-  ├── domain/                    # regras puras e testáveis (recomendação, ofensiva, bingo, horário, segurança)
+  ├── domain/                    # regras puras: recommend.ts, streak.ts, bingo.ts, monthly-goal.ts, opening-hours.ts, safety.ts
   ├── theme/                     # tokens, fontes, tipografia
   ├── i18n/
   │   ├── index.ts               # init do i18next + detecção do idioma do aparelho
@@ -231,7 +276,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   ├── types/                     # inclui database.ts gerado pelo Supabase
   └── utils/
   ```
-- [ ] Definir o **mapa de navegação** (tipos de apresentação: push, modal e fullScreenModal; gate de onboarding; deep links com o scheme `role://`, por exemplo `role://sugestao` e `role://lugar/<id>`).
+- [ ] Definir o **mapa de navegação** (tipos de apresentação: push, modal e fullScreenModal; gate de onboarding; deep links com o scheme `role://`, por exemplo `role://suggestion` e `role://place/<id>`).
 - [ ] Definir a **implementação da tab bar** (ADR curto): o dock flutuante do protótipo exige **tabs JS do Expo Router com `tabBar` customizado**, e não `NativeTabs`/tab bar nativa, que não permitem esse visual. Definir também como as telas recebem o recuo inferior (hook `useDockInset()` = altura do dock + margem + safe area), já que o dock fica sobreposto ao conteúdo. Conferir a API de tabs do Expo Router no SDK 57.
 - [ ] Definir a **estratégia de estado**: estado de servidor com React Query (catálogo, carimbos, cota) e estado local persistido (preferências, filtros, fila offline) com uma lib de store + AsyncStorage. Justificar a escolha (ex.: Zustand) em um ADR curto.
 - [ ] Definir a **arquitetura Supabase** (ADR):
@@ -248,19 +293,20 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   - **Libs:** `expo-localization` (idioma e região do aparelho) + `i18next` + `react-i18next`. Justificar em um ADR curto; a alternativa é `i18n-js`.
   - **Resolução do idioma:** escolha salva pelo usuário → idioma do aparelho → `pt-BR` como fallback. O idioma ativo também fica salvo em `profiles.locale`, para as notificações.
   - **Troca em tempo real** (sem reiniciar o app), com a escolha persistida no store de preferências.
-  - **Chaves:** organizadas por tela/feature (`role.title`, `sugestao.cta`, `plus.table.suggestions`...) e tipadas no TypeScript, para que uma chave inexistente dê erro de compilação.
-  - **Plurais e interpolação** pelo i18next (`restantes_one` / `restantes_other`), ordinais ("3ª semana") via `Intl.PluralRules` com `type: 'ordinal'`, conferindo o suporte a `Intl` no Hermes.
+  - **Chaves:** organizadas por tela/feature (`home.title`, `suggestion.cta`, `plus.table.suggestions`...) e tipadas no TypeScript, para que uma chave inexistente dê erro de compilação.
+  - **Plurais e interpolação** pelo i18next (`suggestion.remaining_one` / `suggestion.remaining_other`), ordinais ("3ª semana") via `Intl.PluralRules` com `type: 'ordinal'`, conferindo o suporte a `Intl` no Hermes.
   - **Formatação** com `Intl.DateTimeFormat` ("SEX · 02 OUT"), `Intl.NumberFormat` (moeda e km) e moeda separada do idioma (ver D10).
   - **Conteúdo do catálogo** vem da tabela `place_translations`, com fallback para pt-BR. A query key do React Query inclui o idioma.
   - **Textos nativos** (permissões e nome do app) via `locales` no `app.json`.
 - [ ] Definir a **estratégia de testes**: jest-expo para `domain/`, hooks e services (com o Supabase mockado), Testing Library para componentes, teste de paridade de chaves de i18n, **pgTAP para RLS e RPCs** e, opcionalmente, Maestro para E2E.
 - [ ] Definir **ambientes e segredos**: Supabase local (dev) e projeto remoto do MVP; `.env`/`.env.example`; variáveis `EXPO_PUBLIC_*` por perfil do EAS.
 - [ ] Listar as **dependências planejadas** (instalar só na fase que usar), sempre via `npx expo install`: `@supabase/supabase-js` (e o que o guia oficial pedir para RN), `react-native-svg`, `@react-native-async-storage/async-storage`, `@tanstack/react-query` (+ persister), `zustand`, `expo-localization`, `i18next`, `react-i18next`, `expo-haptics`, `expo-location`, `expo-notifications`, `expo-sharing`/`Share` do RN, `expo-crypto` (uuid) e as fontes do `@expo-google-fonts`.
+- [ ] Registrar em `docs/ARCHITECTURE.md` a seção **Convenções de nomenclatura** (tabela de padrões, Glossário e IDs de domínio deste plano) e, se der, reforçar com regras de lint (ex.: `@typescript-eslint/naming-convention` e checagem de nome de arquivo em kebab-case).
 - [ ] Criar as pastas vazias, com `index.ts` ou `.gitkeep`, e o alias `@/` no `tsconfig` (conferir se já existe).
-- [ ] Registrar em `docs/ARQUITETURA.md` as **Decisões em aberto** (seção no fim) com o default escolhido.
+- [ ] Registrar em `docs/ARCHITECTURE.md` as **Decisões em aberto** (seção no fim) com o default escolhido.
 
 **Critérios de saída**
-- [ ] `docs/ARQUITETURA.md` completo (pastas, navegação, estado, Supabase, offline, i18n, testes, ambientes, dependências).
+- [ ] `docs/ARCHITECTURE.md` completo (pastas, navegação, estado, Supabase, offline, i18n, testes, ambientes, dependências).
 - [ ] Skill `react-native-architecture` citada como base da arquitetura e `vercel-react-native-skills` como base das convenções de implementação.
 - [ ] Usuário revisou e aprovou a arquitetura (**parar o loop aqui até aprovação**).
 
@@ -274,7 +320,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] `src/i18n/locales/pt-BR.json` com **todos os textos do protótipo** (ver "Referência rápida"), além de `en.json` e `es.json` traduzidos.
 - [ ] Tipagem das chaves (module augmentation do `react-i18next`), para que uma chave errada quebre o `tsc`.
 - [ ] `src/i18n/format.ts`: `formatDate`, `formatStampDate` ("02 · 10 · 2026"), `formatWeekdayShort` ("SEX · 02 OUT"), `formatCurrency`, `formatDistance` ("1,8 km" / "1.8 km") e `formatOrdinal`, todos lendo o idioma ativo. Com testes.
-- [ ] Hook `useLanguage()`: idioma atual, `setLanguage(lang | 'system')` e persistência no store de preferências, com troca imediata.
+- [ ] Hook `useLanguage()` (`src/hooks/use-language.ts`): idioma atual, `setLanguage(lang | 'system')` e persistência no store de preferências, com troca imediata.
 - [ ] Teste de paridade: todos os idiomas têm exatamente as mesmas chaves e placeholders (`{{count}}`, `{{name}}`).
 
 **Design system**
@@ -283,13 +329,13 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] `src/theme/typography.ts` com as variantes: `display`, `title`, `cta`, `body`, `label` (mono em caixa alta) e `stat`.
 - [ ] Ícones SVG do protótipo como componentes (`Logo`, `Bolt`, `Compass`, `Passport`, `Users`, `Arrow`, `Back`, `Close`, `Pin`, `Clock`, `Wallet`, `Smile`, `Refresh`, `Calendar`, `Share`, `Check`), mais `Settings`, `Flag` (informar problema) e `WifiOff`.
 - [ ] Componentes `ui/`: `Button` (primary, outline, cream), `Chip` (seleção única, `aria-pressed` → `accessibilityState`), `SegmentedGrid`, `Pill`, `SectionLabel`, `Card`, `TicketDivider` (picote), `ProgressSegments`, `EmptyState`, `ErrorState`, `OfflineBanner`.
-- [ ] Componente `FloatingTabBar` (dock) fiel à seção "Tab bar — dock flutuante":
-  - pílula `tinta` absoluta com sombra `shadow.dock` (no Android, conferir `boxShadow`/`elevation` e se a sombra fica parecida);
-  - item ativo expandido em `amarelo` com ícone e label; inativos de 64 só com ícone `areia`;
+- [ ] Componente `FloatingTabBar` (`src/components/ui/floating-tab-bar.tsx`, o dock) fiel à seção "Tab bar — dock flutuante":
+  - pílula `ink` absoluta com sombra `shadow.dock` (no Android, conferir `boxShadow`/`elevation` e se a sombra fica parecida);
+  - item ativo expandido em `yellow` com ícone e label; inativos de 64 só com ícone `sand`;
   - **animação** de troca: o item ativo encolhe e o novo expande (largura e cor) com Reanimated, mais um haptic leve opcional. Seguir as regras `animation-` da `vercel-react-native-skills` (animar só no thread de UI, sem re-render por frame);
   - acessibilidade: `accessibilityRole="tab"`, `accessibilityState={{ selected }}` e `accessibilityLabel` traduzido nos itens só com ícone;
   - i18n: o label ativo usa `t()` e o teste de layout cobre o maior label entre os idiomas ("Passaporte" / "Passport" / "Pasaporte").
-- [ ] Hook `useDockInset()`, que devolve o recuo inferior (base de 106 + safe area) para as telas com tabs.
+- [ ] Hook `useDockInset()` (`src/hooks/use-dock-inset.ts`), que devolve o recuo inferior (base de 106 + safe area) para as telas com tabs.
 - [ ] Definir `userInterfaceStyle` como `light` (ver D2).
 
 **Critérios de saída**
@@ -306,11 +352,11 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Gate de onboarding: na primeira abertura vai para `/onboarding`; depois, direto para as tabs (flag persistida).
 - [ ] Grupo `(tabs)` com Rolê, Passaporte e Turma, usando o `FloatingTabBar` da Fase 2 via `tabBar` customizado (labels via `t()`). Todas as telas com tabs aplicam `useDockInset()` no conteúdo/scroll.
 - [ ] Remover o `app-tabs.tsx` do template (e a variante `.web`), substituído pelo dock.
-- [ ] Rotas `sugestao` (push), `carimbo` (fullScreenModal), `como-foi`, `informar-problema`, `plus` e `ajustes` (modais) com placeholders.
-- [ ] `ajustes` com a seção **Idioma** funcional: "Idioma do aparelho", Português (Brasil), English e Español; o idioma ativo fica marcado e a troca vale na hora. O acesso fica num botão no header do Passaporte (ver D9).
+- [ ] Rotas `suggestion` (push), `stamp` (fullScreenModal), `feedback`, `report-problem`, `plus` e `settings` (modais) com placeholders.
+- [ ] `settings` (Ajustes) com a seção **Idioma** funcional: "Idioma do aparelho", Português (Brasil), English e Español; o idioma ativo fica marcado e a troca vale na hora. O acesso fica num botão no header do Passaporte (ver D9).
 - [ ] Títulos de tela e `accessibilityLabel` também traduzidos.
 - [ ] Navegação de ponta a ponta funcionando com dados fake (Rolê → Sugestão → Carimbo → Passaporte; Sugestão → Plus → voltar).
-- [ ] Testar os deep links `role://sugestao`, `role://passaporte` e `role://lugar/<id>` (este por enquanto abre um placeholder).
+- [ ] Testar os deep links `role://suggestion`, `role://passport` e `role://place/<id>` (este por enquanto abre um placeholder).
 
 **Critérios de saída**
 - [ ] O fluxo inteiro dá para clicar no Android e no iOS (ou na web) sem crash.
@@ -344,12 +390,12 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 ## Fase 5 — Domínio e camada de dados 🧭 ARCH ⚡ VRN
 
 - [ ] Configurar a cobertura do jest para `domain/`.
-- [ ] Tipos de domínio em `src/types` derivados de `database.ts`: `Place` (com tradução e horários resolvidos), `Stamp`, `WeekStatus`, `QuotaStatus`, `Plan`. Humores, tempos, orçamentos e categorias do bingo são **IDs** (`curioso`, `2h`, `ate30`, `mirante`...); o rótulo vem sempre do i18n.
-- [ ] `domain/openingHours.ts`: diz se o lugar fica aberto durante toda a janela escolhida (agora + duração), no fuso da cidade, incluindo horário que vira a meia-noite. Com testes.
+- [ ] Tipos de domínio em `src/types` derivados de `database.ts`: `Place` (com tradução e horários resolvidos), `Stamp`, `WeekStatus`, `QuotaStatus`, `Plan`. Humores, tempos, orçamentos e categorias do bingo são **IDs em inglês** conforme o Glossário (`curious`, `2h`, `up_to_30`, `viewpoint`...); o rótulo vem sempre do i18n.
+- [ ] `domain/opening-hours.ts`: diz se o lugar fica aberto durante toda a janela escolhida (agora + duração), no fuso da cidade, incluindo horário que vira a meia-noite. Com testes.
 - [ ] `domain/safety.ts`: lugares `daylight_only` não aparecem depois do `daylight_cutoff` da cidade (ver D19). Com testes.
 - [ ] `domain/recommend.ts`: filtrar por humor, tempo, orçamento, horário e segurança; ordenar por distância compatível com o tempo; priorizar nunca carimbados; sortear sem repetir na sessão; fallback quando nada combina ("afrouxar" o orçamento e depois o humor, avisando o usuário).
 - [ ] `domain/streak.ts`: ofensiva semanal e histórico das últimas 8 semanas.
-- [ ] `domain/bingo.ts` e `domain/monthlyGoal.ts`.
+- [ ] `domain/bingo.ts` e `domain/monthly-goal.ts`.
 - [ ] `services/places`: `PlacesRepository` com `SupabasePlacesRepository` (catálogo da cidade + traduções + horários) e `InMemoryPlacesRepository` para testes. Exposto por um hook React Query com cache persistido.
 - [ ] `services/quota`: `consume()` e `status()` chamando as RPCs; erro de rede vira o estado "offline".
 - [ ] `services/stamps`: criar o carimbo localmente (uuid + número) → fila offline → `upsert` idempotente; listar os carimbos do usuário.
@@ -367,7 +413,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 > **O valor do app está na qualidade das sugestões.** Sugerir um lugar fechado é a pior experiência possível. Esta fase é metade código (ferramentas) e metade conteúdo, e o conteúdo **só o usuário pode fornecer**.
 
 - [ ] ⛔ Usuário define a **cidade inicial** (D7) e o processo de curadoria (D5b).
-- [ ] Planilha-modelo (`scripts/catalog/template.csv`) com todos os campos de `places`, `place_hours` e `place_translations`, mais um guia de preenchimento em `docs/CURADORIA.md` (o que é um bom "motivo", tom de voz, como tirar ou escolher a foto).
+- [ ] Planilha-modelo (`scripts/catalog/template.csv`) com todos os campos de `places`, `place_hours` e `place_translations`, mais um guia de preenchimento em `docs/CURATION.md` (o que é um bom "motivo", tom de voz, como tirar ou escolher a foto).
 - [ ] Script `scripts/catalog/validate`: todo lugar tem horários, coordenadas, categoria, as 3 razões em **todos** os idiomas, foto e `verified_at` recente. Aponta as combinações de filtro sem nenhum lugar.
 - [ ] Script `scripts/catalog/import`: CSV → Supabase (upsert por id, usando a service role **só localmente**) e upload das fotos para o Storage.
 - [ ] Relatório de cobertura: quantos lugares por categoria do bingo, por humor, por faixa de preço e por duração. Meta do MVP: **≥ 60 lugares**, com todas as 16 categorias cobertas.
@@ -399,7 +445,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Título e os três grupos de seleção, com estado inicial vindo dos últimos filtros (default: Curioso, 2h, Até R$30).
 - [ ] CTA "Me tira da inércia": chama `quota.consume()` e navega para a Sugestão; sem cota, abre o Plus; sem internet, mostra o estado offline.
 - [ ] Contador "X de 3 sugestões grátis nesta semana" vindo de `quota_status()` (plural do i18n; oculto para Plus). Valores de orçamento com `formatCurrency`.
-- [ ] Card "Como foi o rolê no {{lugar}}?" quando houver carimbo sem feedback (abre `como-foi`).
+- [ ] Card "Como foi o rolê no {{lugar}}?" quando houver carimbo sem feedback (abre `/feedback`).
 - [ ] Acessibilidade: labels, `accessibilityRole`, estado selecionado e tamanho de fonte dinâmico sem quebrar o layout.
 
 **Critérios de saída**
@@ -412,10 +458,10 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 - [ ] Header com voltar, resumo do filtro (montado a partir dos rótulos traduzidos) e pílula "N restantes" (plural `_one`/`_other`).
 - [ ] Card-ingresso: foto (`expo-image` vinda do Storage, com placeholder listrado), tags, nome, endereço com distância, picote e os 3 motivos traduzidos.
-- [ ] Mostrar "Aberto até HH:MM" no card (vindo de `openingHours`).
+- [ ] Mostrar "Aberto até HH:MM" no card (vindo de `domain/opening-hours.ts`).
 - [ ] "Outra": consome cota, troca de lugar com uma animação de troca de card (Reanimated) e vai para o Plus quando a cota acabar. Opcionalmente pergunta o motivo em um toque (chips: "longe", "caro", "não curti o tipo"), que vai para `suggestion_events.reason`. Nunca bloqueia a troca.
 - [ ] "Reservar" (abre `reservation_url` no WebBrowser) ou "Como chegar" (abre o app de mapas com `Linking`), conforme `reservable`.
-- [ ] Botão discreto **"Informar problema"** → modal `informar-problema` (fechou, informação errada, inseguro, outro + nota) → `place_reports`.
+- [ ] Botão discreto **"Informar problema"** → modal `/report-problem` (fechou, informação errada, inseguro, outro + nota) → `place_reports`.
 - [ ] "Bora, tô indo" registra o evento `go` e leva ao Carimbo.
 - [ ] Estados de loading, vazio ("nenhum rolê aberto com esse filtro agora", com sugestão de afrouxar o filtro), offline e erro.
 
@@ -427,9 +473,9 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Tela azul com a data formatada no idioma ativo (`formatWeekdayShort`), texto dinâmico com ordinal localizado ("É a 3ª semana seguida…" / "3rd week in a row…") e o selo girado −9°.
 - [ ] Animação de entrada do selo (escala + rotação com spring) e `expo-haptics` no impacto.
 - [ ] Card da meta do mês com `ProgressSegments` e o texto do bingo.
-- [ ] "Mandar pro grupo": compartilhar texto traduzido **com link** (no MVP, link da landing/loja ou `role://lugar/<id>`; universal links ficam para a Fase 16, ver D15). Como evolução, imagem do selo (`react-native-view-shot` + `expo-sharing`).
+- [ ] "Mandar pro grupo": compartilhar texto traduzido **com link** (no MVP, link da landing/loja ou `role://place/<id>`; universal links ficam para a Fase 16, ver D15). Como evolução, imagem do selo (`react-native-view-shot` + `expo-sharing`).
 - [ ] "Ver meu passaporte" fecha o modal e abre a tab Passaporte.
-- [ ] Modal `como-foi`: "Curtiu?" (👍/👎 + comentário opcional) → `place_feedback`. Aparece pelo card da home ou pela notificação da Fase 12, **nunca** logo após o carimbo, porque nesse momento o usuário ainda está saindo.
+- [ ] Modal `/feedback`: "Curtiu?" (👍/👎 + comentário opcional) → `place_feedback`. Aparece pelo card da home ou pela notificação da Fase 12, **nunca** logo após o carimbo, porque nesse momento o usuário ainda está saindo.
 
 ---
 
@@ -455,7 +501,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Lembretes (todos traduzidos, respeitando os toggles de Ajustes):
   - **Ofensiva em risco:** sexta à tarde, se não houver carimbo na semana ("Falta 1 rolê pra manter sua ofensiva de 3 semanas").
   - **Cota renovou:** segunda de manhã ("Suas 3 sugestões grátis voltaram").
-  - **Como foi?:** ~3h depois do "Bora, tô indo", com deep link para `como-foi`.
+  - **Como foi?:** ~3h depois do "Bora, tô indo", com deep link para `/feedback`.
 - [ ] Reagendar tudo ao trocar de idioma, ao carimbar e ao desligar um tipo nos Ajustes.
 - [ ] Limite de frequência: no máximo 2 notificações por semana, além do "Como foi?".
 
@@ -512,7 +558,7 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 
 ### Saída do marco
 - [ ] Rodar o teste por ~4 semanas com o grupo definido em D17.
-- [ ] Coletar as métricas e as entrevistas, e registrar o aprendizado em `docs/APRENDIZADOS_MVP.md`.
+- [ ] Coletar as métricas e as entrevistas, e registrar o aprendizado em `docs/MVP_LEARNINGS.md`.
 - [ ] Usuário decide: seguir, ajustar ou pivotar, e reordena as fases pós-MVP se precisar.
 
 ---
@@ -612,3 +658,4 @@ _(vazio)_
 | Data | Fase | Tarefa | Skills / regras aplicadas | Resultado | Commit |
 |---|---|---|---|---|---|
 | 2026-10-02 | 0 | Branch `fase/00-preparacao`, `.gitignore` e commits pendentes | `git-commit` (sem atribuição de IA, conforme o plano) | 3 commits: `84ce37b` (.gitignore), `63dfba6` (skills), `c48eb72` (protótipo); plano no commit seguinte | `84ce37b`..`c48eb72` |
+| 2026-10-02 | 0 | Scripts `typecheck` e `test` no `package.json` | `git-commit` | Scripts adicionados (`test` = `jest --passWithNoTests`; o jest só é instalado na Fase 2). `tsc` e `expo lint` já falhavam antes, só no demo do template (`animated-icon.web`, `constants/theme.ts`, `use-color-scheme.web.ts`); a próxima tarefa remove esse código | `27ae9df` registrado acima; este commit abaixo |
