@@ -343,8 +343,8 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [x] Registrar em `docs/ARCHITECTURE.md` as **Decisões em aberto** (seção no fim) com o default escolhido.
 
 **Critérios de saída**
-- [ ] `docs/ARCHITECTURE.md` completo (pastas, navegação, estado, Supabase, offline, i18n, testes, ambientes, dependências).
-- [ ] Skill `react-native-architecture` citada como base da arquitetura e `vercel-react-native-skills` como base das convenções de implementação.
+- [x] `docs/ARCHITECTURE.md` completo (pastas, navegação, estado, Supabase, offline, i18n, testes, ambientes, dependências).
+- [x] Skill `react-native-architecture` citada como base da arquitetura e `vercel-react-native-skills` como base das convenções de implementação.
 - [ ] Usuário revisou e aprovou a arquitetura (**parar o loop aqui até aprovação**).
 
 ---
@@ -763,7 +763,29 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 
 ## Bloqueios
 
-_(vazio — o bloqueio "Supabase local indisponível" foi resolvido em 02/10/2026: o Supabase passa a ser operado só pelo dashboard web, sem CLI e sem Docker.)_
+### ⏸️ Aguardando aprovação da arquitetura (Fase 1) — 02/10/2026
+
+Todas as tarefas da Fase 1 estão `[x]` e os dois primeiros critérios de saída foram conferidos. **O loop parou** (o agendamento foi cancelado) até você revisar. Nada da Fase 2 foi começado e a branch `fase/01-arquitetura` **ainda não foi integrada na `main`**.
+
+**O que revisar** (`docs/ARCHITECTURE.md`, ~1.150 linhas; se quiser ir direto ao que importa, leia nesta ordem):
+
+1. **Seção 15, Decisões em aberto:** os defaults 🟡 que valem se você não disser nada, e os ⛔ que vão bloquear fases futuras (D7 cidade, D17 testadores, D20 bundle id, D14 crash, D3 pagamento).
+2. **Seções 4 e 5:** estrutura de pastas, quem importa quem e mapa de navegação (gate de onboarding, modais, deep links).
+3. **Seção 6:** dock flutuante com `Tabs` de `expo-router/js-tabs` + `tabBar` customizado, e `useDockInset()`.
+4. **Seção 8:** Supabase (Auth anônima, RLS com grants mínimos, cota no servidor, `delete-my-data`).
+5. **Seções 9 e 10:** offline-first (só a sugestão exige internet) e i18n (i18next + polyfill de `Intl.PluralRules`, porque o Hermes não tem).
+6. **Seções 11 a 14:** testes, ambientes e segredos, dependências por fase, nomenclatura (já com lint).
+
+**Escolhas que mais valem a sua atenção** (diga se quer outra):
+
+- Zustand + AsyncStorage para estado local (D1) e `expo-network` no lugar do NetInfo (D29).
+- **Publishable key** do Supabase no lugar da `anon` (D30); sessão anônima em AsyncStorage no MVP (D28).
+- Reinstalar o app **perde o passaporte** até existir conta (Fase 15); a cota por reinstalação é burlável (D12). O MVP aceita isso.
+- Sem `Co-Authored-By` e sem push (como já definido); `.env` só com 3 variáveis públicas.
+- Testes de rota em `tests/app/` (a doc do Expo Router proíbe dentro de `src/app/`); Maestro só depois da Fase 13.
+- Fase 2 começa removendo `@expo/ui`, `expo-glass-effect`, `expo-symbols` e `expo-device` (sem uso).
+
+**Como responder:** escreva "arquitetura aprovada" (ou a lista do que mudar). Aí o loop marca o terceiro critério, commita, integra `fase/01-arquitetura` na `main` com `--no-ff` (`chore(fase-01): conclui arquitetura`), apaga a branch local, cria `fase/02-design-system` e retoma. Depois disso, reinicie o `/loop`.
 
 ## Registro de iterações
 
@@ -792,4 +814,5 @@ _(vazio — o bloqueio "Supabase local indisponível" foi resolvido em 02/10/202
 | 2026-10-02 | 1 | Listar as dependências planejadas | `react-native-architecture`; docs atuais do Expo SDK 57 (notificações, localização), `bundledNativeModules.json` do SDK instalado e `npm view` | Nova seção 13 em `docs/ARCHITECTURE.md`: tabela por fase (Fases 2 a 18) com versão, motivo e se precisa de build ou roda no Expo Go; lista do que já está instalado; **candidatas à remoção** sem uso no `src/` (`@expo/ui`, `expo-glass-effect`, `expo-symbols`, `expo-device`); escolhas que evitam dependência. **Ajustes nos ADRs anteriores:** `zustand` e `async-storage` entram na Fase 2 (persistência do idioma) e o `QueryClient` simples na Fase 3, com o cache persistido só na Fase 5. **Achados:** `@supabase/supabase-js` exige Node ≥ 22 (a máquina tem 22.21; fixar `node` no `eas.json`); plugins de config só valem em build; notificações locais e localização em primeiro plano rodam no Expo Go. **Risco aberto:** contas de fuso sem biblioteca; nova tarefa no início da Fase 5 (`utils/zonedTime.ts`) e 👀 de verificação. Só documentação | `da7f7bf` |
 | 2026-10-02 | 1 | Convenções de nomenclatura (+ lint) | `react-native-architecture` (nomes de arquivo da skill); doc do Expo Router (arquivos especiais) | Nova seção 14 em `docs/ARCHITECTURE.md` (fonte canônica): regra geral, tabela de padrões (acrescenta chaves de storage `role.<store>`, variáveis de ambiente e descrições de teste em inglês), glossário, IDs de domínio (acrescenta `report_reason`, ações da sugestão e `plan`), o que o lint garante e o que não, e cuidados práticos (Windows não diferencia maiúsculas). **Lint reforçado** em `eslint.config.js`: regra local `local/file-naming` (arquivo e pasta por diretório: rotas em kebab-case e sem testes em `src/app/`, componentes/providers em PascalCase, hooks `useX`, resto camelCase; **sem plugin novo**) e `@typescript-eslint/naming-convention` (já vem com o `eslint-config-expo`), com `src/types/database.ts` isento e `supabase/functions/**` ignorado. Testado com arquivos temporários certos e errados (removidos depois): 9 erros esperados detectados, nomes válidos passam. `expo lint` e `tsc` verdes | `056a8bd` |
 | 2026-10-02 | 1 | Criar as pastas vazias e conferir o alias `@/` | `react-native-architecture` | Criadas todas as pastas da árvore da seção 4 de `docs/ARCHITECTURE.md` (mais `tests/app/` e `src/test/`, dos ADRs de testes) com `.gitkeep`, **sem barris** (a skill e a seção 4.2 só permitem `index.ts` em `services/<assunto>/`). Alias `@/*` → `src/*` já existia; **verificado de verdade**: import temporário `@/utils/...` passou no `tsc` e apareceu no bundle de `expo export --platform android` (revertido). `expo lint` e `tsc` verdes. Nenhum código de feature | `20c505c` |
-| 2026-10-02 | 1 | Registrar as decisões em aberto | `react-native-architecture` | Nova seção 15 em `docs/ARCHITECTURE.md` (a antiga seção de índice some, pois todos os ADRs estão feitos): legenda ✅/🟡/⛔, D1 a D20 com status e default, **D21 a D30 novas** que surgiram nos ADRs (fuso, Google, limite de anônimos, plano do Supabase, Maestro, nomes de data, fotos, sessão, conectividade, publishable key), quadro de **quando o usuário precisa decidir** e como mudar uma decisão. Tabela do plano atualizada e apontando para a seção 15. Só documentação | este commit |
+| 2026-10-02 | 1 | Registrar as decisões em aberto | `react-native-architecture` | Nova seção 15 em `docs/ARCHITECTURE.md` (a antiga seção de índice some, pois todos os ADRs estão feitos): legenda ✅/🟡/⛔, D1 a D20 com status e default, **D21 a D30 novas** que surgiram nos ADRs (fuso, Google, limite de anônimos, plano do Supabase, Maestro, nomes de data, fotos, sessão, conectividade, publishable key), quadro de **quando o usuário precisa decidir** e como mudar uma decisão. Tabela do plano atualizada e apontando para a seção 15. Só documentação | `cc7e345` |
+| 2026-10-02 | 1 | Fim da fase: critérios de saída | — | Conferidos os critérios 1 (ARCHITECTURE completo: seções 1 a 15) e 2 (skills citadas como base nas seções 1 e 3). **Critério 3 pendente:** aprovação do usuário. Bloqueio "Aguardando aprovação da arquitetura" registrado com roteiro de revisão; agendamento do loop cancelado. Merge na `main` só depois da aprovação | este commit |
