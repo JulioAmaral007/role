@@ -16,6 +16,9 @@
     "crew": "Crew",
     "profile": "Profile"
   },
+  "crew": {
+    "comingSoon": "Coming soon"
+  },
   "settings": {
     "languageSystem": "Device language"
   },

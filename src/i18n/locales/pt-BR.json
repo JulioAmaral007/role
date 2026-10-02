@@ -16,6 +16,9 @@
     "crew": "Turma",
     "profile": "Perfil"
   },
+  "crew": {
+    "comingSoon": "Em breve"
+  },
   "settings": {
     "languageSystem": "Idioma do aparelho"
   },

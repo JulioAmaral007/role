@@ -16,6 +16,9 @@
     "crew": "Pandilla",
     "profile": "Perfil"
   },
+  "crew": {
+    "comingSoon": "Próximamente"
+  },
   "settings": {
     "languageSystem": "Idioma del dispositivo"
   },

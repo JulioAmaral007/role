@@ -66,7 +66,7 @@ describe('root layout', () => {
 
   it('holds the splash and shows nothing while the fonts are loading', async () => {
     mockedFonts.mockReturnValue(false);
-    await renderRouter({ _layout: RootLayoutModule, index: Home, catalog: Home });
+    await renderRouter({ _layout: RootLayoutModule, '(tabs)/index': Home });
     expect(mockedHide).not.toHaveBeenCalled();
     expect(screen.queryByText(/./)).not.toBeOnTheScreen();
   });
@@ -76,25 +76,25 @@ describe('root layout', () => {
   });
 
   it('releases the splash once fonts and stores are ready, and shows the route', async () => {
-    await renderRouter({ _layout: RootLayoutModule, index: Home, catalog: Home });
+    await renderRouter({ _layout: RootLayoutModule, '(tabs)/index': Home });
     expect(await screen.findByText('Me tira da inércia')).toBeOnTheScreen();
     expect(mockedHide).toHaveBeenCalledTimes(1);
   });
 
   it('opens already in the saved language, never in the device one first', async () => {
     // preferência salva: pt-BR; aparelho e i18next: en
-    await renderRouter({ _layout: RootLayoutModule, index: Home, catalog: Home });
+    await renderRouter({ _layout: RootLayoutModule, '(tabs)/index': Home });
     expect(await screen.findByText('Me tira da inércia')).toBeOnTheScreen();
     expect(screen.queryByText('Get me out of my rut')).not.toBeOnTheScreen();
   });
 
   it('gives the routes a query client', async () => {
-    await renderRouter({ _layout: RootLayoutModule, index: Home, catalog: Home });
+    await renderRouter({ _layout: RootLayoutModule, '(tabs)/index': Home });
     expect(await screen.findByText('has query client')).toBeOnTheScreen();
   });
 
   it('wraps the app in the gesture handler root, which the slider needs', async () => {
-    await renderRouter({ _layout: RootLayoutModule, index: Home, catalog: Home });
+    await renderRouter({ _layout: RootLayoutModule, '(tabs)/index': Home });
     const root = await screen.findByTestId('gesture-root');
     expect(root).toHaveStyle({ flex: 1 });
     // o contêiner envolve as telas: o texto da rota está dentro dele
@@ -104,7 +104,7 @@ describe('root layout', () => {
   it('shows the translated error screen when a route throws, and can try again', async () => {
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
     routeShouldThrow = true;
-    await renderRouter({ _layout: RootLayoutModule, index: Flaky, catalog: Home });
+    await renderRouter({ _layout: RootLayoutModule, '(tabs)/index': Flaky });
     expect(await screen.findByText('Algo deu errado')).toBeOnTheScreen();
 
     routeShouldThrow = false; // o problema passou

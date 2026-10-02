@@ -13,6 +13,10 @@ import { QueryProvider } from '@/providers/QueryProvider';
 // Tela de erro de rota (seção 5.5 do ADR): o Expo Router procura este nome no layout.
 export { RootErrorBoundary as ErrorBoundary } from '@/components/features/navigation/RootErrorBoundary';
 
+// Âncora (seção 5.3 do ADR): um deep link para uma rota empilhada abre com o Rolê por baixo, e o
+// voltar funciona.
+export const unstable_settings = { anchor: '(tabs)' };
+
 // No escopo do módulo, para rodar antes de a splash sumir sozinha (doc do expo-splash-screen).
 SplashScreen.preventAutoHideAsync();
 
@@ -44,8 +48,7 @@ export default function RootLayout() {
               <Stack.Screen name="onboarding" />
             </Stack.Protected>
             <Stack.Protected guard={onboardingDone}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="catalog" />
+              <Stack.Screen name="(tabs)" />
             </Stack.Protected>
           </Stack>
         </QueryProvider>

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { I18nextProvider } from 'react-i18next';
 
 import { useLanguage } from '@/hooks/useLanguage';
@@ -13,6 +13,8 @@ import i18n from '@/i18n';
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { locale } = useLanguage();
   const [applied, setApplied] = useState(false);
+  // só a primeira aplicação muda o estado; as trocas seguintes não precisam de nova renderização
+  const appliedOnce = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -21,7 +23,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       .catch(() => {})
       // com falha o app abre mesmo assim, no idioma que o i18next já tinha
       .finally(() => {
-        if (active) setApplied(true);
+        if (!active || appliedOnce.current) return;
+        appliedOnce.current = true;
+        setApplied(true);
       });
     return () => {
       active = false;
