@@ -9,7 +9,7 @@ import { colors, dock, height } from '@/theme/tokens';
 import { FloatingTabBar, type FloatingTabBarItem } from './FloatingTabBar';
 import { Compass } from './icons/Compass';
 import { Passport } from './icons/Passport';
-import { Settings } from './icons/Settings';
+import { Profile } from './icons/Profile';
 import { Users } from './icons/Users';
 
 // Dock com as 4 abas da revisão de 02/10/2026, num aparelho de 390.
@@ -31,8 +31,7 @@ function itemsFor(tabs: Tabs): FloatingTabBarItem[] {
     { key: 'index', label: tabs.home, icon: Compass },
     { key: 'passport', label: tabs.passport, icon: Passport },
     { key: 'crew', label: tabs.crew, icon: Users },
-    // o ícone `Profile` chega na tarefa de ícones; até lá o teste usa outro
-    { key: 'profile', label: tabs.profile, icon: Settings },
+    { key: 'profile', label: tabs.profile, icon: Profile },
   ];
 }
 

@@ -12,18 +12,24 @@ import { Arrow } from '@/components/ui/icons/Arrow';
 import { Back } from '@/components/ui/icons/Back';
 import { Bolt } from '@/components/ui/icons/Bolt';
 import { Calendar } from '@/components/ui/icons/Calendar';
+import { Camera } from '@/components/ui/icons/Camera';
 import { Check } from '@/components/ui/icons/Check';
 import { Clock } from '@/components/ui/icons/Clock';
+import { CloudRain } from '@/components/ui/icons/CloudRain';
 import { Close } from '@/components/ui/icons/Close';
 import { Compass } from '@/components/ui/icons/Compass';
 import { Flag } from '@/components/ui/icons/Flag';
 import { Logo } from '@/components/ui/icons/Logo';
 import { Passport } from '@/components/ui/icons/Passport';
+import { Profile } from '@/components/ui/icons/Profile';
 import { Pin } from '@/components/ui/icons/Pin';
+import { PinOff } from '@/components/ui/icons/PinOff';
 import { Refresh } from '@/components/ui/icons/Refresh';
+import { Search } from '@/components/ui/icons/Search';
 import { Settings } from '@/components/ui/icons/Settings';
 import { Share } from '@/components/ui/icons/Share';
 import { Smile } from '@/components/ui/icons/Smile';
+import { UserPlus } from '@/components/ui/icons/UserPlus';
 import { Users } from '@/components/ui/icons/Users';
 import { Wallet } from '@/components/ui/icons/Wallet';
 import { WifiOff } from '@/components/ui/icons/WifiOff';
@@ -70,6 +76,12 @@ const ICONS = [
   <Settings key="Settings" />,
   <Flag key="Flag" />,
   <WifiOff key="WifiOff" />,
+  <Camera key="Camera" />,
+  <CloudRain key="CloudRain" />,
+  <PinOff key="PinOff" />,
+  <Profile key="Profile" />,
+  <Search key="Search" />,
+  <UserPlus key="UserPlus" />,
 ];
 
 // Datas de exemplo: a do protótipo (sex, 02 out 2026) e o instante atual no fuso do aparelho.
@@ -112,8 +124,7 @@ export default function CatalogScreen() {
     { key: 'index', label: t('tabs.home'), icon: Compass },
     { key: 'passport', label: t('tabs.passport'), icon: Passport },
     { key: 'crew', label: t('tabs.crew'), icon: Users },
-    // o ícone `Profile` chega na tarefa de ícones da Fase 3
-    { key: 'profile', label: t('tabs.profile'), icon: Settings },
+    { key: 'profile', label: t('tabs.profile'), icon: Profile },
   ];
 
   return (
