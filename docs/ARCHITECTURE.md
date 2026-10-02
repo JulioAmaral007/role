@@ -245,11 +245,91 @@ Notas:
 | Cor, espaço, raio, fonte | `theme/` |
 | Uma tela nova | `src/app/<nome-em-kebab>.tsx`, fina, só juntando hooks e componentes |
 
-## 5. Itens detalhados nas próximas tarefas da Fase 1
+## 5. Mapa de navegação
+
+Base: skill `react-native-architecture` (padrão 1, Expo Router) e a doc do Expo Router conferida em 02/10/2026 (`router/advanced/modals`, `protected`, `router-settings`, `custom-tabs`, `error-handling`). Typed Routes ligado: todo `href` é tipado, nunca montado por concatenação de string.
+
+### 5.1 Grafo
+
+```
+Stack raiz (src/app/_layout.tsx, headerShown: false, anchor: '(tabs)')
+│
+├─ [guard: onboarding NÃO concluído]
+│    └─ onboarding ............................ tela cheia, sem voltar, sem gesto
+│
+└─ [guard: onboarding concluído]
+     ├─ (tabs) ............................... Rolê · Passaporte · Turma (dock flutuante)
+     ├─ suggestion ........................... push        (Rolê → Sugestão)
+     ├─ place/[id] ........................... push        (deep link; placeholder no MVP)
+     ├─ stamp ................................ fullScreenModal (Sugestão "Bora, tô indo" → Carimbo)
+     ├─ feedback ............................. modal       ("Como foi?")
+     ├─ report-problem ....................... modal       (Sugestão/Carimbo → "Informar problema")
+     ├─ plus ................................. modal       (Sugestão "Outra" sem cota → Plus)
+     └─ settings ............................. modal       (botão no header do Passaporte)
+```
+
+Fluxo principal: `Rolê ──"Me tira da inércia"──▶ suggestion ──"Bora, tô indo"──▶ stamp ──"Ver meu passaporte"──▶ (tabs)/passport`. Ramo: `suggestion ──"Outra" sem cota──▶ plus ──fechar──▶ suggestion`.
+
+### 5.2 Tabela de rotas
+
+| Arquivo (`src/app/`) | URL | Apresentação | Deep link público | Parâmetros | Voltar |
+|---|---|---|---|---|---|
+| `onboarding.tsx` | `/onboarding` | tela cheia (stack, sem header) | não | — | desligado (`gestureEnabled: false`); sair só concluindo |
+| `(tabs)/index.tsx` | `/` | tab | **sim** `role://` | — | sai do app (Android) |
+| `(tabs)/passport.tsx` | `/passport` | tab | **sim** `role://passport` | — | volta para a tab anterior |
+| `(tabs)/crew.tsx` | `/crew` | tab | não | — | idem |
+| `suggestion.tsx` | `/suggestion` | push | **sim** `role://suggestion` | nenhum: o filtro (humor, tempo, orçamento) vem do store de preferências | volta para o Rolê |
+| `place/[id].tsx` | `/place/<id>` | push | **sim** `role://place/<id>` | `id` (uuid do lugar) | volta para o Rolê (âncora) |
+| `stamp.tsx` | `/stamp?stampId=<uuid>` | `fullScreenModal` | não | `stampId`: o carimbo já existe no aparelho (criado offline, ver a seção de offline) | gesto desligado; sai por "Ver meu passaporte" ou fechar |
+| `feedback.tsx` | `/feedback?stampId=<uuid>` | `modal` | não | `stampId` | gesto de fechar ligado; nunca bloqueia |
+| `report-problem.tsx` | `/report-problem?placeId=<uuid>` | `modal` | não | `placeId` | gesto de fechar ligado |
+| `plus.tsx` | `/plus?source=<origem>` | `modal` | não | `source` (`quota`/`settings`, para métrica) | gesto de fechar ligado |
+| `settings.tsx` | `/settings` | `modal` | não | — | gesto de fechar ligado |
+| `+not-found.tsx` | qualquer URL sem rota | — | — | — | link para `/` |
+
+Regras:
+
+1. **Cabeçalho nativo desligado em tudo** (`headerShown: false`): cada tela desenha o próprio topo com componentes de `ui/` (seção 3.4).
+2. **Rota interna aberta por link sem parâmetro** (ex.: `role://stamp`): a tela detecta o parâmetro ausente e faz `<Redirect href="/" />`. Nada de crash nem tela vazia.
+3. **Parâmetros carregam só identificadores**, nunca objetos nem dados do usuário. O dado vem do hook (React Query ou store) a partir do `id`.
+4. **Localização nunca vai na URL.**
+5. Modais cobrem o dock porque ficam no Stack raiz, acima de `(tabs)`; o `suggestion` (push) também cobre o dock. Só as três tabs mostram o dock.
+6. `fullScreenModal` no Android cai para `modal` (comportamento do Expo Router); o `stamp` precisa ficar correto nos dois, então não depende do tipo de apresentação para o visual (fundo azul próprio, ocupando a tela inteira).
+7. Esquema `role://` já está no `app.json` (`"scheme": "role"`). Links universais (`https://`) ficam para o pós-MVP, porque exigem domínio.
+
+### 5.3 Gate de onboarding
+
+- **Mecanismo:** `Stack.Protected` com `guard` no `_layout.tsx` raiz, como na doc do Expo Router: `onboarding` protegido por `!onboardingDone` e as demais rotas por `onboardingDone`. Não usar `<Redirect>` espalhado pelas telas.
+- **Fonte da flag:** `onboardingDone` no store de preferências (persistido em AsyncStorage). A flag só é lida **depois da reidratação** do store: a splash fica segurada (`SplashScreen.preventAutoHideAsync`) até terminarem a reidratação, as fontes e o init do i18n. Sem isso, o app piscaria o onboarding antes de abrir o Rolê.
+- **Concluir o onboarding:** gravar `onboardingDone = true`. O guard muda e o Expo Router leva sozinho à âncora `(tabs)`, removendo `onboarding` do histórico (comportamento documentado do `Stack.Protected`).
+- **Âncora:** `export const unstable_settings = { anchor: '(tabs)' }` no `_layout.tsx` raiz. Assim, um deep link para `/suggestion` ou `/place/<id>` abre com o Rolê por baixo, e o voltar funciona.
+- **Deep link antes do onboarding:** cai no `onboarding` (primeira tela disponível) e, depois de concluir, vai ao Rolê; **o destino do link é descartado**. Aceito no MVP, porque o link só chega a quem já instalou e abriu o app.
+- **Limite da doc do SDK 57:** a opção `redirectTo` do `Stack.Protected` é do SDK 58+. Aqui vale o redirecionamento padrão (âncora/primeira tela), que atende ao fluxo acima.
+- **A auth anônima não entra no gate.** `signInAnonymously` roda em segundo plano (AuthProvider) e nunca bloqueia o onboarding nem o Rolê. Telas que dependem de sessão (cota, carimbos no servidor) tratam "sessão ainda não pronta" como estado de carregamento ou offline.
+
+### 5.4 Tabs
+
+- Grupo `(tabs)` com três rotas: `index` (Rolê), `passport`, `crew`. Aba inicial: `index`.
+- O dock flutuante **não** usa `NativeTabs`. Como ele é montado (propriedade `tabBar` das tabs JS do Expo Router, ou os componentes `Tabs`/`TabList`/`TabTrigger`/`TabSlot` de `expo-router/ui`, que a doc mostra com uma barra flutuante) é decidido no **ADR da tab bar**, na próxima seção desta fase. O mapa de navegação não muda com essa escolha.
+- Cada tela de tab aplica `useDockInset()` no conteúdo, porque o dock fica por cima.
+
+### 5.5 Erros e rotas inexistentes
+
+- **`+not-found.tsx`** personalizado: texto via `t()`, visual do app e botão que leva a `/`.
+- **`ErrorBoundary`** exportado pelo `_layout.tsx` raiz (padrão do Expo Router: o erro de uma rota sobe para o `ErrorBoundary` mais próximo): tela com mensagem traduzida e botão "Tentar de novo" (`retry`). Erros de rede **não** passam por aqui; viram estado `offline`/`error` da própria tela.
+
+### 5.6 Pontos que ficam para a implementação (conferir na doc antes de usar)
+
+Não decididos aqui porque dependem de API que precisa ser lida na doc do SDK 57 na hora de codar:
+
+- como fechar `stamp` e `suggestion` de uma vez e cair em `/passport` (`dismissAll`, `dismissTo` ou `navigate` com reset): Fase 10;
+- `sheetAllowedDetents` e `formSheet` para `feedback`/`report-problem`, se o design pedir uma folha parcial em vez de modal cheio (limitação do Android: sem header nativo nem stack aninhado dentro de formSheet);
+- teste dos deep links com `npx uri-scheme open role://... ` feito pelo usuário (👀) na Fase 3.
+
+## 6. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- Mapa de navegação e deep links
 - ADR da tab bar (dock flutuante) e `useDockInset()`
 - ADR da estratégia de estado
 - ADR da arquitetura Supabase
