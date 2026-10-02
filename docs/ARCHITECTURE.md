@@ -1137,8 +1137,67 @@ Roda em `npx expo lint`, que o loop executa em **toda** iteração; erro bloquei
 - **Renomear** exige atualizar importações e rotas (um rename de rota muda o deep link; revisar `role://...` e os testes de `tests/app/`).
 - **Rota nova** em `src/app/` com nome fora do kebab-case é erro de lint; o **tipo das rotas** (`typedRoutes`) acompanha o nome do arquivo.
 
-## 15. Itens detalhados nas próximas tarefas da Fase 1
+## 15. Decisões em aberto
 
-Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
+**Regra:** o loop **não decide sozinho** o que é de produto. Cada decisão abaixo tem um **default**, que o loop segue até o usuário dizer o contrário; mudar um default é atualizar **esta seção**, a tabela do plano e o Registro de iterações. A tabela do plano (`PLANO_DESENVOLVIMENTO.md`, "Decisões em aberto") espelha esta.
 
-- Decisões em aberto
+**Legenda:** ✅ decidido · 🟡 default adotado (vale até o usuário mudar; é revisado na aprovação da Fase 1) · ⛔ **aberto, o usuário precisa decidir** (o loop para quando chegar a fase que depende dele).
+
+### 15.1 Decisões do plano (D1 a D20)
+
+| # | Decisão | Status | Default adotado | Onde está o raciocínio | Fase |
+|---|---|---|---|---|---|
+| D1 | Lib de estado local | 🟡 | Zustand v5 + `persist` + AsyncStorage (reserva `expo-sqlite/kv-store`) | Seção 7 | 1 |
+| D2 | Tema escuro | 🟡 | Não: só tema claro; `userInterfaceStyle: light` | Seção 1 | 2 |
+| D3 | Provedor de pagamento e preços do Plus | ⛔ | Sugestão: RevenueCat (webhook fácil para uma Edge Function). **Não decidir o preço sem o usuário** | Seções 13.2 e 8.8 | 14 |
+| D4 | Escopo da aba Turma | 🟡 | Placeholder "Em breve" com dock e `useDockInset()`; o desenho real fica para o pós-MVP | Seção 5 | 17 |
+| D5 | Backend | ✅ | Supabase | Seção 8 | 1 |
+| D5b | Como o catálogo é curado | 🟡 | Planilha própria → `buildCsv` → Import CSV no Table Editor | Seção 8.7 | 6 |
+| D6 | Check-in exige estar no local | 🟡 | Não no MVP (carimbo direto) | Plano | 16 |
+| D7 | **Cidade inicial do catálogo** | ⛔ | — (**bloqueia a Fase 6**) | Plano | 6 |
+| D8 | Idiomas no lançamento | 🟡 | pt-BR (base), en, es | Seção 10 | 1 |
+| D9 | Onde fica o seletor de idioma | 🟡 | Em Ajustes, aberto pelo header do Passaporte | Seção 5 | 3 |
+| D10 | Moeda muda com o idioma | 🟡 | Não: sempre BRL; só a formatação segue o idioma | Seção 10.6 | 1 |
+| D11 | **Quem revisa as traduções en/es** | ⛔ | — (até lá, tradução própria, marcada como não revisada) | Seção 10.10 | 18 |
+| D12 | Cota no MVP | 🟡 | Ligada: 3/semana no servidor, por usuário anônimo; pedir sugestão exige internet; burla por reinstalação aceita | Seções 8.3, 8.6 e 9.4 | 4 |
+| D13 | Plus no MVP | 🟡 | Fake door "Quero o Plus — me avisa", sem cobrança | Plano | 13 |
+| D14 | Analytics e crash | 🟡 / ⛔ | Analytics: tabela `events` no Supabase (🟡). **Crash: EAS Observe ou Sentry, a decidir** (⛔) | Seção 13.2 | 13 |
+| D15 | **Domínio dos links compartilháveis / landing** | ⛔ | MVP: link da loja/landing ou `role://place/<id>`; universal links no pós-MVP | Plano | 10 / 16 |
+| D16 | Onde roda a recomendação | 🟡 | No cliente, sobre o catálogo em cache; RPC com PostGIS acima de ~500 lugares | Seção 8.7 | 1 / 16 |
+| D17 | **Grupo de teste do MVP** | ⛔ | Sugestão: 15 a 30 pessoas da cidade inicial, ~4 semanas (**quem são, o usuário define**) | Plano | 13 |
+| D18 | Projetos Supabase | ✅ | Só dashboard web. `role-dev` e `role-mvp`; produção separada (`role-prod`, Fase 19) | Seções 8 e 12 | 4 |
+| D19 | Regra "só de dia" | 🟡 | `daylight_only` no lugar + `daylight_cutoff` fixo por cidade (ex.: 18h) | Plano | 5 |
+| D20 | **Bundle id / package name** | ⛔ | — (ex.: `com.<seu-nome>.rolealeatorio`); se for preciso instalar `development` e `preview` lado a lado, sufixo por `APP_ENV` | Seção 12.4 | 13 |
+
+### 15.2 Decisões novas que surgiram nos ADRs da Fase 1
+
+| # | Decisão | Status | Default adotado | Onde | Fase |
+|---|---|---|---|---|---|
+| D21 | **Contas de data por fuso** (`utils/zonedTime.ts`) | 🟡 | `Intl.DateTimeFormat` com `timeZone` e *parse* da string, sem `formatToParts`; trocar por uma biblioteca pequena (`@date-fns/tz`, `luxon` ou `Temporal` polyfill) se o 👀 mostrar diferença entre iOS e Android | Seção 13.5 | 5 |
+| D22 | Login com Google na conta definitiva | ⛔ | — (`expo-auth-session` ou pacote nativo do Google); decidir na Fase 15, junto com Apple | Seção 13.2 | 15 |
+| D23 | Limite de 30 logins anônimos por hora por IP e captcha | 🟡 | Manter o limite padrão; subir no dashboard se o grupo de teste dividir a rede; captcha (Turnstile) só no pós-MVP | Seção 8.3 | 4 / 13 |
+| D24 | Limites do plano gratuito do Supabase (pausa por inatividade, cotas) | 🟡 | Conferir na doc atual ao criar cada projeto e registrar em `docs/SUPABASE_SETUP.md`; escolher o plano do `role-mvp` antes de chamar os testadores | Seção 12.1 | 4 / 13 |
+| D25 | E2E com Maestro | 🟡 | Opcional e só depois da Fase 13; fluxos escritos pelo loop, executados pelo usuário (no Windows, só Android) | Seção 11.6 | 13 / 18 |
+| D26 | Nomes curtos de dia e mês (`SEX · 02 OUT`) | 🟡 | `Intl.DateTimeFormat` normalizado; se o 👀 divergir entre aparelhos, mover os nomes para o JSON de i18n | Seção 10.6 | 2 |
+| D27 | Tamanho e formato das fotos dos lugares | 🟡 | Já redimensionadas na curadoria (sem depender da transformação de imagens do Storage, que não foi confirmada para o plano); tamanho exato definido na Fase 6 | Seção 8.7 | 6 |
+| D28 | Sessão anônima em AsyncStorage (e não `LargeSecureStore`) | 🟡 | AsyncStorage no MVP; criptografar com `expo-secure-store` na Fase 15, quando a sessão tiver e-mail | Seção 8.4 | 15 |
+| D29 | Conectividade com `expo-network` (e não NetInfo) | 🟡 | `expo-network`, por ser módulo oficial do Expo | Seção 9.2 | 5 |
+| D30 | Chave pública do Supabase | ✅ | **Publishable key** (`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`); a `anon` está sendo descontinuada | Seção 8.4 | 4 |
+
+### 15.3 O que o usuário precisa decidir, e quando
+
+| Quando o loop chega em… | Decisão | O que acontece se não houver |
+|---|---|---|
+| **Fase 1, critério de saída** | Aprovar a arquitetura (este documento) e os defaults 🟡 | O loop **para** e não começa a Fase 2 |
+| **Fase 4** | (nenhuma de produto) criar o `role-dev` e aplicar os scripts (handoff 🖐) | O loop para no handoff |
+| **Fase 6** | **D7** cidade inicial e o conteúdo real do catálogo | O loop **para**; sem catálogo real, o MVP não tem o que sugerir |
+| **Fase 10** | **D15** o link que vai no "Mandar pro grupo" | Fica o default (`role://place/<id>` / link genérico) |
+| **Fase 13** | **D14** (crash), **D17** (testadores), **D20** (bundle id) e os textos legais (Termos e Privacidade) | O loop **para**; não há build de preview sem D20 |
+| **Marco MVP** | Validar com usuários reais antes da Fase 14 | O loop **para** (regra do plano) |
+| **Fase 14 em diante** | D3, D4, D11, D22 | Cada uma bloqueia a sua fase |
+
+### 15.4 Como mudar uma decisão
+
+1. O usuário avisa no chat.
+2. O loop atualiza **esta seção** e a tabela do plano; se a decisão mexer num ADR (seções 5 a 14), atualiza o ADR **primeiro**.
+3. Registra no Registro de iterações e commita (`docs(arquitetura)` ou `docs(plan)`).
