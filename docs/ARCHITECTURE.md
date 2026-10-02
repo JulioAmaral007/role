@@ -185,7 +185,7 @@ src/
 │   │   ├── Button.tsx  Chip.tsx  Pill.tsx  Card.tsx  Text.tsx  FloatingTabBar.tsx ...
 │   │   └── icons/                 # Logo.tsx, Bolt.tsx, Compass.tsx ... (react-native-svg)
 │   └── features/                  # conhecem o domínio, falam com hooks
-│       ├── home/  suggestion/  stamp/  passport/  plus/  settings/  feedback/  onboarding/
+│       ├── home/  suggestion/  stamp/  passport/  plus/  settings/  feedback/  onboarding/  navigation/
 ├── hooks/                         # useQuota.ts, useStreak.ts, useSuggestion.ts, usePlaces.ts, useLanguage.ts, useDockInset.ts
 ├── providers/                     # QueryProvider.tsx, I18nProvider.tsx, AuthProvider.tsx
 ├── lib/
@@ -228,7 +228,7 @@ Notas:
 - `app/` usa **hooks**, e é o hook que combina `services` + React Query + `stores` + `domain`. Isso mantém as telas finas.
 - `features/` isoladas entre si: o que for compartilhado sobe para `components/ui/` (se genérico) ou vira hook (se tiver regra).
 - Sem barris (`index.ts` que reexportam tudo). Barril só em `services/<assunto>/index.ts`, que é a **API pública** do assunto; o restante importa pelo caminho do arquivo, para não puxar código à toa no Metro.
-- O `FloatingTabBar` (`ui/`) recebe os itens por props e não importa as rotas; quem liga o dock às rotas é `app/(tabs)/_layout.tsx`.
+- O `FloatingTabBar` (`ui/`) recebe os itens por props e não importa as rotas nem o React Navigation; quem liga o dock às rotas é o adaptador `components/features/navigation/AppTabBar.tsx`, usado por `app/(tabs)/_layout.tsx` (ADR da seção 6).
 - Se a regra da tabela for violada por necessidade real, atualizar **primeiro** este documento.
 
 ### 4.3 Onde colocar o quê (decisões rápidas)
@@ -310,7 +310,7 @@ Regras:
 ### 5.4 Tabs
 
 - Grupo `(tabs)` com três rotas: `index` (Rolê), `passport`, `crew`. Aba inicial: `index`.
-- O dock flutuante **não** usa `NativeTabs`. Como ele é montado (propriedade `tabBar` das tabs JS do Expo Router, ou os componentes `Tabs`/`TabList`/`TabTrigger`/`TabSlot` de `expo-router/ui`, que a doc mostra com uma barra flutuante) é decidido no **ADR da tab bar**, na próxima seção desta fase. O mapa de navegação não muda com essa escolha.
+- O dock flutuante **não** usa `NativeTabs`. A decisão está no **ADR da tab bar** (seção 6): tabs JS de `expo-router/js-tabs` com a prop `tabBar` customizada.
 - Cada tela de tab aplica `useDockInset()` no conteúdo, porque o dock fica por cima.
 
 ### 5.5 Erros e rotas inexistentes
@@ -326,11 +326,60 @@ Não decididos aqui porque dependem de API que precisa ser lida na doc do SDK 57
 - `sheetAllowedDetents` e `formSheet` para `feedback`/`report-problem`, se o design pedir uma folha parcial em vez de modal cheio (limitação do Android: sem header nativo nem stack aninhado dentro de formSheet);
 - teste dos deep links com `npx uri-scheme open role://... ` feito pelo usuário (👀) na Fase 3.
 
-## 6. Itens detalhados nas próximas tarefas da Fase 1
+## 6. ADR — Tab bar (dock flutuante) e recuo inferior
+
+**Status:** aceito em 02/10/2026. **Contexto:** o protótipo tem uma pílula flutuante `ink` sobre o conteúdo (seção "Tab bar — dock flutuante" do plano). API conferida **nos tipos instalados** do `expo-router` 57.0.24 (`node_modules/expo-router/build/...`), porque a doc online não detalha a prop `tabBar`.
+
+### 6.1 Opções avaliadas
+
+| Opção | Resultado |
+|---|---|
+| **A. Tabs JS do Expo Router com `tabBar` customizado** | **Escolhida.** `BottomTabNavigationOptions` tem `tabBar?: (props: BottomTabBarProps) => ReactNode`, com `BottomTabBarProps = { state, descriptors, navigation, insets }`. Mantém estado e histórico por aba, evento `tabPress` com `preventDefault`, `lazy` e as opções por tela (`title`, `sceneStyle`, `tabBarAccessibilityLabel`) |
+| B. Tabs "headless" de `expo-router/ui` (`Tabs`, `TabList`, `TabTrigger`, `TabSlot`) | Serve (a doc mostra até uma barra flutuante), mas cada trigger exige `href`, o estado "ativo" vem só por `asChild`/`isFocused` e não há `descriptors`. Mais código manual para o mesmo resultado. **Reserva** se a opção A mudar de API |
+| C. `NativeTabs` (tab bar nativa) | **Descartada.** Não permite a pílula flutuante, o item ativo expandido nem o fundo `ink` |
+
+Isso é a exceção já registrada à regra `navigation-native-navigators` (seção 3.9).
+
+### 6.2 Decisões
+
+1. **Import:** `import { Tabs } from 'expo-router/js-tabs'`. O `Tabs` exportado direto de `expo-router` está marcado como **`@deprecated` no SDK 57**. O tipo `BottomTabBarProps` sai do mesmo módulo (`export *` de `layouts/Tabs`).
+2. **Dois componentes, para a regra de camadas da seção 4.2:**
+   - `components/ui/FloatingTabBar.tsx`: **puro**, não conhece Expo Router nem React Navigation. Props: `items` (`{ key, label, icon, accessibilityLabel }[]`), `activeIndex`, `bottomInset`, `onPress(index)`, `onLongPress?(index)`. Concentra o visual, a animação e a acessibilidade; é testável sozinho.
+   - `components/features/navigation/AppTabBar.tsx`: **adaptador**. Recebe `BottomTabBarProps`, monta os `items` (ícone por nome de rota, `label` vindo de `descriptors[route.key].options.title`, já traduzido) e liga `onPress` ao padrão do React Navigation: emitir `tabPress` com `canPreventDefault` e, se a aba não estiver em foco e o evento não tiver sido cancelado, navegar para a rota. Usa `insets.bottom` das props. Se o SDK 58 mudar a API, só este arquivo muda.
+3. **`app/(tabs)/_layout.tsx`:**
+   ```tsx
+   <Tabs
+     tabBar={(props) => <AppTabBar {...props} />}
+     screenOptions={{ headerShown: false }}
+   >
+     <Tabs.Screen name="index"    options={{ title: t('tabs.home'),     sceneStyle: { backgroundColor: colors.yellow } }} />
+     <Tabs.Screen name="passport" options={{ title: t('tabs.passport'), sceneStyle: { backgroundColor: colors.cream } }} />
+     <Tabs.Screen name="crew"     options={{ title: t('tabs.crew'),     sceneStyle: { backgroundColor: colors.yellow } }} />
+   </Tabs>
+   ```
+   O layout usa `useTranslation()`, então os títulos (e o dock) se atualizam ao trocar o idioma. `sceneStyle` dá o fundo por aba, sem faixa de outra cor atrás do dock.
+4. **O dock é `position: 'absolute'` dentro do contêiner das tabs.** Pela implementação do `BottomTabView` (coluna: telas com `flex: 1`, depois a barra), uma barra absoluta fica **por cima** das telas, sem encolhê-las. Posição: `left`/`right` 20, `bottom` = 22 + `insets.bottom`.
+5. **Recuo inferior: `useDockInset()`** (`src/hooks/useDockInset.ts`) devolve `DOCK_BASE_INSET + insets.bottom`, com `DOCK_BASE_INSET = 106` (52 do item + 12 de padding + 22 de margem + 20 de folga) e `insets` de `useSafeAreaInsets()`. **Não** usar `useBottomTabBarHeight()`: a barra customizada e absoluta não registra altura útil, e o hook só funciona dentro de tabs. A constante e a altura/margem do dock vêm do mesmo lugar (`theme/tokens.ts`), para não divergirem.
+6. **Como o recuo é aplicado:** `contentContainerStyle={{ paddingBottom: dockInset }}` no scroll da tela (seção 3.5: padding estático, não `contentInset`). Telas sem scroll somam o valor ao padding inferior do contêiner.
+7. **Animação** (detalhada na tarefa do `FloatingTabBar`, Fase 2): só `transform` e `opacity`, largura do item ativo constante, um shared value `activeIndex` como fonte de verdade, sincronizado a partir de `state.index` (`.set()`/`.get()`, React Compiler). Medir a largura útil uma vez com `onLayout`.
+8. **Acessibilidade:** contêiner com `accessibilityRole="tablist"`; cada item `accessibilityRole="tab"`, `accessibilityState={{ selected }}` e `accessibilityLabel` traduzido (nos inativos, só ícone, é o único nome). Alvo de toque ≥ 44 (itens têm 52).
+9. **Ícones por rota** ficam num mapa tipado no adaptador (`Record<'index' | 'passport' | 'crew', IconComponent>`), então uma rota nova sem ícone quebra o `tsc`.
+10. **Dock só nas três abas.** Push (`suggestion`, `place/[id]`) e modais ficam no Stack raiz, acima de `(tabs)`, e cobrem o dock sem código extra (seção 5.2).
+
+### 6.3 Riscos e como foram tratados
+
+| Risco | Tratamento |
+|---|---|
+| API de `tabBar` mudar no próximo SDK | Isolada em `AppTabBar`; `FloatingTabBar` não depende dela. Reserva: opção B |
+| Sombra do dock diferente no Android | `boxShadow` com as duas camadas do protótipo; conferir no critério 👀 da Fase 2 |
+| Label maior em en/es estourar o item ativo | Largura ativa constante (202 em 390): teste de layout com o maior label entre idiomas ("Passaporte"/"Passport"/"Pasaporte") |
+| Conteúdo escondido atrás do dock | `useDockInset()` obrigatório em toda tela de aba |
+| Aparelho com largura bem menor | A largura ativa sai da largura medida (`338 − 128 − 8` em 390); mínimo a validar no 👀 |
+
+## 7. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- ADR da tab bar (dock flutuante) e `useDockInset()`
 - ADR da estratégia de estado
 - ADR da arquitetura Supabase
 - Estratégia offline-first
