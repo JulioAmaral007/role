@@ -36,18 +36,21 @@ Comando sugerido:
    - `⚡ VRN` → **`vercel-react-native-skills`**: boas práticas de implementação (performance de listas, animações, navegação, padrões de UI, estado, renderização, imagens, fontes e módulos nativos). Obrigatória em **toda iteração que escreva ou altere código do app** (Fases 2 a 18).
    - Se a tarefa tiver as duas tags, invocar as duas: primeiro a de arquitetura, depois a de implementação.
    - API do Expo/RN: consultar `https://docs.expo.dev/versions/v57.0.0/`.
-   - Supabase: consultar a **documentação atual do Supabase** (guia de Expo/React Native, Auth anônima, RLS, CLI e Edge Functions) antes de usar qualquer API. Não confiar na memória.
+   - Supabase: consultar a **documentação atual do Supabase** (guia de Expo/React Native, Auth anônima, RLS, SQL Editor e Edge Functions pelo dashboard) antes de usar qualquer API. Não confiar na memória.
+   - `🖐 DASHBOARD` → a tarefa precisa de uma ação do usuário no **dashboard web do Supabase**. O loop não tem acesso a ele: prepara os arquivos e o passo a passo, registra o handoff em **Bloqueios** e para (ver "Supabase").
+   - `👀` (em critério de saída) → verificação manual: o **usuário** roda o app (`npx expo start`) e confirma. O loop nunca roda o app.
 4. **Executar só essa tarefa.** Não adiantar tarefas de fases futuras.
-5. **Validar:** `npx expo lint`, `npx tsc --noEmit` e `npx jest` (a partir da Fase 2, incluindo o teste de paridade das chaves de i18n). A partir da Fase 4, quando a tarefa mexer no banco, rodar também os testes do banco (`supabase test db`). Tudo verde antes de marcar.
+5. **Validar:** `npx expo lint`, `npx tsc --noEmit` e `npx jest` (a partir da Fase 2, incluindo o teste de paridade das chaves de i18n). A partir da Fase 4, quando a tarefa mexer no banco **e** os scripts já estiverem aplicados no projeto `role-dev`, rodar também os testes de integração do banco (`npm run test:db`). Tudo verde antes de marcar.
 6. **Marcar** a tarefa como `- [x]` e adicionar uma linha no **Registro de iterações** (fim do arquivo).
 7. **Commitar** a iteração invocando a skill **`git-commit`** (ver "Commits"). Um commit por tarefa, com o código, os testes, o plano atualizado e o registro juntos. Depois do commit, anotar o hash curto na linha do Registro, que vai junto no commit seguinte.
-8. **Fim de fase:** se todas as tarefas da fase estiverem `[x]`, verificar os "Critérios de saída", marcar cada um, commitar (skill `git-commit`) e integrar a branch da fase na `main` localmente (ver "Commits"). **Sem push.**
-9. **Bloqueio:** se depender de decisão do usuário (⛔), de conteúdo que só o usuário pode fornecer, ou falhar 2× seguidas, registrar em **Bloqueios**, commitar o plano atualizado (`docs(plan): ...`) e parar o loop. Não chutar decisões de produto. Nunca commitar código quebrado: se a validação falhar, não commitar.
+8. **Fim de fase:** se todas as tarefas da fase estiverem `[x]`, verificar os "Critérios de saída". Se houver critérios 👀 (verificação manual), registrar em **Bloqueios** um roteiro curto do que testar no app e **parar** até o usuário confirmar. Depois, marcar cada critério, commitar (skill `git-commit`) e integrar a branch da fase na `main` localmente (ver "Commits"). **Sem push.**
+9. **Bloqueio:** se depender de decisão do usuário (⛔), de ação no dashboard do Supabase (🖐), de conteúdo que só o usuário pode fornecer, ou falhar 2× seguidas, registrar em **Bloqueios**, commitar o plano atualizado (`docs(plan): ...`) e parar o loop. Não chutar decisões de produto. Nunca commitar código quebrado: se a validação falhar, não commitar.
 10. **Marco MVP:** ao concluir a Fase 13, **parar o loop** e registrar o bloqueio "Aguardando validação do MVP". Só seguir para a Fase 14 com autorização explícita do usuário.
 
 ### Regras gerais
 
 - Uma tarefa por iteração, pequena e verificável.
+- 🚫 **O loop nunca roda o app:** nada de `npx expo start`, `npx expo run:android`/`run:ios`, abrir emulador ou simulador. Quem roda o app é o usuário. Para conferir que o código compila, o loop usa `tsc`, lint, testes e `npx expo export --platform android` (só gera o bundle, sem servidor). O que só dá para conferir com o app aberto vira critério 👀, verificado pelo usuário.
 - Nada de código de feature antes da Fase 1 (arquitetura) estar aprovada.
 - Seguir a estrutura definida em `docs/ARCHITECTURE.md` (gerada na Fase 1); se precisar mudá-la, atualizar o doc primeiro.
 - `StyleSheet.create` + tokens do tema; nada de cor/tamanho “mágico” solto nas telas.
@@ -70,6 +73,7 @@ Comando sugerido:
 | Tokens do tema | `camelCase` | `colors.yellow`, `colors.ink`, `shadow.dock` |
 | Banco (tabelas, colunas, enums, RPCs) | `snake_case` | `suggestion_events`, `consume_suggestion()` |
 | Edge Functions e scripts | `kebab-case` | `delete-my-data`, `scripts/catalog/validate.ts` |
+| Scripts SQL do Supabase | `NNN_snake_case.sql` (número sequencial) | `001_initial_schema.sql`, `003_quota.sql` |
 | Chaves de i18n | `feature.camelCaseKey`, com sufixo de plural do i18next | `home.title`, `suggestion.remaining_one` |
 | Eventos de analytics | `snake_case` | `stamp_created`, `go_tapped` |
 | Testes | `<arquivo>.test.ts(x)` ao lado do arquivo testado | `streak.test.ts` |
@@ -102,7 +106,7 @@ Comando sugerido:
 - **Todo commit é feito pela skill `git-commit`**, que analisa o diff, faz o stage dos arquivos certos e gera a mensagem em Conventional Commits. Não escrever `git commit` "na mão" fora dela.
 - 🚫 **Nunca** adicionar `Co-Authored-By` (nem qualquer outra linha de atribuição ao Claude/IA) nas mensagens de commit. Conferir a mensagem antes de executar.
 - **Formato:** `<tipo>(<escopo>): <descrição>`, no imperativo, com até 72 caracteres, em **pt-BR** (ex.: `feat(suggestion): adiciona troca de card com animação`). O escopo é o nome **em inglês** do módulo tocado: `home`, `suggestion`, `stamp`, `passport`, `plus`, `settings`, `feedback`, `onboarding`, `ui`, `theme`, `i18n`, `db`, `catalog`, `nav`, `notifications`, `plan`...
-- **Tipos mais usados:** `feat` (feature), `fix`, `test`, `refactor`, `docs` (ARCHITECTURE, CURATION, plano), `build` (dependências, `app.json`, `eas.json`), `chore` (manutenção), `ci`. Para migrations do Supabase, usar `feat(db)` ou `fix(db)`.
+- **Tipos mais usados:** `feat` (feature), `fix`, `test`, `refactor`, `docs` (ARCHITECTURE, CURATION, plano), `build` (dependências, `app.json`, `eas.json`), `chore` (manutenção), `ci`. Para scripts SQL e Edge Functions do Supabase, usar `feat(db)` ou `fix(db)`.
 - **Corpo do commit:** a fase e a tarefa do plano (ex.: `Fase 9 — Sugestão: "Outra"`) e as skills usadas.
 - **Branches:** uma por fase, criada a partir da `main` atualizada no início da fase (`fase/02-design-system`, `fase/04-supabase`...). Os commits de tarefa vão nessa branch.
 - **Fim de fase:** `git checkout main` → `git merge --no-ff fase/NN-...` (mensagem `chore(fase-NN): conclui <nome da fase>`) → apagar a branch local.
@@ -113,13 +117,23 @@ Comando sugerido:
 - Nenhum texto visível ao usuário fica hardcoded em componente. Tudo passa por `t('chave')` (a partir da Fase 2). O idioma base é **pt-BR**, com o texto exatamente igual ao do protótipo; os outros idiomas são traduções desse base. Datas, números, moeda e plurais usam `Intl` com o idioma ativo, nunca string montada à mão.
 - Ao criar ou alterar uma tela, adicionar as chaves em **todos** os arquivos de idioma na mesma iteração (o teste de paridade precisa passar). Isso vale também para textos de notificações.
 
-**Supabase**
-- Toda mudança de schema é feita por **migration** em `supabase/migrations/` (Supabase CLI). Nunca alterar a estrutura direto no dashboard sem gerar a migration.
-- **RLS ligado em todas as tabelas**, com policy explícita e testada (pgTAP / `supabase test db`).
-- Depois de cada migration, regenerar os tipos (`supabase gen types typescript` → `src/types/database.ts`).
-- No app só entram `EXPO_PUBLIC_SUPABASE_URL` e a chave pública (anon/publishable), via `.env`. A **service role nunca vai para o app**: fica só em Edge Functions e scripts locais. `.env` no `.gitignore` e `.env.example` versionado.
+**Supabase — operado só pelo dashboard web**
+- 🚫 **Sem Docker, sem Supabase CLI e sem Supabase local.** Não instalar nem rodar `supabase start`, `db push`, `gen types` ou `test db`. Tudo no Supabase é feito pelo usuário no dashboard (supabase.com/dashboard).
+- **Divisão de papéis:** o loop **escreve** os scripts SQL, o código das Edge Functions, os testes e o passo a passo; o **usuário aplica** no dashboard (SQL Editor, Authentication, Storage, Edge Functions) e avisa no chat. O loop nunca pede nem guarda a senha do banco ou a service role.
+- **Fonte de verdade versionada:** scripts em `supabase/sql/NNN_snake_case.sql`, numerados e aplicados em ordem (ex.: `001_initial_schema.sql`). Escrever de forma idempotente quando der (`create ... if not exists`, `create or replace function`, `drop policy if exists` antes de `create policy`). **Script já aplicado não se edita**: a mudança vai num script novo.
+- **Registro de aplicação:** `supabase/APPLIED.md`, uma tabela script × projeto (`role-dev` / `role-mvp`) × data, preenchida pelo loop quando o usuário confirma.
+- **Mudança feita direto na UI** do dashboard (Table Editor, ajustes de Auth etc.): o usuário avisa, e o loop transcreve para um script SQL novo ou para `docs/SUPABASE_SETUP.md` (configurações que não são SQL). Assim o repositório continua refletindo o banco.
+- **Configurações que não são SQL** (sign-in anônimo, captcha/rate limit, URLs de redirect, bucket do Storage, segredos das Edge Functions) ficam documentadas como checklist em `docs/SUPABASE_SETUP.md`.
+- **Edge Functions:** código em `supabase/functions/<nome>/index.ts`; o usuário cria e publica pelo **editor de Edge Functions do dashboard**, colando o código. A service role só existe dentro da função (variável de ambiente que o próprio Supabase injeta).
+- **Tipos:** `src/types/database.ts` vem do gerador de tipos do dashboard, se disponível (conferir na doc atual; o usuário baixa e o loop commita). Se não houver, o loop o mantém à mão, espelhando os scripts SQL. Os testes de integração pegam divergências.
+- **Testes do banco sem CLI:**
+  - **integração** (`npm run test:db`, jest com config própria) contra o projeto `role-dev`, usando só a chave pública: cria usuários anônimos e verifica RLS, cota e leitura de lugares, apagando os próprios dados no fim;
+  - **checagens SQL** em `supabase/checks/*.sql`, que o usuário roda no SQL Editor; cada linha devolve `test, ok`, e todos os `ok` precisam ser `true`. Servem para o que não dá para testar de fora (ex.: virada da semana da cota).
+- **RLS ligado em todas as tabelas**, com policy explícita e coberta por teste.
+- No app só entram `EXPO_PUBLIC_SUPABASE_URL` e a chave pública (anon/publishable), via `.env` (o usuário preenche a partir do `.env.example`). A **service role nunca vai para o app nem para o repositório**. `.env` no `.gitignore` e `.env.example` versionado.
 - O app conversa com o Supabase **só pela camada `services/`**. Telas e componentes nunca importam o client direto.
-- Desenvolvimento com o Supabase local (`supabase start`) e um projeto remoto separado para o build de teste (ver D18).
+- **Ambientes (D18):** projeto `role-dev`, para desenvolvimento e testes de integração, e projeto `role-mvp`, para os testadores. Todo script vai primeiro no `role-dev`; o `role-mvp` recebe tudo de uma vez na Fase 13.
+- **Handoffs agrupados:** para não parar o loop a cada script, as tarefas de banco de uma fase são preparadas **todas antes** e entregues num único handoff 🖐, com um checklist numerado em Bloqueios.
 
 **Privacidade (LGPD)**
 - Coletar só o necessário. A localização é usada no aparelho para calcular distância e **não é salva no servidor** no MVP. Todo evento de analytics tem que estar listado na Fase 13.
@@ -220,11 +234,12 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [x] Adicionar os scripts `typecheck` (`tsc --noEmit`) e `test` no `package.json`.
 - [x] Rodar `npx expo-doctor` e registrar o resultado.
 - [x] Remover o conteúdo de demonstração do template (`explore.tsx`, `animated-icon`, `hint-row`, `web-badge` e afins) sem quebrar o build. Usar o `reset-project` só se fizer sentido; olhar o script antes de rodar.
-- [x] Conferir se o Supabase CLI e o Docker estão disponíveis (necessários para o Supabase local). Se não estiverem, registrar em Bloqueios com as instruções de instalação.
+- [x] ~~Conferir se o Supabase CLI e o Docker estão disponíveis~~ — **dispensado** (02/10/2026): o Supabase será operado só pelo dashboard web, sem CLI e sem Docker. O bloqueio correspondente foi removido.
 
 **Critérios de saída**
-- [ ] App abre (`npx expo start`) com uma tela vazia sem erros.
-- [ ] Lint e typecheck verdes.
+- [x] O bundle compila (`npx expo export --platform android`) sem erros.
+- [ ] 👀 Usuário abre o app (`npx expo start`) e confirma a tela vazia sem erros.
+- [x] Lint e typecheck verdes.
 
 ---
 
@@ -237,13 +252,16 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARCHITECTURE.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
 - [ ] Definir a **estrutura de pastas** em `docs/ARCHITECTURE.md`. Proposta inicial, a validar com a skill:
   ```
-  supabase/
-  ├── migrations/                # schema versionado (SQL)
-  ├── functions/                 # Edge Functions (delete-my-data, depois webhooks)
-  ├── tests/                     # testes de RLS/RPC (pgTAP)
-  └── seed.sql                   # dados de dev
+  supabase/                      # SEM CLI: tudo aqui é aplicado pelo usuário no dashboard
+  ├── sql/                       # 001_initial_schema.sql, 002_rls_policies.sql... (SQL Editor, em ordem)
+  │   └── seed_dev.sql           # dados de exemplo, só no role-dev
+  ├── functions/                 # Edge Functions (delete-my-data, depois webhooks), coladas no editor do dashboard
+  ├── checks/                    # checagens SQL (test, ok), rodadas no SQL Editor
+  └── APPLIED.md                 # quais scripts já foram aplicados em cada projeto
+  tests/
+  └── db/                        # testes de integração (npm run test:db) contra o role-dev
   scripts/
-  └── catalog/                   # validação/importação do catálogo (CSV → Supabase)
+  └── catalog/                   # validação do catálogo e geração dos CSVs para importar no dashboard
   src/
   ├── app/                       # SOMENTE rotas (Expo Router)
   │   ├── _layout.tsx            # providers + Stack raiz + gate de onboarding
@@ -280,6 +298,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Definir a **implementação da tab bar** (ADR curto): o dock flutuante do protótipo exige **tabs JS do Expo Router com `tabBar` customizado**, e não `NativeTabs`/tab bar nativa, que não permitem esse visual. Definir também como as telas recebem o recuo inferior (hook `useDockInset()` = altura do dock + margem + safe area), já que o dock fica sobreposto ao conteúdo. Conferir a API de tabs do Expo Router no SDK 57.
 - [ ] Definir a **estratégia de estado**: estado de servidor com React Query (catálogo, carimbos, cota) e estado local persistido (preferências, filtros, fila offline) com uma lib de store + AsyncStorage. Justificar a escolha (ex.: Zustand) em um ADR curto.
 - [ ] Definir a **arquitetura Supabase** (ADR):
+  - **Operação só pelo dashboard web**, sem CLI e sem Docker. O fluxo é: scripts versionados em `supabase/sql/` → usuário aplica no SQL Editor → `APPLIED.md` (ver a seção "Supabase" das Regras gerais).
   - **Auth anônima** (`signInAnonymously`) na primeira abertura, sem cadastro. Cada aparelho ganha um `user_id`, o que dá backup do passaporte e cota no servidor desde o MVP. A conta definitiva (vincular e-mail, Apple ou Google) fica para a Fase 15.
   - Sessão persistida conforme o guia oficial do Supabase para Expo, com refresh automático ligado ao `AppState`.
   - Schema conforme o "Modelo de dados inicial", com RLS e as RPCs `consume_suggestion()` e `quota_status()` (fuso do usuário em `profiles.timezone`).
@@ -298,8 +317,8 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   - **Formatação** com `Intl.DateTimeFormat` ("SEX · 02 OUT"), `Intl.NumberFormat` (moeda e km) e moeda separada do idioma (ver D10).
   - **Conteúdo do catálogo** vem da tabela `place_translations`, com fallback para pt-BR. A query key do React Query inclui o idioma.
   - **Textos nativos** (permissões e nome do app) via `locales` no `app.json`.
-- [ ] Definir a **estratégia de testes**: jest-expo para `domain/`, hooks e services (com o Supabase mockado), Testing Library para componentes, teste de paridade de chaves de i18n, **pgTAP para RLS e RPCs** e, opcionalmente, Maestro para E2E.
-- [ ] Definir **ambientes e segredos**: Supabase local (dev) e projeto remoto do MVP; `.env`/`.env.example`; variáveis `EXPO_PUBLIC_*` por perfil do EAS.
+- [ ] Definir a **estratégia de testes**: jest-expo para `domain/`, hooks e services (com o Supabase mockado), Testing Library para componentes, teste de paridade de chaves de i18n, **testes de integração do banco (`npm run test:db`) contra o `role-dev` e checagens SQL** no SQL Editor (sem pgTAP/CLI) e, opcionalmente, Maestro para E2E.
+- [ ] Definir **ambientes e segredos**: projetos `role-dev` e `role-mvp` no dashboard (sem Supabase local); `.env`/`.env.example` apontando para o `role-dev`; variáveis `EXPO_PUBLIC_*` por perfil do EAS (preview → `role-mvp`).
 - [ ] Listar as **dependências planejadas** (instalar só na fase que usar), sempre via `npx expo install`: `@supabase/supabase-js` (e o que o guia oficial pedir para RN), `react-native-svg`, `@react-native-async-storage/async-storage`, `@tanstack/react-query` (+ persister), `zustand`, `expo-localization`, `i18next`, `react-i18next`, `expo-haptics`, `expo-location`, `expo-notifications`, `expo-sharing`/`Share` do RN, `expo-crypto` (uuid) e as fontes do `@expo-google-fonts`.
 - [ ] Registrar em `docs/ARCHITECTURE.md` a seção **Convenções de nomenclatura** (tabela de padrões, Glossário e IDs de domínio deste plano) e, se der, reforçar com regras de lint (ex.: `@typescript-eslint/naming-convention` e checagem de nome de arquivo em kebab-case).
 - [ ] Criar as pastas vazias, com `index.ts` ou `.gitkeep`, e o alias `@/` no `tsconfig` (conferir se já existe).
@@ -342,7 +361,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Tela temporária de "catálogo de componentes" mostrando todos os componentes (remover depois), com um botão para alternar o idioma ali mesmo.
 - [ ] Nenhuma cor hardcoded fora de `theme/` e nenhum texto hardcoded fora de `i18n/locales/`.
 - [ ] Componentes de texto aguentam strings até ~40% maiores que o pt-BR sem estourar (botões, chips, pílulas e o item ativo do dock).
-- [ ] Dock conferido num iPhone com home indicator e num Android com navegação por gestos e por botões (o safe area está correto e nada fica cortado).
+- [ ] 👀 Dock conferido num iPhone com home indicator e num Android com navegação por gestos e por botões (o safe area está correto e nada fica cortado).
 
 ---
 
@@ -359,31 +378,64 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Testar os deep links `role://suggestion`, `role://passport` e `role://place/<id>` (este por enquanto abre um placeholder).
 
 **Critérios de saída**
-- [ ] O fluxo inteiro dá para clicar no Android e no iOS (ou na web) sem crash.
-- [ ] Trocar o idioma em Ajustes atualiza tabs e telas na hora, e a escolha continua valendo depois de reabrir o app.
+- [ ] 👀 O fluxo inteiro dá para clicar no Android e no iOS (ou na web) sem crash.
+- [ ] 👀 Trocar o idioma em Ajustes atualiza tabs e telas na hora, e a escolha continua valendo depois de reabrir o app.
 
 ---
 
-## Fase 4 — Supabase: setup, schema e segurança 🧭 ARCH
+## Fase 4 — Supabase: schema e segurança (via dashboard) 🧭 ARCH 🖐 DASHBOARD
 
-- [ ] `supabase init` no repositório e Supabase local rodando (`supabase start`). Documentar os comandos no `README.md`.
-- [ ] Migration do schema do "Modelo de dados inicial": tabelas, enums (`category`, `mood`, `time_slot`, `budget`, `report_reason`), índices e `updated_at`.
-- [ ] **RLS em todas as tabelas**, com policies conforme a tabela do modelo.
-- [ ] RPC `consume_suggestion(place_id)`: `security definer`; valida a cota semanal no fuso do usuário (segunda 00:00), registra em `suggestion_events` e retorna `{ allowed, remaining, resets_at }`. Plus não tem limite.
-- [ ] RPC `quota_status()`: devolve o restante e a data de renovação, sem consumir.
-- [ ] Trigger: criar `profiles` automaticamente quando um usuário (inclusive anônimo) é criado.
-- [ ] Edge Function `delete-my-data`: apaga o usuário e todos os dados dele (usa a service role só no servidor).
-- [ ] Testes pgTAP: usuário A não lê nem escreve dados do B; cota bloqueia a 4ª sugestão da semana; a cota renova na segunda; anônimo lê só lugares ativos.
-- [ ] `seed.sql` com uma cidade e ~10 lugares de exemplo (dev).
-- [ ] Gerar `src/types/database.ts` e adicionar o script `npm run db:types`.
-- [ ] `src/lib/supabase.ts`: client único com sessão persistida e auto-refresh ligado ao `AppState`, conforme o guia oficial atual.
-- [ ] Auth anônima: `signInAnonymously` silencioso na primeira abertura, com retry e sem bloquear o onboarding. Habilitar a proteção contra abuso recomendada pelo Supabase (captcha/rate limit) e anotar no ADR.
-- [ ] ⛔ Usuário cria o **projeto remoto do MVP** no Supabase e fornece a URL e a chave pública para o `.env` (ver D18). Aplicar as migrations (`supabase db push`).
+> Sem CLI e sem Docker. O loop prepara **tudo** primeiro (tarefas 1 a 10) e só então entrega **um único handoff** (tarefa 11). Depois que o usuário confirma, o loop valida (tarefas 12 e 13).
+
+**Preparação (o loop faz)**
+- [ ] `docs/SUPABASE_SETUP.md`: passo a passo no dashboard, com o caminho de cada menu conferido na doc atual:
+  - criar o projeto `role-dev` (região São Paulo);
+  - onde copiar a URL e a chave pública para o `.env`;
+  - habilitar o **sign-in anônimo** e a proteção contra abuso (captcha/rate limit);
+  - criar o bucket `place-photos` (público, só leitura);
+  - como colar e rodar scripts no SQL Editor;
+  - como criar e publicar uma Edge Function pelo editor do dashboard;
+  - como baixar os tipos TypeScript, se o dashboard oferecer.
+- [ ] `.env.example` com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` (sem valores).
+- [ ] `supabase/sql/001_initial_schema.sql`: tabelas do "Modelo de dados inicial", enums (`category`, `mood`, `time_slot`, `budget`, `report_reason`) com os IDs do Glossário, índices e trigger de `updated_at`.
+- [ ] `supabase/sql/002_rls_policies.sql`: **RLS em todas as tabelas**, com policies conforme a tabela do modelo.
+- [ ] `supabase/sql/003_quota.sql`:
+  - função pura `quota_week_start(ts, tz)` (segunda 00:00 no fuso do usuário);
+  - RPC `consume_suggestion(place_id)`, `security definer`: valida a cota semanal, registra em `suggestion_events` e retorna `{ allowed, remaining, resets_at }`; Plus não tem limite;
+  - RPC `quota_status()`: devolve o restante e a data de renovação, sem consumir.
+- [ ] `supabase/sql/004_profiles_trigger.sql`: cria `profiles` automaticamente quando um usuário (inclusive anônimo) é criado.
+- [ ] `supabase/sql/005_storage_policies.sql`: policies do bucket `place-photos`.
+- [ ] `supabase/sql/seed_dev.sql`: uma cidade e ~10 lugares de exemplo (**só no `role-dev`**).
+- [ ] `supabase/functions/delete-my-data/index.ts`: apaga o usuário autenticado e todos os dados dele (a service role só dentro da função).
+- [ ] `supabase/checks/001_quota_week_start.sql`: casos de virada de semana (domingo 23:59 / segunda 00:00, fusos diferentes, horário de verão), cada um retornando `test, ok`.
+- [ ] Testes de integração em `tests/db/` + `jest.db.config.js` + script `npm run test:db` (lê o `.env`):
+  - usuário anônimo A não lê nem escreve dados do B;
+  - a 4ª sugestão da semana é bloqueada;
+  - só lugares `active` são visíveis;
+  - insert idempotente de `stamps` (mesmo `id` não duplica);
+  - `delete-my-data` apaga tudo do usuário (usada também na limpeza dos testes).
+- [ ] `src/lib/supabase.ts`: client único com sessão persistida e auto-refresh ligado ao `AppState`, conforme o guia oficial atual. Auth anônima (`signInAnonymously`) silenciosa na primeira abertura, com retry e sem bloquear o onboarding.
+- [ ] `src/types/database.ts` provisório, escrito à mão a partir dos scripts (será trocado pelo gerado no dashboard, se houver).
+
+**Handoff (o usuário faz)**
+- [ ] 🖐 Registrar em **Bloqueios** o checklist e parar o loop:
+  1. criar o projeto `role-dev`, seguindo `docs/SUPABASE_SETUP.md`;
+  2. no SQL Editor, rodar `001` → `005` e depois `seed_dev.sql`, nessa ordem;
+  3. aplicar as configurações (sign-in anônimo, captcha/rate limit, bucket);
+  4. criar e publicar a Edge Function `delete-my-data`;
+  5. rodar `supabase/checks/001_quota_week_start.sql` e colar o resultado no chat;
+  6. criar o `.env` a partir do `.env.example`, com a URL e a chave pública do `role-dev`;
+  7. (se disponível) baixar os tipos TypeScript para `src/types/database.ts`;
+  8. avisar no chat que terminou.
+
+**Validação (o loop faz, depois da confirmação)**
+- [ ] Registrar os scripts em `supabase/APPLIED.md` (`role-dev`) e conferir se o resultado das checagens veio todo `ok = true`.
+- [ ] Rodar `npm run test:db` e corrigir o que falhar. A correção vai num script SQL **novo**, num novo handoff curto.
 
 **Critérios de saída**
-- [ ] `supabase test db` verde.
-- [ ] O app abre, cria o usuário anônimo e chama `quota_status()` com sucesso no Supabase local.
-- [ ] Nenhuma chave secreta no código nem no bundle (conferir com uma busca por `service_role`).
+- [ ] `npm run test:db` verde contra o `role-dev`, e checagens SQL com todos os `ok = true`.
+- [ ] O fluxo de criar o usuário anônimo e chamar `quota_status()` passa no `npm run test:db`, e 👀 o usuário confirma que o app abre sem erro de conexão.
+- [ ] Nenhuma chave secreta no código, no repositório nem no bundle (conferir com uma busca por `service_role` e `SERVICE_ROLE`).
 
 ---
 
@@ -403,25 +455,32 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 **Critérios de saída**
 - [ ] Cobertura ≥ 90% em `domain/`.
-- [ ] Carimbo criado em modo avião aparece no Supabase depois que a conexão volta, sem duplicar.
-- [ ] Estado persiste depois de fechar e reabrir o app.
+- [ ] 👀 Carimbo criado em modo avião aparece no Supabase depois que a conexão volta, sem duplicar.
+- [ ] 👀 Estado persiste depois de fechar e reabrir o app (a lógica de persistência também coberta por teste).
 
 ---
 
-## Fase 6 — Catálogo e curadoria 🧭 ARCH
+## Fase 6 — Catálogo e curadoria 🧭 ARCH 🖐 DASHBOARD
 
 > **O valor do app está na qualidade das sugestões.** Sugerir um lugar fechado é a pior experiência possível. Esta fase é metade código (ferramentas) e metade conteúdo, e o conteúdo **só o usuário pode fornecer**.
 
 - [ ] ⛔ Usuário define a **cidade inicial** (D7) e o processo de curadoria (D5b).
 - [ ] Planilha-modelo (`scripts/catalog/template.csv`) com todos os campos de `places`, `place_hours` e `place_translations`, mais um guia de preenchimento em `docs/CURATION.md` (o que é um bom "motivo", tom de voz, como tirar ou escolher a foto).
-- [ ] Script `scripts/catalog/validate`: todo lugar tem horários, coordenadas, categoria, as 3 razões em **todos** os idiomas, foto e `verified_at` recente. Aponta as combinações de filtro sem nenhum lugar.
-- [ ] Script `scripts/catalog/import`: CSV → Supabase (upsert por id, usando a service role **só localmente**) e upload das fotos para o Storage.
+- [ ] Script `scripts/catalog/validate.ts`: todo lugar tem horários, coordenadas, categoria (ID do Glossário), as 3 razões em **todos** os idiomas, foto e `verified_at` recente. Aponta as combinações de filtro sem nenhum lugar.
+- [ ] Script `scripts/catalog/build-csv.ts`: transforma a planilha em **3 CSVs** com exatamente as colunas das tabelas (`places.csv`, `place_hours.csv`, `place_translations.csv`), prontos para o **Import CSV do Table Editor** do dashboard. Não usa service role nem acessa o Supabase.
 - [ ] Relatório de cobertura: quantos lugares por categoria do bingo, por humor, por faixa de preço e por duração. Meta do MVP: **≥ 60 lugares**, com todas as 16 categorias cobertas.
-- [ ] Rotina de manutenção documentada: revisar `place_reports` toda semana (view `reports_pending` no Supabase Studio), desativar lugares fechados (`active = false`) e reverificar lugares com `verified_at` antigo.
-- [ ] ⛔ Usuário preenche o catálogo real; o loop roda `validate` e `import`.
+- [ ] `supabase/sql/006_reports_view.sql`: view `reports_pending` para a revisão semanal.
+- [ ] Rotina de manutenção em `docs/CURATION.md`: revisar `reports_pending` toda semana pelo dashboard, desativar lugares fechados (`active = false` no Table Editor) e reverificar lugares com `verified_at` antigo.
+- [ ] ⛔ Usuário preenche o catálogo real; o loop roda `validate` e `build-csv`.
+- [ ] 🖐 Handoff em **Bloqueios**:
+  1. rodar `006_reports_view.sql` no `role-dev`;
+  2. importar os 3 CSVs pelo Table Editor, **nessa ordem**: `places` → `place_hours` → `place_translations`;
+  3. subir as fotos no bucket `place-photos`, com o nome igual ao `photo_path`;
+  4. avisar no chat.
+- [ ] Depois da confirmação: atualizar `APPLIED.md` e rodar uma checagem de integração (`npm run test:db -- catalog`) que confere a contagem de lugares, horários e traduções e se cada foto abre.
 
 **Critérios de saída**
-- [ ] `validate` sem erros e meta de cobertura atingida no projeto remoto do MVP.
+- [ ] `validate` sem erros e meta de cobertura atingida no `role-dev`. O mesmo catálogo vai para o `role-mvp` na Fase 13.
 
 ---
 
@@ -435,7 +494,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Estados de primeira vez nas telas: ofensiva "0 semanas" com texto motivador e passaporte vazio com um CTA para o primeiro rolê.
 
 **Critérios de saída**
-- [ ] Instalação limpa → onboarding → home funciona com a permissão aceita **e** com a permissão negada.
+- [ ] 👀 Instalação limpa → onboarding → home funciona com a permissão aceita **e** com a permissão negada.
 
 ---
 
@@ -449,8 +508,8 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Acessibilidade: labels, `accessibilityRole`, estado selecionado e tamanho de fonte dinâmico sem quebrar o layout.
 
 **Critérios de saída**
-- [ ] Visual bate com o protótipo (comparar com screenshot) em pt-BR e não quebra em en/es.
-- [ ] CTA "Me tira da inércia" e o contador ficam **acima** do dock, sem sobreposição, inclusive com fonte grande (o conteúdo rola se não couber).
+- [ ] 👀 Visual bate com o protótipo em pt-BR e não quebra em en/es.
+- [ ] 👀 CTA "Me tira da inércia" e o contador ficam **acima** do dock, sem sobreposição, inclusive com fonte grande (o conteúdo rola se não couber).
 
 ---
 
@@ -506,7 +565,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Limite de frequência: no máximo 2 notificações por semana, além do "Como foi?".
 
 **Critérios de saída**
-- [ ] Cada notificação dispara no horário certo (testar adiantando o agendamento) e abre a tela certa.
+- [ ] 👀 Cada notificação dispara no horário certo (testar adiantando o agendamento) e abre a tela certa.
 
 ---
 
@@ -516,7 +575,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Error boundary global com tela de erro amigável e botão "tentar de novo".
 - [ ] Crash reporting conforme D14 (EAS Observe ou Sentry).
 - [ ] `services/analytics` → tabela `events` (ou a ferramenta definida em D14). Só estes eventos: `onboarding_done`, `location_permission` (aceita/negada), `suggestion_requested`, `suggestion_other` (+ motivo), `go_tapped`, `stamp_created`, `feedback_sent`, `report_sent`, `paywall_viewed`, `plus_interest`, `share_tapped`, `notification_opened`, `language_changed`.
-- [ ] Views SQL de métricas no Supabase (ver "Métricas do MVP" abaixo).
+- [ ] `supabase/sql/0NN_metrics_views.sql`: views de métricas (ver "Métricas do MVP" abaixo), consultáveis no SQL Editor.
 
 **Produto**
 - [ ] Plus como **fake door** (D13): tela fiel ao protótipo, mas "Assinar o Plus" vira "Quero o Plus — me avisa", que grava em `plus_interest` e mostra um agradecimento. O preço só aparece se o usuário decidir mostrar um valor de teste.
@@ -525,17 +584,25 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 **Qualidade mínima**
 - [ ] Acessibilidade básica: leitor de tela nas telas principais e contraste conferido (atenção ao `#3A3200` sobre `#FFD43B`).
 - [ ] Revisão de i18n: varredura por strings hardcoded e checagem de layout em en/es.
-- [ ] Testar em pelo menos 1 Android e 1 iPhone reais.
+- [ ] 👀 Testar em pelo menos 1 Android e 1 iPhone reais (o usuário testa; o loop lista o roteiro).
 
 **Legal e distribuição**
 - [ ] ⛔ Usuário fornece (ou aprova o rascunho de) **Política de Privacidade** e **Termos de Uso**, publicados numa URL pública e linkados no onboarding e em Ajustes.
 - [ ] `app.json`: nome "Rolê Aleatório", bundle id / package (D20), ícone, splash `#FFD43B` e `locales`.
-- [ ] `eas.json` com os perfis development e preview (variáveis do Supabase por perfil).
+- [ ] 🖐 Handoff **`role-mvp`** em Bloqueios:
+  1. criar o projeto `role-mvp` seguindo `docs/SUPABASE_SETUP.md`;
+  2. rodar **todos** os scripts de `supabase/sql/` em ordem (**sem** o `seed_dev.sql`);
+  3. aplicar as mesmas configurações e a Edge Function;
+  4. importar o catálogo real (3 CSVs + fotos);
+  5. passar a URL e a chave pública do `role-mvp` para as variáveis do perfil `preview` do EAS.
+
+  Depois da confirmação, o loop atualiza o `APPLIED.md` e roda `npm run test:db` apontando para o `role-mvp`.
+- [ ] `eas.json` com os perfis development (`role-dev`) e preview (`role-mvp`).
 - [ ] `expo-updates`/EAS Update configurado no canal `preview`, para corrigir rápido durante o teste.
 - [ ] Build de preview e distribuição para o grupo de teste (Android interno / TestFlight), conforme D17.
 
 **Critérios de saída**
-- [ ] Testadores instalaram o app e os eventos estão chegando no Supabase.
+- [ ] 👀 Testadores instalaram o app e os eventos estão chegando no Supabase.
 - [ ] **→ Marco MVP: parar o loop.**
 
 ---
@@ -570,7 +637,7 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 - [ ] ⛔ Usuário decide o provedor de pagamentos e os preços (D3). Exige development build.
 - [ ] `services/billing` com interface, mais uma implementação mock para dev.
 - [ ] Paywall completo: preço **vindo da loja** e já localizado, Mensal/Anual, **"Restaurar compras"** (exigido pela Apple), links para Termos e Privacidade e o texto de renovação automática exigido pelas lojas.
-- [ ] Assinatura validada **no servidor**: webhook do provedor → Edge Function → tabela `subscriptions` → `profiles.plan`. `consume_suggestion()` passa a respeitar o plano do servidor, nunca do cliente.
+- [ ] Assinatura validada **no servidor**: webhook do provedor → Edge Function (publicada pelo dashboard, com o segredo do webhook cadastrado nos secrets das Edge Functions) → tabela `subscriptions` (script SQL novo) → `profiles.plan`. `consume_suggestion()` passa a respeitar o plano do servidor, nunca do cliente.
 - [ ] Tratar cancelamento, expiração, reembolso e período de carência.
 - [ ] Testes em sandbox (iOS e Android).
 - [ ] Avisar quem demonstrou interesse no fake door (`plus_interest`).
@@ -611,11 +678,12 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 - [ ] Acessibilidade completa (leitor de tela em todas as telas e fonte grande).
 - [ ] Performance: FlashList onde couber, memoização onde o React Compiler não resolver e medição de TTI.
 - [ ] Auditoria de RLS e das Edge Functions; revisar índices e o plano de backup do Supabase.
-- [ ] Testes em aparelhos variados (Android de entrada inclusive).
+- [ ] 👀 Testes em aparelhos variados (Android de entrada inclusive), feitos pelo usuário com o roteiro do loop.
 
 ## Fase 19 — Release nas lojas 🧭 ARCH
 
-- [ ] `eas.json` com o perfil production e o projeto Supabase de produção.
+- [ ] 🖐 Projeto Supabase de **produção** criado pelo dashboard, com todos os scripts de `supabase/sql/` (sem seed), configurações, Edge Functions e catálogo, registrado no `APPLIED.md`.
+- [ ] `eas.json` com o perfil production apontando para o projeto de produção.
 - [ ] `app.json`: `locales` com o nome do app e os textos de permissão por idioma; declarar os idiomas suportados no iOS e no Android, conforme o guia de localização do Expo SDK 57.
 - [ ] Formulários de privacidade das lojas (App Privacy da Apple e Data safety do Google) coerentes com os eventos coletados.
 - [ ] Assets, screenshots e textos das lojas **em cada idioma suportado**.
@@ -632,7 +700,7 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | D3 | Provedor de pagamento e preços do Plus | — (sugestão: RevenueCat, que tem webhook fácil para o Supabase) | 14 |
 | D4 | Escopo da aba Turma | Placeholder "Em breve" | 17 |
 | D5 | Backend / banco de dados | ✅ **Decidido: Supabase** | 1 |
-| D5b | Como o catálogo é curado | Curadoria própria em planilha → script de importação; manutenção pelo Supabase Studio | 6 |
+| D5b | Como o catálogo é curado | Curadoria própria em planilha → `build-csv` → **Import CSV no Table Editor** do dashboard; manutenção pelo dashboard | 6 |
 | D6 | Check-in exige estar no local? | MVP: não (carimbo direto); avaliar no pós-MVP | 16 |
 | D7 | Cidade inicial do catálogo | — **(bloqueia a Fase 6)** | 6 |
 | D8 | Idiomas suportados no lançamento | pt-BR (base), en, es | 1 |
@@ -645,16 +713,19 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | D15 | Domínio para links compartilháveis / landing | — (MVP: link da loja/landing; universal links no pós-MVP) | 10 / 16 |
 | D16 | Onde roda a recomendação | MVP: no cliente, com o catálogo da cidade em cache; RPC com PostGIS quando passar de ~500 lugares | 1 / 16 |
 | D17 | Grupo de teste do MVP | 15–30 pessoas da cidade inicial, ~4 semanas | 13 |
-| D18 | Projetos Supabase | Local (dev) + 1 remoto para o MVP; projeto de produção separado no pós-MVP | 4 |
+| D18 | Projetos Supabase | ✅ **Decidido: só pelo dashboard web, sem CLI/Docker/local.** `role-dev` (desenvolvimento + testes) e `role-mvp` (testadores); produção separada no pós-MVP | 4 |
 | D19 | Regra de segurança "só de dia" | Campo `daylight_only` no lugar + `daylight_cutoff` fixo por cidade (ex.: 18h) | 5 |
 | D20 | Bundle id / package name | — (ex.: `com.<seu-nome>.rolealeatorio`) | 13 |
 
 ## Bloqueios
 
-- **Supabase local indisponível (aberto em 02/10/2026).** Necessário a partir da Fase 4; as Fases 0 a 3 não dependem disso.
-  1. Instalar o Supabase CLI. No Windows: `scoop bucket add supabase https://github.com/supabase/scoop-bucket.git` e `scoop install supabase` (o scoop também não está instalado: https://scoop.sh), ou baixar o binário em https://github.com/supabase/cli/releases. Conferir com `supabase --version`.
-  2. Abrir o Docker Desktop e esperar o daemon subir. Conferir com `docker info` (a seção Server precisa responder).
-  3. Avisar no chat para o loop retomar.
+- **Fase 0: aguardando verificação manual 👀 (aberto em 02/10/2026).** Roteiro para o usuário:
+  1. Na raiz do projeto, rodar `npx expo start`.
+  2. Abrir no Android/iOS (Expo Go ou development build) ou na web (`w`).
+  3. Conferir que aparece uma tela vazia, sem erro vermelho e sem warning no terminal.
+  4. Avisar no chat ("Fase 0 ok" ou o erro que apareceu). O loop então marca o critério, integra `fase/00-preparacao` na `main` e começa a Fase 1.
+
+_(Bloqueio antigo resolvido: o bloqueio "Supabase local indisponível" foi resolvido em 02/10/2026: o Supabase passa a ser operado só pelo dashboard web, sem CLI e sem Docker.)_
 
 ## Registro de iterações
 
@@ -665,3 +736,4 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | 2026-10-02 | 0 | `npx expo-doctor` | — | 21/21 checks passaram, nenhum problema detectado | `9280d1f` |
 | 2026-10-02 | 0 | Remover o demo do template | — | Removidos explore, animated-icon, app-tabs (+`.web`), hint-row, web-badge, themed-*, collapsible, external-link, constants/theme, global.css, hooks do template, imagens de demo e `scripts/reset-project.js` (+ script do `package.json`); `_layout` e `index` mínimos. `reset-project` não foi usado (apagaria `scripts/`). `expo lint` instalou `eslint` e `eslint-config-expo` e criou `eslint.config.js` (commit `build` separado). `tsc` e lint verdes; `expo export --platform android` gera o bundle. O item da Fase 3 "remover app-tabs" já está feito | `fa27e69` |
 | 2026-10-02 | 0 | Conferir Supabase CLI e Docker | — | Supabase CLI **não instalado**; Docker 29.8.1 instalado, mas o daemon (Docker Desktop) não está rodando. Registrado em Bloqueios; loop parado | este commit |
+| 2026-10-02 | — | Revisão do plano (feita pelo usuário com o Claude, fora do loop) | — | Supabase só pelo dashboard web (sem CLI/Docker/local, handoffs 🖐, testes `test:db` + checagens SQL); bloqueio do CLI/Docker removido; o loop não roda o app (critérios 👀 verificados pelo usuário); nomenclatura em inglês | entra no próximo commit do loop |
