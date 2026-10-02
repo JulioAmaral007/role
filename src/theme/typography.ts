@@ -88,6 +88,11 @@ export const typography = {
     fontFamily: fontFamily.body.semiBold,
     fontSize: size.sm,
   },
+  /** Botão médio, como "Ver meu passaporte" (Instrument Sans 600). */
+  buttonLarge: {
+    fontFamily: fontFamily.body.semiBold,
+    fontSize: size.md,
+  },
   /** Label do item ativo do dock (Instrument Sans 700). */
   tabLabel: {
     fontFamily: fontFamily.body.bold,

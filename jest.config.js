@@ -13,5 +13,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  // o primeiro render de cada arquivo carrega react-native-svg e as fontes: com cache frio passa de 5 s
+  testTimeout: 30000,
   testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/db/'],
 };
