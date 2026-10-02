@@ -30,7 +30,7 @@ describe('Button', () => {
       </Button>,
     );
     const button = screen.getByRole('button', { name: 'Bora, tô indo' });
-    fireEvent.press(button);
+    await fireEvent.press(button);
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
@@ -43,7 +43,7 @@ describe('Button', () => {
     );
     const button = screen.getByRole('button', { name: 'Outra' });
     expect(button).toBeDisabled();
-    fireEvent.press(button);
+    await fireEvent.press(button);
     expect(onPress).not.toHaveBeenCalled();
   });
 

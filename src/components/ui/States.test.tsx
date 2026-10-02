@@ -23,7 +23,7 @@ describe('EmptyState', () => {
   it('shows the action only when both label and handler exist', async () => {
     const onAction = jest.fn();
     await render(<EmptyState title="Vazio" actionLabel="Escolher um rolê" onAction={onAction} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Escolher um rolê' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Escolher um rolê' }));
     expect(onAction).toHaveBeenCalledTimes(1);
   });
 
@@ -47,7 +47,7 @@ describe('ErrorState', () => {
     // o painel é anunciado como alerta, mas não é `accessible`: senão o iOS esconderia o botão
     const alerts = findNodes(await view.toJSON(), 'View').filter((node) => node.props.accessibilityRole === 'alert');
     expect(alerts).toHaveLength(1);
-    fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 

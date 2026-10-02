@@ -19,7 +19,7 @@ describe('Chip', () => {
   it('calls onPress', async () => {
     const onPress = jest.fn();
     await render(<Chip label="Na paz" selected={false} onPress={onPress} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Na paz' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Na paz' }));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 

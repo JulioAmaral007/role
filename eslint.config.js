@@ -112,6 +112,12 @@ module.exports = defineConfig([
     // docs/ARCHITECTURE.md, seção 11.4 (regra 9); os testes do banco não usam Testing Library
     files: ['src/**/*.test.{ts,tsx}', 'tests/app/**/*.{ts,tsx}'],
     ...testingLibrary.configs['flat/react'],
+    rules: {
+      ...testingLibrary.configs['flat/react'].rules,
+      // No Testing Library 14 `fireEvent` devolve Promise e PRECISA de `await` (sem ele os `act`
+      // se sobrepõem e contaminam os testes seguintes). A regra do plugin assume a API antiga.
+      'testing-library/no-await-sync-events': 'off',
+    },
   },
   {
     // espelha as colunas do banco (snake_case); a regra de nomes não se aplica aqui

@@ -36,7 +36,7 @@ describe('SegmentedGrid', () => {
   it('reports the id of the pressed option', async () => {
     const onChange = jest.fn();
     await render(<SegmentedGrid options={TIME_OPTIONS} value="2h" onChange={onChange} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Meio dia' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Meio dia' }));
     expect(onChange).toHaveBeenCalledWith('half_day');
   });
 
