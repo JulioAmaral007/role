@@ -103,8 +103,10 @@ export function FloatingTabBar({
   // sem a largura do dock e dos labels medidas, as posições ainda estariam erradas: fica invisível
   const ready = containerWidth > 0 && items.every((_, index) => labelWidths[index] !== undefined);
 
+  // o worklet roda na thread de UI e só captura valores: `pillStep` (função JS) fica de fora
+  const step = pillStep(geometry);
   const pillStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: progress.get() * pillStep(geometry) }],
+    transform: [{ translateX: progress.get() * step }],
   }));
 
   return (
