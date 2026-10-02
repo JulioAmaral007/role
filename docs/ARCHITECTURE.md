@@ -83,7 +83,7 @@ Contexto técnico que muda a aplicação das regras: **React Compiler ligado** (
 
 ### 3.3 Animação (`animation-*`)
 
-- **Animar só `transform` e `opacity`** (`animation-gpu-properties`). Nada de `width`, `height`, `top`, `margin` nem `padding`. Exceção documentada para o dock em 3.8.
+- **Animar só `transform` e `opacity`** (`animation-gpu-properties`). Nada de `width`, `height`, `top`, `margin` nem `padding`. **Sem exceção, inclusive no dock:** o item ativo tem largura constante, então a troca de aba é feita com `translateX` e `opacity` (ver o ADR da tab bar e a tarefa do `FloatingTabBar` no plano).
 - Estado real, não valor visual (`state-ground-truth`): o shared value guarda `pressed` (0/1), `activeIndex` ou `progress`; escala, opacidade e cor saem por `interpolate`/`interpolateColor`.
 - Valor derivado de outro shared value usa `useDerivedValue`, não `useAnimatedReaction` (`animation-derived-value`). `useAnimatedReaction` fica para efeito colateral (haptic, log).
 - **Com o React Compiler: `.get()` e `.set()`, nunca `.value`** (`react-compiler-reanimated-shared-values`).
@@ -107,7 +107,7 @@ Contexto técnico que muda a aplicação das regras: **React Compiler ligado** (
   - `gap` no pai em vez de margem nos filhos; `padding` para espaço interno;
   - `boxShadow` (string CSS) em vez de `shadow*`/`elevation`; o `shadow.dock` do protótipo vira `boxShadow` com as duas camadas. Conferir o resultado no Android (critério 👀 da Fase 2);
   - degradê com `experimental_backgroundImage`, sem biblioteca de gradiente. Se o protótipo não usa degradê, não há o que fazer.
-  - A regra "evitar vários tamanhos de fonte" da skill **não se aplica**: o protótipo define uma escala própria (`display`, `title`, `cta`, `body`, `label`, `stat`) em `theme/typography.ts`.
+  - A regra "evitar vários tamanhos de fonte" (`ui-styling`) **vale para corpo e rótulos**: só **4 tamanhos** (12, 14, 16 e 20), com hierarquia por peso e cor dentro do mesmo tamanho. A **exceção** são os tamanhos de display do protótipo (28, 32, 34, 38, 44, 50 e 64), mantidos como identidade visual. Tudo em `theme/typography.ts` (ver 3.9).
 - Safe area (`ui-safe-area-scroll`, `ui-scrollview-content-inset`): usar `contentInsetAdjustmentBehavior="automatic"` no scroll raiz **no iOS**. O recuo do dock (`useDockInset()`) é **padding estático** no `contentContainerStyle`, e não `contentInset`, porque `contentInset` só existe no iOS e o dock precisa funcionar igual no Android.
 - Medição de tamanho (`ui-measure-views`): `onLayout` (e `useLayoutEffect` com `getBoundingClientRect`, disponível no RN 0.86), com updater para comparar antes de atualizar o estado. Nunca `measure()`.
 - Galeria de imagem em tela cheia (`ui-image-gallery`): fora do escopo do MVP; se surgir, `@nandorojo/galeria`.
@@ -138,20 +138,117 @@ Contexto técnico que muda a aplicação das regras: **React Compiler ligado** (
 | Regra da skill | Decisão no projeto | Motivo |
 |---|---|---|
 | `navigation-native-navigators` (tabs nativas) | `tabBar` customizado com o dock flutuante | Visual do protótipo; `NativeTabs` não permite |
-| `animation-gpu-properties` (só transform/opacity) | **Exceção só no dock:** o item ativo muda de largura. Implementar com Reanimated e um único shared value `activeIndex`; se a medição no aparelho mostrar queda de quadros, trocar por `scaleX` no fundo amarelo + `opacity` no label | São 3 itens e a largura é o que dá a leitura do protótipo. Validar no critério 👀 da Fase 2 |
 | `fonts-config-plugin` | `useFonts` + splash até a Fase 13 | Compatível com Expo Go e mais simples de iterar |
 | `ui-scrollview-content-inset` (`contentInset`) | Padding estático para o recuo do dock | `contentInset` é só iOS |
-| `ui-styling` (poucos tamanhos de fonte) | Escala tipográfica própria do protótipo | Identidade visual |
+| `ui-styling` (poucos tamanhos de fonte) | **Exceção parcial:** só os tamanhos de display (28–64) fogem da regra; corpo e rótulos usam 4 tamanhos (12, 14, 16, 20) | Os títulos grandes são a identidade do protótipo; no corpo, os tamanhos vizinhos (12/13, 14/15, 16/17, 18–21) eram quase indistinguíveis |
 | `list-performance-virtualize` (virtualizar tudo) | Grades fixas e pequenas ficam em `View` | Nada a virtualizar; layout em grade mais simples |
 | `list-performance-item-memo`/`callbacks` (`memo`, `useCallback`) | Não usar por padrão | React Compiler ligado |
 
 Divergências novas devem entrar nesta tabela e no Registro de iterações do plano.
 
-## 4. Itens detalhados nas próximas tarefas da Fase 1
+## 4. Estrutura de pastas
+
+Base da skill `react-native-architecture` (`app/`, `components/{ui,features}/`, `hooks/`, `services/`, `stores/`, `utils/`, `types/`), validada contra ela e acrescida de `domain/`, `lib/`, `providers/`, `theme/` e `i18n/` (seção 1). O grupo `(auth)` da skill **não existe** aqui: não há login (auth anônima). Hoje só existem `src/app/_layout.tsx` e `src/app/index.tsx`; as demais pastas são criadas na tarefa "Criar as pastas vazias" desta fase.
+
+### 4.1 Árvore
+
+```
+supabase/                          # SEM CLI: tudo aqui o usuário aplica no dashboard
+├── sql/                           # 001_initial_schema.sql … 005_*.sql, seed_dev.sql (em ordem)
+├── functions/<nome-em-kebab>/     # Edge Functions (delete-my-data/index.ts), coladas no editor do dashboard
+├── checks/                        # checagens SQL que devolvem (test, ok)
+└── APPLIED.md                     # script × projeto (role-dev / role-mvp) × data
+tests/
+└── db/                            # integração contra o role-dev (npm run test:db)
+scripts/
+└── catalog/                       # template.csv, validate.ts, buildCsv.ts (sem service role)
+docs/                              # ARCHITECTURE.md, SUPABASE_SETUP.md, CURATION.md...
+src/
+├── app/                           # SOMENTE rotas (Expo Router). Nomes em kebab-case: viram URL
+│   ├── _layout.tsx                # providers + Stack raiz + gate de onboarding
+│   ├── +not-found.tsx             # rota inexistente (deep link inválido)
+│   ├── onboarding.tsx
+│   ├── (tabs)/
+│   │   ├── _layout.tsx            # <Tabs tabBar={FloatingTabBar}>
+│   │   ├── index.tsx              # Rolê (home)
+│   │   ├── passport.tsx
+│   │   └── crew.tsx               # Turma (placeholder "Em breve")
+│   ├── suggestion.tsx             # push
+│   ├── place/[id].tsx             # deep link role://place/<id>
+│   ├── stamp.tsx                  # fullScreenModal
+│   ├── feedback.tsx               # modal ("Como foi?")
+│   ├── report-problem.tsx         # modal
+│   ├── plus.tsx                   # modal (paywall / fake door)
+│   └── settings.tsx               # modal (idioma, notificações, privacidade, apagar dados)
+├── components/
+│   ├── ui/                        # genéricos, sem domínio
+│   │   ├── Button.tsx  Chip.tsx  Pill.tsx  Card.tsx  Text.tsx  FloatingTabBar.tsx ...
+│   │   └── icons/                 # Logo.tsx, Bolt.tsx, Compass.tsx ... (react-native-svg)
+│   └── features/                  # conhecem o domínio, falam com hooks
+│       ├── home/  suggestion/  stamp/  passport/  plus/  settings/  feedback/  onboarding/
+├── hooks/                         # useQuota.ts, useStreak.ts, useSuggestion.ts, usePlaces.ts, useLanguage.ts, useDockInset.ts
+├── providers/                     # QueryProvider.tsx, I18nProvider.tsx, AuthProvider.tsx
+├── lib/
+│   └── supabase.ts                # client único; importado só por services/
+├── services/                      # uma pasta por assunto; cada uma com index.ts como entrada pública
+│   ├── places/                    # placesRepository.ts (interface), supabasePlacesRepository.ts, inMemoryPlacesRepository.ts, index.ts
+│   ├── stamps/  quota/  feedback/  reports/  analytics/
+│   └── location.ts  notifications.ts  share.ts  haptics.ts   # módulos nativos: um arquivo cada
+├── stores/                        # Zustand + AsyncStorage: preferencesStore.ts, syncQueueStore.ts, passportCacheStore.ts
+├── domain/                        # regras puras: recommend.ts, streak.ts, bingo.ts, monthlyGoal.ts, openingHours.ts, safety.ts
+├── theme/                         # tokens.ts, typography.ts, fonts.ts
+├── i18n/
+│   ├── index.ts                   # init do i18next + idioma do aparelho
+│   ├── format.ts                  # Intl (cache por idioma)
+│   └── locales/                   # pt-BR.json (base), en.json, es.json
+├── types/                         # database.ts (Supabase) + tipos de domínio
+└── utils/                         # helpers genéricos sem domínio (ex.: uuid.ts, clamp.ts)
+```
+
+Testes ficam **ao lado do arquivo testado** (`streak.test.ts`, `FloatingTabBar.test.tsx`); só a integração do banco fica em `tests/db/`. O alias `@/*` → `src/*` já existe no `tsconfig.json` (assim como `@/assets/*` → `assets/*`).
+
+### 4.2 Quem pode importar quem
+
+Sentido único, de cima para baixo. Uma seta quebrada é erro de revisão.
+
+| Camada | Pode importar | **Não** pode importar |
+|---|---|---|
+| `app/` | `components`, `hooks`, `providers`, `theme`, `i18n`, `types` | `services`, `stores`, `lib`, `domain` direto (passa por hook) |
+| `components/features/` | `components/ui`, `hooks`, `theme`, `i18n`, `types` | `services`, `lib`, outras `features/` |
+| `components/ui/` | `theme`, `i18n`, `types`, `utils` | `hooks` de domínio, `services`, `domain`, `features/` |
+| `hooks/` | `services`, `stores`, `domain`, `i18n`, `types`, `utils` | `components`, `app` |
+| `providers/` | `services`, `stores`, `lib` (só o necessário para iniciar), `i18n` | `components/features` |
+| `services/` | `lib`, `domain`, `types`, `utils` | `hooks`, `components`, `stores`, `app` |
+| `stores/` | `types`, `utils` | `services`, `components`, `hooks` |
+| `domain/` | só `types` e `utils` | React, Expo, Supabase, `services`, `stores` |
+| `lib/`, `theme/`, `utils/`, `types/` | nada do projeto acima deles (`types` pode ser importado por todos) | — |
+
+Notas:
+
+- `app/` usa **hooks**, e é o hook que combina `services` + React Query + `stores` + `domain`. Isso mantém as telas finas.
+- `features/` isoladas entre si: o que for compartilhado sobe para `components/ui/` (se genérico) ou vira hook (se tiver regra).
+- Sem barris (`index.ts` que reexportam tudo). Barril só em `services/<assunto>/index.ts`, que é a **API pública** do assunto; o restante importa pelo caminho do arquivo, para não puxar código à toa no Metro.
+- O `FloatingTabBar` (`ui/`) recebe os itens por props e não importa as rotas; quem liga o dock às rotas é `app/(tabs)/_layout.tsx`.
+- Se a regra da tabela for violada por necessidade real, atualizar **primeiro** este documento.
+
+### 4.3 Onde colocar o quê (decisões rápidas)
+
+| Preciso de… | Vai para… |
+|---|---|
+| Uma regra de negócio ("este lugar está aberto?") | `domain/` (função pura + teste) |
+| Chamar o Supabase ou um módulo nativo | `services/` (com versão em memória se for mockável) |
+| Estado vindo do servidor (catálogo, carimbos, cota) | hook com React Query em `hooks/` |
+| Preferência ou fila offline persistida | `stores/` |
+| Um botão ou chip genérico | `components/ui/` |
+| Um card de lugar, o ingresso, a grade do bingo | `components/features/<tela>/` |
+| Um texto visível | `i18n/locales/*.json` (nunca no componente) |
+| Cor, espaço, raio, fonte | `theme/` |
+| Uma tela nova | `src/app/<nome-em-kebab>.tsx`, fina, só juntando hooks e componentes |
+
+## 5. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- Estrutura de pastas definitiva
 - Mapa de navegação e deep links
 - ADR da tab bar (dock flutuante) e `useDockInset()`
 - ADR da estratégia de estado

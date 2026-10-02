@@ -167,6 +167,17 @@ Os nomes dos tokens são em inglês (`colors.<token>` em `src/theme/tokens.ts`).
 | `shadow.dock` | `0 12 32 rgba(20,20,20,.28)` + `0 2 6 rgba(20,20,20,.18)` | sombra da tab bar flutuante |
 
 - **Fontes:** Bricolage Grotesque 700/800 (títulos, CTAs, números), Instrument Sans 400–700 (corpo), DM Mono 400/500 (rótulos em CAIXA ALTA, letter-spacing 0.08em).
+- **Escala tipográfica (decisão de 02/10/2026):** o protótipo usa ~18 tamanhos; o app consolida o **corpo e os rótulos em 4 tamanhos**, conforme a regra `ui-styling` da `vercel-react-native-skills`, e mantém os **tamanhos de display** do protótipo:
+
+  | Token | Tamanho | Substitui no protótipo | Uso |
+  |---|---|---|---|
+  | `size.xs` | 12 | 11, 12, 13 | rótulos mono em CAIXA ALTA, tags, legendas, pílulas |
+  | `size.sm` | 14 | 14, 15 | corpo, chips, botões secundários, label do dock |
+  | `size.md` | 16 | 16, 17, 18 | parágrafos de destaque, títulos de card, preço do plano |
+  | `size.lg` | 20 | 19, 20, 21 | CTAs principais |
+  | `display.*` | 28, 32, 34, 38, 44, 50, 64 | iguais ao protótipo | títulos de tela, estatísticas, "Carimbo novo!", "Nº 14" |
+
+  Dentro do mesmo tamanho, a hierarquia vem de **peso e cor**, como pede a skill.
 - **Forma:** bordas sólidas de 2px na cor `ink`; pílulas com raio 999; botões com raio 14/16/18; cards com raio 20/24.
 - **Layout:** padding de 52 em cima e 20 nas laterais; CTA principal com 58–62 de altura; alvos de toque ≥ 44.
 
@@ -254,7 +265,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 - [x] 🧭 ARCH: invocar `react-native-architecture` e resumir em `docs/ARCHITECTURE.md` os padrões adotados.
 - [x] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARCHITECTURE.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
-- [ ] Definir a **estrutura de pastas** em `docs/ARCHITECTURE.md`. Proposta inicial, a validar com a skill:
+- [x] Definir a **estrutura de pastas** em `docs/ARCHITECTURE.md`. Proposta inicial, a validar com a skill:
   ```
   supabase/                      # SEM CLI: tudo aqui é aplicado pelo usuário no dashboard
   ├── sql/                       # 001_initial_schema.sql, 002_rls_policies.sql... (SQL Editor, em ordem)
@@ -276,6 +287,8 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   │   │   ├── passport.tsx       # Passaporte
   │   │   └── crew.tsx           # Turma
   │   ├── suggestion.tsx         # Sugestão (Stack push)
+  │   ├── place/[id].tsx         # deep link role://place/<id>
+  │   ├── +not-found.tsx         # rota inexistente (deep link inválido)
   │   ├── stamp.tsx              # Carimbo (fullScreenModal)
   │   ├── feedback.tsx           # "Como foi?" (modal)
   │   ├── report-problem.tsx     # "Informar problema" (modal)
@@ -350,13 +363,20 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 **Design system**
 - [ ] `src/theme/tokens.ts` com cores, espaçamentos, raios, bordas e alturas de toque (ver tabela acima).
 - [ ] Carregar as fontes Bricolage Grotesque, Instrument Sans e DM Mono (via `expo-font`/`@expo-google-fonts`) e segurar a splash até elas carregarem.
-- [ ] `src/theme/typography.ts` com as variantes: `display`, `title`, `cta`, `body`, `label` (mono em caixa alta) e `stat`.
+- [ ] `src/theme/typography.ts` com a escala da seção "Escala tipográfica": `size.xs/sm/md/lg` (12/14/16/20) para corpo e rótulos, e `display.*` com os tamanhos grandes do protótipo. Variantes prontas para uso: `display`, `title`, `cta`, `body`, `label` (mono em caixa alta) e `stat`. Nenhum `fontSize` solto fora desse arquivo.
 - [ ] Ícones SVG do protótipo como componentes (`Logo`, `Bolt`, `Compass`, `Passport`, `Users`, `Arrow`, `Back`, `Close`, `Pin`, `Clock`, `Wallet`, `Smile`, `Refresh`, `Calendar`, `Share`, `Check`), mais `Settings`, `Flag` (informar problema) e `WifiOff`.
 - [ ] Componentes `ui/`: `Button` (primary, outline, cream), `Chip` (seleção única, `aria-pressed` → `accessibilityState`), `SegmentedGrid`, `Pill`, `SectionLabel`, `Card`, `TicketDivider` (picote), `ProgressSegments`, `EmptyState`, `ErrorState`, `OfflineBanner`.
 - [ ] Componente `FloatingTabBar` (`src/components/ui/FloatingTabBar.tsx`, o dock) fiel à seção "Tab bar — dock flutuante":
   - pílula `ink` absoluta com sombra `shadow.dock` (no Android, conferir `boxShadow`/`elevation` e se a sombra fica parecida);
   - item ativo expandido em `yellow` com ícone e label; inativos de 64 só com ícone `sand`;
-  - **animação** de troca: o item ativo encolhe e o novo expande (largura e cor) com Reanimated, mais um haptic leve opcional. Seguir as regras `animation-` da `vercel-react-native-skills` (animar só no thread de UI, sem re-render por frame);
+  - **animação de troca só com `transform` e `opacity`** (regra `animation-gpu-properties`, **sem exceção**). O truque é que a largura do item ativo é **constante**: `largura útil − (n−1) × 64 − (n−1) × 4`, ou seja, 338 − 128 − 8 = **202** num aparelho de 390. Assim:
+    - a pílula amarela é **um único elemento** de largura fixa, posicionado de forma absoluta, que **desliza** com `translateX` até `índiceAtivo × (64 + 4)`;
+    - cada ícone **desliza** com `translateX` até a posição do seu slot (antes, dentro ou depois do item ativo), e a cor muda de `sand` para `ink` por `interpolateColor`;
+    - o label **aparece e some** com `opacity` (e um pequeno `translateX`, se ajudar);
+    - um shared value `activeIndex` animado com spring é a única fonte de verdade (`state-ground-truth`), e as posições saem por `interpolate`;
+    - a largura útil é medida uma vez com `onLayout` no container (`ui-measure-views`). A largura de cada label é medida por idioma, para centralizar o conjunto ícone + label, e é refeita ao trocar de idioma;
+    - as áreas de toque seguem o layout final de cada estado, e o haptic leve é opcional;
+    - **não** usar `scaleX` para esticar a pílula, porque isso deforma os cantos arredondados;
   - acessibilidade: `accessibilityRole="tab"`, `accessibilityState={{ selected }}` e `accessibilityLabel` traduzido nos itens só com ícone;
   - i18n: o label ativo usa `t()` e o teste de layout cobre o maior label entre os idiomas ("Passaporte" / "Passport" / "Pasaporte").
 - [ ] Hook `useDockInset()` (`src/hooks/useDockInset.ts`), que devolve o recuo inferior (base de 106 + safe area) para as telas com tabs.
@@ -737,6 +757,8 @@ _(vazio — o bloqueio "Supabase local indisponível" foi resolvido em 02/10/202
 | 2026-10-02 | 0 | Conferir Supabase CLI e Docker | — | Supabase CLI **não instalado**; Docker 29.8.1 instalado, mas o daemon (Docker Desktop) não está rodando. Registrado em Bloqueios; loop parado | `9a614c6` |
 | 2026-10-02 | 0 | Fim da fase: critérios de saída | — | Usuário confirmou "Fase 0 ok" (👀). Bloqueio removido. Fase 00 integrada na main, pronta para push manual | `9a614c6`, `1161601`, merge `a7e2fb8` |
 | 2026-10-02 | 1 | 🧭 ARCH: resumir padrões em `docs/ARCHITECTURE.md` | `react-native-architecture` (lido `references/details.md`) | Criado `docs/ARCHITECTURE.md` com os 6 padrões da skill, divergências do projeto (kebab-case, SVG próprio, `expo-image`, sessão do Supabase, tema só claro, tab bar custom) e regras de camadas. Só documentação; `tsc` e lint verdes | `9df20e9` |
-| 2026-10-02 | — | Revisão do plano (feita pelo usuário com o Claude, fora do loop) | — | Supabase só pelo dashboard web (sem CLI/Docker/local, handoffs 🖐, testes `test:db` + checagens SQL); bloqueio do CLI/Docker removido; o loop não roda o app (critérios 👀 verificados pelo usuário); nomenclatura em inglês | entra no próximo commit do loop |
-| 2026-10-02 | — | Revisão do plano (fora do loop) | `react-native-architecture` | Nomes de arquivo passam a seguir a skill: `PascalCase.tsx` para componentes e providers, `useX.ts` para hooks, `camelCase.ts` para o resto; rotas de `src/app/` seguem em kebab-case. Pasta `providers/` adicionada. A linha de divergência do `docs/ARCHITECTURE.md` foi corrigida | entra no próximo commit do loop |
-| 2026-10-02 | 1 | ⚡ VRN: seção "Convenções de implementação" em `docs/ARCHITECTURE.md` | `vercel-react-native-skills` (lido `AGENTS.md` compilado com as 38 regras) | Nova seção 3 com as regras por prefixo (`rendering-`, `list-performance-`, `animation-`, `navigation-`, `ui-`, `react-state-`, `react-compiler-`, `design-system-`, `js-`, `fonts-`) e a tabela de 7 exceções (tabs custom, largura animada só no dock, `useFonts` até a Fase 13, padding em vez de `contentInset`, escala tipográfica própria, grades fixas sem virtualizador, sem `memo`/`useCallback` por padrão). Pendência anotada: conferir `runOnJS` × `scheduleOnRN` na doc do Reanimated 4 antes de usar. Só documentação | este commit |
+| 2026-10-02 | — | Revisão do plano (feita pelo usuário com o Claude, fora do loop) | — | Supabase só pelo dashboard web (sem CLI/Docker/local, handoffs 🖐, testes `test:db` + checagens SQL); bloqueio do CLI/Docker removido; o loop não roda o app (critérios 👀 verificados pelo usuário); nomenclatura em inglês | `afcfc4c` |
+| 2026-10-02 | — | Revisão do plano (fora do loop) | `react-native-architecture` | Nomes de arquivo passam a seguir a skill: `PascalCase.tsx` para componentes e providers, `useX.ts` para hooks, `camelCase.ts` para o resto; rotas de `src/app/` seguem em kebab-case. Pasta `providers/` adicionada. A linha de divergência do `docs/ARCHITECTURE.md` foi corrigida | `afcfc4c` |
+| 2026-10-02 | 1 | ⚡ VRN: seção "Convenções de implementação" em `docs/ARCHITECTURE.md` | `vercel-react-native-skills` (lido `AGENTS.md` compilado com as 38 regras) | Nova seção 3 com as regras por prefixo (`rendering-`, `list-performance-`, `animation-`, `navigation-`, `ui-`, `react-state-`, `react-compiler-`, `design-system-`, `js-`, `fonts-`) e a tabela de 7 exceções (tabs custom, largura animada só no dock, `useFonts` até a Fase 13, padding em vez de `contentInset`, escala tipográfica própria, grades fixas sem virtualizador, sem `memo`/`useCallback` por padrão). Pendência anotada: conferir `runOnJS` × `scheduleOnRN` na doc do Reanimated 4 antes de usar. Só documentação | `afcfc4c` |
+| 2026-10-02 | — | Revisão do plano (fora do loop) | `vercel-react-native-skills` | Duas exceções revistas: (1) o dock passa a seguir `animation-gpu-properties` sem exceção (largura ativa constante; animação por `translateX`/`opacity`); (2) a escala tipográfica segue `ui-styling` no corpo (4 tamanhos: 12/14/16/20), e só os tamanhos de display do protótipo continuam como exceção. Plano e `docs/ARCHITECTURE.md` atualizados | entra no próximo commit do loop |
+| 2026-10-02 | 1 | Definir a estrutura de pastas | `react-native-architecture` | Nova seção 4 em `docs/ARCHITECTURE.md`: árvore validada contra a skill (sem `(auth)`; acrescenta `place/[id].tsx` e `+not-found.tsx`), tabela de quem pode importar quem, regra de barris só em `services/<assunto>/index.ts` e guia "onde colocar o quê". Arquivos de classe seguem a nomenclatura (`supabasePlacesRepository.ts`). Também entram as revisões feitas pelo usuário fora do loop (dock sem exceção, escala tipográfica). Só documentação | este commit |
