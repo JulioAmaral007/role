@@ -724,10 +724,10 @@ Funções puras que recebem o `Locale` (e não leem estado global), com testes. 
 
 | Helper | Saída (pt-BR) | Implementação |
 |---|---|---|
-| `formatStampDate(date, tz)` | `02 · 10 · 2026` | Partes numéricas montadas à mão (dia e mês com 2 dígitos, ano), independentes do `Intl`, para o carimbo ser idêntico em qualquer aparelho |
+| `formatStampDate(date, tz)` | `02 · 10 · 2026` | Texto montado à mão (dia e mês com 2 dígitos, ano). Os números do dia no fuso vêm de `Intl.DateTimeFormat('en-US', { timeZone })` lido por regex (sem `formatToParts`, opção (a) da seção 13.5); o formato `en-US` é estável, então o carimbo sai igual em qualquer idioma |
 | `formatWeekdayShort(date, locale, tz)` | `SEX · 02 OUT` | `Intl.DateTimeFormat` com `weekday: 'short'` e `month: 'short'`, em maiúsculas e sem o ponto final (`sex.` → `SEX`). **Não** usa `formatToParts`. Se aparelhos divergirem no 👀, os nomes curtos passam para o JSON |
 | `formatDate(date, locale, tz)` | `2 de outubro` | `Intl.DateTimeFormat` |
-| `formatCurrency(value, locale)` | `R$ 30,00` / `R$30.00` | `Intl.NumberFormat` com `currency: 'BRL'` sempre (D10); só o formato segue o idioma |
+| `formatCurrency(value, locale)` | `R$ 30,00` / `R$30.00` | Sempre BRL (D10). `Intl.NumberFormat` decimal com 2 casas e o prefixo `R$` montado à mão (espaço não separável em pt-BR e es, sem espaço em en). **Não** usa `style: 'currency'`: em `es` ele escreve `0,00 BRL` no lugar do símbolo (verificado), e `narrowSymbol` não é garantido no Hermes |
 | `formatDistance(meters, locale)` | `1,8 km` / `1.8 km`; abaixo de 1 km, `350 m` | `Intl.NumberFormat` decimal (1 casa) + símbolo `km`/`m`, sem `style: 'unit'` (suporte incerto no iOS) |
 | ordinais | `3ª` | `t(..., { ordinal: true })` (10.4) |
 
