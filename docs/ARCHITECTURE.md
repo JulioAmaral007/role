@@ -567,11 +567,107 @@ createClient(url, publishableKey, {
 | Detalhe de API divergir da doc (polyfill, nome de variável, JWT da função) | Conferir a doc atual no início de cada tarefa de banco/auth, antes de escrever |
 | Anônimos acumulando sem limpeza | Sem custo relevante no MVP; script manual se preciso |
 
-## 9. Itens detalhados nas próximas tarefas da Fase 1
+## 9. ADR — Estratégia offline-first
+
+**Status:** aceito em 02/10/2026. **Base:** Pattern 3 da skill `react-native-architecture` (React Query offline-first), a doc atual do TanStack Query (`persistQueryClient`, guia de React Native), a doc do `expo-network` no SDK 57 e as seções 7 (estado) e 8 (Supabase) deste documento.
+
+### 9.1 O que funciona sem internet
+
+| Recurso | Offline? | Como |
+|---|---|---|
+| Abrir o app e ver o **Passaporte** (ofensiva, meta, bingo, carimbos) | Sim | Carimbos e catálogo vêm do cache persistido do React Query, somados aos itens pendentes da `syncQueueStore` |
+| **Criar um carimbo** ("Bora, tô indo") | Sim | Vai para a fila e aparece já no passaporte; envio quando a conexão voltar |
+| Ver o catálogo, a **Ajustes**, trocar o idioma | Sim | Cache e store local |
+| **Pedir uma sugestão nova** ("Me tira da inércia", "Outra") | **Não** | A cota é do servidor (D12). Tela clara de "sem conexão", **sem gastar cota** |
+| Primeira abertura **sem** internet | Não | Não há sessão nem catálogo; mostra o estado de "sem conexão" com "Tentar de novo" |
+| Informar problema, "Como foi?", fake door do Plus | Parcial | Entram na mesma fila (ver 9.6); sem internet ficam guardados |
+
+Pelo desenho do plano, **a sugestão é a única coisa que exige rede**, e ela só é pedida depois que o usuário toca no CTA.
+
+### 9.2 Conectividade
+
+- **Fonte:** `expo-network` (módulo oficial do Expo, SDK 57), no lugar do `@react-native-community/netinfo` que a skill usa. Motivo: `AGENTS.md` pede preferir módulos do Expo, e a doc do TanStack tem o mesmo exemplo com `expo-network` (`addNetworkStateListener` + `getNetworkStateAsync` para o estado inicial).
+- **Ligação com o React Query** (um módulo, `src/lib/onlineManager.ts`, importado uma vez pelo `QueryProvider`): `onlineManager.setEventListener` alimentado pelo `expo-network`, e `focusManager.setFocused(state === 'active')` alimentado pelo `AppState` (o React Query não detecta foco sozinho no celular).
+- **Limite conhecido:** no iOS, `isInternetReachable` é igual a `isConnected`, e um Wi-Fi sem saída para a internet aparece como "online". Por isso **estar online nunca é prova de sucesso**: todo envio trata falha de rede (9.5) e a tela de sugestão trata erro de rede (9.4), além do estado do `expo-network`.
+- Hook `useIsOnline()` (`src/hooks/useIsOnline.ts`): lê o `onlineManager` com `useSyncExternalStore`. É o que alimenta o `OfflineBanner` (Fase 2) e a decisão de desabilitar o CTA.
+
+### 9.3 Cache de servidor (React Query persistido)
+
+- **Provider:** `PersistQueryClientProvider` (`providers/QueryProvider.tsx`) com `createAsyncStoragePersister` (`@tanstack/query-async-storage-persister`), chave `role.queryCache`.
+- **O que persiste** (lista branca por `shouldDehydrateQuery`, só queries com `status === 'success'` e `meta: { persist: true }`):
+
+  | Query | Persiste? | `staleTime` | Observação |
+  |---|---|---|---|
+  | `places(cityId, locale)` (catálogo + traduções + horários) | **sim** | 6 h | Muda pouco; revalida ao voltar ao primeiro plano |
+  | `stamps(userId)` | **sim** | 5 min | O passaporte offline depende dele |
+  | `quota(userId)` | **não** | 0 | A cota é autoridade do servidor; um número velho enganaria. Offline a Home esconde o contador |
+  | `profile`, `place feedback` etc. | não | — | Pouco valor offline |
+
+- **Tempos:** `maxAge` do persister **7 dias** e `gcTime` do `QueryClient` **≥ 7 dias** (a doc exige `gcTime ≥ maxAge`, senão o cache é descartado antes). `networkMode: 'offlineFirst'` nas **queries**: usa o cache e tenta a rede; sem rede, não fica em laço de retry.
+- **`buster`:** `CACHE_VERSION` (constante em `src/lib/queryClient.ts`), incrementada **sempre que o formato de uma query persistida mudar**. Cache com `buster` diferente é descartado na hora (mesma regra de `version`+`migrate` dos stores, seção 7.4).
+- **Idiomas:** a chave leva o `locale`, então trocar de idioma cria outra entrada. Ao trocar, as entradas de `places` de **outros** idiomas são removidas (`removeQueries`), para o cache não crescer com três cópias.
+- **Hidratação:** o `_layout` raiz segura a splash também até o cache ser restaurado (`useIsRestoring()` falso), somando-se ao que a seção 7.5 já exige (stores, fontes, i18n).
+- **Limpeza:** "apagar meus dados" (seção 8.8) chama `queryClient.clear()` e `persister.removeClient()`.
+- **Fotos:** `expo-image` com `cachePolicy="disk"` guarda no aparelho as fotos já vistas. **Não** se pré-baixa a cidade inteira no MVP; foto não vista e offline mostra o placeholder listrado.
+
+### 9.4 Sugestão exige internet (e como não gastar cota à toa)
+
+1. O CTA "Me tira da inércia" fica ativo mesmo offline, porque o aviso é mais útil que um botão morto. Ao tocar, o hook `useSuggestion` consulta `onlineManager.isOnline()`: se **offline**, abre o estado `OfflineState` na própria tela de sugestão (ícone `WifiOff`, texto e "Tentar de novo"), **sem chamar o servidor**.
+2. `consume_suggestion` é uma mutação com `networkMode: 'always'` e **sem retry automático**. O padrão do React Query (`online`) **pausaria** a mutação offline e a tela ficaria presa; aqui queremos falhar rápido.
+3. **Resposta perdida:** se a rede cair depois do servidor processar, o cliente vê erro mas a cota já foi gasta. Para o "Tentar de novo" **não cobrar duas vezes**, o cliente gera um `request_id` (uuid) por tentativa lógica e o reenvia; o servidor ignora repetições do mesmo `request_id`. **Entrada para a tarefa de banco (Fase 4):** `consume_suggestion(place_id, request_id uuid)` com índice único em `suggestion_events (user_id, request_id)` e retorno idêntico na repetição.
+4. A tela só mostra o card depois da resposta `allowed = true`; `allowed = false` abre o Plus (regra de negócio, sem mudar nada aqui).
+
+### 9.5 Fila de carimbos (`syncQueueStore`)
+
+Já definida na seção 7.3; aqui o comportamento.
+
+- **Criar o carimbo:** o cliente gera `id` (uuid v4, `expo-crypto`), o `number` e `stampedAt` e chama `enqueueStamp`. O carimbo aparece na hora (o passaporte junta cache + fila, seção 7.3). O **`number`** é atribuído no cliente como "total confirmado + pendentes + 1".
+  - **Entrada para a tarefa de banco (Fase 4):** `stamps.id` é a chave primária e a base da idempotência. **Não** criar índice único em `(user_id, number)` no MVP, para uma colisão de numeração (só possível com mais de um aparelho, Fase 15) nunca virar carimbo perdido; a renumeração por ordem de `stamped_at` fica para a Fase 15.
+  - **Entrada para a tarefa de banco (Fase 4):** a policy de leitura de `places` precisa deixar o usuário ler lugares **inativos que ele já carimbou** (`active or exists (select 1 from stamps ...)`), para o passaporte não perder o nome de um lugar que saiu do catálogo.
+- **Envio** (`useSyncQueue`, em `hooks/`, une `stores` + `services`): `upsert` em lote com `onConflict: 'id'` e `ignoreDuplicates: true` (idempotente: reenviar o mesmo `id` não duplica). Roda com **trava de execução única** (se já está enviando, não começa outra).
+- **Quando roda:** (a) ao abrir o app, depois de sessão e stores prontos; (b) quando o `onlineManager` volta a `online`; (c) quando o app volta ao primeiro plano; (d) logo após um `enqueueStamp`; (e) por um timer de reenvio com **backoff exponencial** (5 s, 15 s, 45 s... até 5 min) enquanto houver item pendente e o app estiver em primeiro plano. **Sem tarefa em segundo plano no MVP** (`expo-background-task` fica como evolução).
+- **Sucesso:** `acknowledge(id)` remove o item e `invalidateQueries(stamps)` traz a versão do servidor.
+- **Falha de rede/timeout/5xx:** o item **fica**, `attempts` sobe e o backoff continua. Isso nunca é erro para o usuário.
+- **Falha permanente** (4xx do servidor, como violação de RLS ou de chave estrangeira): `markFailed(id)` guarda o motivo; o item **não é reenviado** sozinho. O app **não perde o carimbo**: ele continua aparecendo no passaporte com o estado "não enviado", e o evento `stamp_sync_failed` (Fase 13) mede quantos casos existem.
+- **Teto:** no máximo **50** itens pendentes (mais do que isso, só acontece com um bug); acima disso `enqueueStamp` ainda aceita, mas dispara o evento e o log, para a gente descobrir cedo.
+- **Lógica pura em `domain/syncQueue.ts`:** escolher o próximo lote, calcular o backoff e classificar o erro (`retry` × `permanent`) ficam em funções puras e testáveis; o hook só orquestra.
+
+### 9.6 Outras escritas
+
+`place_reports`, `place_feedback` e `plus_interest` são inserts simples, sem número e sem cota. Usam o **mesmo mecanismo** de fila (cada item com `id` uuid e `kind`), generalizando a `syncQueueStore` (`kind: 'stamp' | 'report' | 'feedback' | 'plusInterest'`), para o app não precisar de uma fila por assunto. O MVP **começa só com `stamp`**; os outros tipos entram na fase de cada tela, reutilizando o envio idempotente. Eventos de analytics (`events`) usam um buffer próprio e **descartável** (Fase 13): perder um evento é aceitável, perder um carimbo não.
+
+### 9.7 Sessão e conflitos
+
+- **Sessão offline:** o `supabase-js` guarda a sessão no AsyncStorage (seção 8.4). Se o refresh falhar por falta de rede, a sessão local continua válida; as consultas voltam a funcionar quando a rede volta.
+- **Sem conflitos de edição:** carimbo é **só criado**, nunca editado, e há um aparelho por usuário no MVP. O `id` do cliente resolve a duplicidade; não é preciso resolver conflito de versão.
+- **Relógio do aparelho:** `stampedAt` vem do relógio local. O servidor guarda também `created_at` próprio, e a ofensiva usa `stamped_at`; adiantar o relógio para ganhar ofensiva é aceito no MVP (sem competição entre usuários).
+
+### 9.8 Dependências e testes
+
+- **Dependências** (instaladas na Fase 5, via `npx expo install`): `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`, `expo-network`, `expo-crypto`. **Sem** `@react-native-community/netinfo`. A tarefa de dependências planejadas consolida a lista.
+- **Testes:**
+  - `domain/syncQueue.ts`: lote, backoff e classificação de erro, com jest puro;
+  - `useSyncQueue`: service em memória que falha na rede e depois funciona, conferindo que o item sai da fila só no sucesso e que reenviar não duplica;
+  - `QueryProvider`: só `places` e `stamps` entram no cache persistido (`quota` não);
+  - `test:db`: reenviar o mesmo `id` de `stamps` não duplica, e repetir o `request_id` do `consume_suggestion` não gasta cota de novo.
+- **Verificação 👀 (Fase 5/9):** modo avião → abrir o app e ver o passaporte; criar um carimbo offline; religar a rede e ver o envio; tentar sugestão offline e ver o `OfflineState` sem perder cota.
+
+### 9.9 Riscos
+
+| Risco | Tratamento |
+|---|---|
+| Wi-Fi "conectado" sem internet engana o `expo-network` | Falha de rede tratada em cada chamada; `onlineManager` só decide a UX inicial |
+| Cota cobrada duas vezes por resposta perdida | `request_id` idempotente em `consume_suggestion` (9.4) |
+| Carimbo "preso" por erro permanente | Estado "não enviado" visível + evento `stamp_sync_failed`; sem descarte silencioso |
+| Cache crescer (3 idiomas, muitos lugares) | Lista branca de queries, remoção de outros idiomas, `maxAge` de 7 dias, `buster` |
+| Cache velho incompatível após atualizar o app | `CACHE_VERSION` incrementada a cada mudança de formato |
+| Splash demorar para hidratar tudo | Medir na Fase 13; reserva `expo-sqlite/kv-store` (seção 7.2) |
+| Perder dados ao reinstalar | Fila e cache vivem no aparelho; o que já foi enviado está no servidor, o resto se perde (aceito no MVP, 8.3) |
+
+## 10. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- Estratégia offline-first
 - Estratégia de i18n
 - Estratégia de testes
 - Ambientes e segredos
