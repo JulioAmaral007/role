@@ -194,7 +194,7 @@ src/
 │   ├── places/                    # placesRepository.ts (interface), supabasePlacesRepository.ts, inMemoryPlacesRepository.ts, index.ts
 │   ├── stamps/  quota/  feedback/  reports/  analytics/
 │   └── location.ts  notifications.ts  share.ts  haptics.ts   # módulos nativos: um arquivo cada
-├── stores/                        # Zustand + AsyncStorage: preferencesStore.ts, syncQueueStore.ts, passportCacheStore.ts
+├── stores/                        # Zustand + AsyncStorage: preferencesStore.ts, syncQueueStore.ts, suggestionSessionStore.ts (ver ADR da seção 7)
 ├── domain/                        # regras puras: recommend.ts, streak.ts, bingo.ts, monthlyGoal.ts, openingHours.ts, safety.ts
 ├── theme/                         # tokens.ts, typography.ts, fonts.ts
 ├── i18n/
@@ -376,11 +376,89 @@ Isso é a exceção já registrada à regra `navigation-native-navigators` (seç
 | Conteúdo escondido atrás do dock | `useDockInset()` obrigatório em toda tela de aba |
 | Aparelho com largura bem menor | A largura ativa sai da largura medida (`338 − 128 − 8` em 390); mínimo a validar no 👀 |
 
-## 7. Itens detalhados nas próximas tarefas da Fase 1
+## 7. ADR — Estratégia de estado
+
+**Status:** aceito em 02/10/2026. **Base:** skill `react-native-architecture` (padrão 3, React Query offline-first), regras `react-state-*` e `state-ground-truth` da `vercel-react-native-skills` (seção 3.6) e a doc atual do Zustand v5 (`persist`, `createJSONStorage`, hidratação).
+
+### 7.1 Decisão
+
+| Tipo de estado | Ferramenta | Exemplos |
+|---|---|---|
+| **Servidor** (a verdade está no Supabase) | **React Query** (`@tanstack/react-query` + persister em AsyncStorage) | catálogo da cidade, carimbos, cota |
+| **Local persistido** (a verdade está no aparelho) | **Zustand v5** com o middleware `persist` + `AsyncStorage` | idioma, onboarding, filtros do Rolê, fila offline de carimbos |
+| **Local efêmero** (some ao fechar o app) | **Zustand sem `persist`** ou `useState` | lugares já vistos na sessão, lugar atual da sugestão |
+| **De tela** (um componente só) | `useState`/`useReducer` | chip em foco, modal aberto |
+| **Derivado** | **calculado no render ou no hook**, nunca guardado | cota restante, ofensiva, progresso da meta, células do bingo, resumo do filtro |
+
+Regra de ouro (seção 2, regra 5): **o mesmo dado nunca vive em dois lugares**. Se vem do servidor, é do React Query; o store não faz cópia dele.
+
+### 7.2 Por que Zustand (e não outra coisa)
+
+| Alternativa | Por que não |
+|---|---|
+| Context + `useReducer` | Todo consumidor re-renderiza a cada mudança; ruim para listas e para o dock. Fica só para dado quase estático (i18n, sessão) |
+| Redux Toolkit | Mais cerimônia do que o app precisa (3 stores pequenos); sem ganho para o MVP |
+| Jotai | Bom, mas a persistência e o modelo de "um store por assunto" casam melhor com Zustand; a skill e as regras de lista já citam seletores do Zustand |
+| MMKV | Módulo nativo: exige development build e não roda no Expo Go. A leitura síncrona não compensa agora |
+| `expo-sqlite/kv-store` | Existe como substituto do AsyncStorage no SDK 57 (inclusive com API síncrona, e roda no Expo Go), mas adiciona um módulo. **Reserva:** se a hidratação assíncrona do AsyncStorage causar atraso perceptível na abertura, trocar o `storage` do `persist` por ele, sem mudar mais nada |
+
+Zustand v5 + `persist` é pequeno, tipado, usa seletor por padrão (regra `list-performance-item-expensive` e `react-state-minimize`) e funciona bem com o React Compiler.
+
+### 7.3 Stores do MVP (`src/stores/`)
+
+| Store (arquivo) | Persistido? | Conteúdo |
+|---|---|---|
+| `preferencesStore.ts` | **sim** (`role.preferences`, `version: 1`) | `language` (`'system'` \| `'pt-BR'` \| `'en'` \| `'es'`; começa `'system'`), `onboardingDone`, `mood`/`timeSlot`/`budget` (começam `undefined`, regra `react-state-fallback`), preferências de notificação |
+| `syncQueueStore.ts` | **sim** (`role.syncQueue`, `version: 1`) | fila de carimbos ainda não enviados: `{ id (uuid), placeId, number, stampedAt, attempts }[]`, com `enqueue`, `acknowledge(id)` e `markFailed(id)` |
+| `suggestionSessionStore.ts` | **não** | ids de lugares já mostrados nesta sessão (para "sortear sem repetir") e o lugar atual |
+
+Observações:
+
+- **Sem `passportCacheStore`.** A árvore inicial previa um cache do passaporte em store; ele **duplicaria** os carimbos que já ficam no cache persistido do React Query. O passaporte offline vem do cache do React Query **mais** os itens pendentes da `syncQueueStore`, juntados por um hook (`usePassport`) com `domain/`.
+- **Localização não é persistida.** As coordenadas ficam só em memória (hook de localização), nunca em store persistido nem enviadas ao servidor (regra de privacidade do plano).
+- O idioma efetivo é derivado: `language === 'system' ? idioma do aparelho : language`; o store guarda só a **escolha** do usuário.
+
+### 7.4 Regras de uso do Zustand
+
+1. **Sempre seletor:** `usePreferencesStore((s) => s.language)`. Nunca ler o store inteiro. Seletor que devolve objeto ou array novo usa `useShallow` (obrigatório no v5, senão há re-render em laço).
+2. **Ações no próprio store**, nomeadas por intenção (`setLanguage`, `completeOnboarding`, `enqueueStamp`), e não `set` solto nas telas.
+3. **`partialize`** para persistir só dados, nunca funções nem estado transitório (`_hasHydrated`).
+4. **Versionar:** `version` + `migrate` em todo store persistido. Mudar o formato sem migração é erro de revisão.
+5. **Camadas (seção 4.2):** `stores/` só importa `types` e `utils`. **Não** chama `services/`. Quem une fila + rede é um hook (`useSyncQueue`), que pode importar `services` e `stores`.
+6. **Em listas:** o item lê o que precisa por seletor, em vez de receber do pai (seção 3.2).
+7. **Testes:** o estado se inspeciona e se reseta com `getState()`/`setState()`; o `AsyncStorage` entra com o mock oficial do pacote.
+
+### 7.5 Hidratação (o ponto sensível do `persist` com storage assíncrono)
+
+A doc do Zustand avisa que, com storage assíncrono, o store **não está hidratado no primeiro render** e mostraria os valores iniciais antes dos persistidos. Para o Rolê isso quebraria o gate de onboarding e o idioma. Decisão:
+
+- cada store persistido expõe se já hidratou (`persist.hasHydrated()` e `persist.onFinishHydration()`), encapsulado em um hook `useStoresHydrated()`;
+- o `_layout.tsx` raiz **mantém a splash** (`SplashScreen.preventAutoHideAsync`) até: store(s) hidratados, fontes carregadas e i18n inicializado (seção 5.3);
+- nenhum componente decide nada com base em valor de store antes disso.
+
+### 7.6 Estado de servidor (React Query): contrato
+
+O detalhe de cache e de offline fica na tarefa da estratégia offline-first; aqui só o contrato de uso:
+
+- **Chaves em uma fábrica** (`queryKeys.places(cityId, locale)`, `queryKeys.stamps(userId)`, `queryKeys.quota(userId)`), sempre com o **idioma** onde o conteúdo é traduzido.
+- Leitura vive em **hooks de `hooks/`** (`usePlaces`, `useStamps`, `useQuota`) que chamam `services/`; a tela nunca chama `useQuery` direto.
+- **Cota é autoridade do servidor:** `consume_suggestion()` é uma mutação **sem** atualização otimista; a UI espera a resposta.
+- **Carimbo é otimista por fila:** grava na `syncQueueStore` e aparece já no passaporte; o envio é `upsert` idempotente, e o sucesso remove o item da fila e invalida `stamps`.
+- Dados derivados do servidor (`useStreak`, `useBingo`, `useMonthlyGoal`) são hooks que aplicam `domain/` sobre o resultado do React Query; **não** são salvos em store.
+
+### 7.7 Riscos
+
+| Risco | Tratamento |
+|---|---|
+| Piscar de tela por hidratação assíncrona | Splash segurada até hidratar (7.5); reserva `expo-sqlite/kv-store` |
+| Formato do store mudar entre versões do app | `version` + `migrate` obrigatórios (7.4, regra 4) |
+| Fila offline crescer sem controle | `attempts` por item e teto a definir na estratégia offline (descartar ou alertar ao passar do limite) |
+| Duplicar dado entre React Query e store | Regra de ouro (7.1) e remoção do `passportCacheStore` |
+
+## 8. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- ADR da estratégia de estado
 - ADR da arquitetura Supabase
 - Estratégia offline-first
 - Estratégia de i18n
