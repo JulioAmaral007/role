@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { act, renderHook } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useLocales } from 'expo-localization';
 
 import i18n from '@/i18n';
@@ -48,9 +48,12 @@ describe('useLanguage', () => {
     expect(result.current.locale).toBe('es');
     expect(i18n.language).toBe('es');
     expect(i18n.t('tabs.passport')).toBe('Pasaporte');
-    expect(JSON.parse((await AsyncStorage.getItem(PREFERENCES_STORAGE_KEY)) ?? 'null')).toEqual({
-      state: { language: 'es' },
-      version: 1,
+    // o `persist` grava em segundo plano
+    await waitFor(async () => {
+      expect(JSON.parse((await AsyncStorage.getItem(PREFERENCES_STORAGE_KEY)) ?? 'null')).toEqual({
+        state: { language: 'es' },
+        version: 1,
+      });
     });
   });
 

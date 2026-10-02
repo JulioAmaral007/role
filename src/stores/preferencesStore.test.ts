@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { waitFor } from '@testing-library/react-native';
 
 import { PREFERENCES_STORAGE_KEY, usePreferencesStore } from './preferencesStore';
 
@@ -16,8 +17,9 @@ describe('preferencesStore', () => {
 
   it('saves the chosen language with the store version, and only data', async () => {
     usePreferencesStore.getState().setLanguage('es');
-    await Promise.resolve();
-    expect(await readSaved()).toEqual({ state: { language: 'es' }, version: 1 });
+    await waitFor(async () => {
+      expect(await readSaved()).toEqual({ state: { language: 'es' }, version: 1 });
+    });
   });
 
   it('restores the saved language when it hydrates', async () => {
