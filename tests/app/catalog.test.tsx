@@ -106,4 +106,23 @@ describe('catalog screen', () => {
     await fireEvent.press(screen.getByRole('tab', { name: 'Turma' }));
     expect(screen.getByRole('tab', { name: 'Turma', selected: true })).toBeOnTheScreen();
   });
+  it('draws the revised form components: switches, checkbox chips and the distance slider', async () => {
+    await renderCatalog();
+    expect(screen.getByRole('switch', { name: 'Só lugares acessíveis', checked: false })).toBeOnTheScreen();
+    expect(screen.getByRole('switch', { name: 'Lembrete semanal da ofensiva', checked: true })).toBeOnTheScreen();
+    expect(screen.getByRole('checkbox', { name: 'Balada', checked: true })).toBeOnTheScreen();
+    expect(screen.getByRole('adjustable', { name: 'Distância máxima' })).toBeOnTheScreen();
+  });
+
+  it('toggles a switch and a checkbox chip, and moves the slider by accessibility action', async () => {
+    await renderCatalog();
+    await fireEvent.press(screen.getByRole('switch', { name: 'Só lugares acessíveis' }));
+    expect(screen.getByRole('switch', { name: 'Só lugares acessíveis', checked: true })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Bar' }));
+    expect(screen.getByRole('checkbox', { name: 'Bar', checked: true })).toBeOnTheScreen();
+    await fireEvent(screen.getByRole('adjustable', { name: 'Distância máxima' }), 'accessibilityAction', {
+      nativeEvent: { actionName: 'increment' },
+    });
+    expect(screen.getByText('6 km')).toBeOnTheScreen();
+  });
 });

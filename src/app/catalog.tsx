@@ -33,16 +33,22 @@ import { UserPlus } from '@/components/ui/icons/UserPlus';
 import { Users } from '@/components/ui/icons/Users';
 import { Wallet } from '@/components/ui/icons/Wallet';
 import { WifiOff } from '@/components/ui/icons/WifiOff';
+import { Avatar } from '@/components/ui/Avatar';
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { ListRow } from '@/components/ui/ListRow';
+import { MultiChip } from '@/components/ui/MultiChip';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { Pill } from '@/components/ui/Pill';
 import { ProgressSegments } from '@/components/ui/ProgressSegments';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { SegmentedGrid } from '@/components/ui/SegmentedGrid';
+import { Slider } from '@/components/ui/Slider';
+import { Switch } from '@/components/ui/Switch';
+import { TextField } from '@/components/ui/TextField';
 import { Text } from '@/components/ui/Text';
 import { TicketDivider } from '@/components/ui/TicketDivider';
 import { useDockInset } from '@/hooks/useDockInset';
@@ -56,6 +62,13 @@ import { LOCALES, type LanguagePreference } from '@/types/language';
 const MOODS = ['curious', 'lazy', 'romantic', 'restless', 'chill', 'social'] as const;
 const TIME_SLOTS = ['1h', '2h', 'half_day', 'full_day'] as const;
 const BUDGETS = ['free', 'up_to_30', 'up_to_80', 'any'] as const;
+const AVOID = [
+  ['bar', 'Bar'],
+  ['nightclub', 'Balada'],
+  ['long_trail', 'Trilha longa'],
+  ['crowded', 'Lugar lotado'],
+  ['mall', 'Shopping'],
+] as const;
 const ICONS = [
   <Logo key="Logo" />,
   <Bolt key="Bolt" />,
@@ -109,6 +122,11 @@ export default function CatalogScreen() {
   const [time, setTime] = useState<(typeof TIME_SLOTS)[number] | undefined>('2h');
   const [budget, setBudget] = useState<(typeof BUDGETS)[number] | undefined>('up_to_30');
   const [longChoice, setLongChoice] = useState<string | undefined>('a');
+  const [city, setCity] = useState('');
+  const [memory, setMemory] = useState('');
+  const [distanceKm, setDistanceKm] = useState(5);
+  const [avoid, setAvoid] = useState<string[]>(['nightclub']);
+  const [switches, setSwitches] = useState({ accessible: false, reminder: true });
 
   // Faz o papel do I18nProvider da Fase 3: aplica o idioma efetivo (inclusive o salvo ao reabrir).
   useEffect(() => {
@@ -316,6 +334,74 @@ export default function CatalogScreen() {
               {t('plus.pricePerYear', { price: formatCurrency(199, locale) })}
             </Text>
           </Card>
+        </Block>
+
+        <Block title="Formulários e Perfil (revisão)" tone="cream">
+          <TextField
+            accessibilityLabel="Cidade ou bairro"
+            placeholder={t('home.title').slice(0, 24)}
+            value={city}
+            onChangeText={setCity}
+            leading={<Search color={colors.gray} />}
+          />
+          <TextField accessibilityLabel="Lembrança" placeholder="Uma lembrança" value={memory} onChangeText={setMemory} multiline />
+          <View style={styles.rowBetween}>
+            <Avatar initials="VC" size={60} accessibilityLabel="Você" />
+            <Avatar initials="MA" size={34} tone="blue" />
+            <Avatar initials="LU" size={34} tone="cream" />
+            <Avatar initials="RA" size={34} tone="sand" />
+          </View>
+          <View style={styles.rowBetween}>
+            <Text variant="button">Distância máxima</Text>
+            <Text variant="button">{distanceKm} km</Text>
+          </View>
+          <Slider
+            value={distanceKm}
+            onValueChange={setDistanceKm}
+            min={1}
+            max={20}
+            step={1}
+            accessibilityLabel="Distância máxima"
+            valueText={`${distanceKm} km`}
+          />
+          <View style={styles.wrap}>
+            {AVOID.map(([id, label]) => (
+              <MultiChip
+                key={id}
+                size="compact"
+                label={label}
+                checked={avoid.includes(id)}
+                onPress={() => setAvoid((previous) => (previous.includes(id) ? previous.filter((item) => item !== id) : [...previous, id]))}
+              />
+            ))}
+          </View>
+          <ListRow
+            title="Só lugares acessíveis"
+            trailing={
+              <Switch
+                value={switches.accessible}
+                onValueChange={(value) => setSwitches((previous) => ({ ...previous, accessible: value }))}
+                accessibilityLabel="Só lugares acessíveis"
+              />
+            }
+          />
+          <ListRow
+            title="Lembrete semanal da ofensiva"
+            separator={false}
+            trailing={
+              <Switch
+                value={switches.reminder}
+                onValueChange={(value) => setSwitches((previous) => ({ ...previous, reminder: value }))}
+                accessibilityLabel="Lembrete semanal da ofensiva"
+              />
+            }
+          />
+          <ListRow
+            title="Marina carimbou Sebo Dois Andares"
+            subtitle="Sebo · ontem"
+            leading={<Avatar initials="MA" size={40} />}
+            trailing={<Chip label="Quero ir" selected={false} onPress={() => {}} />}
+          />
         </Block>
 
         <Block title="Estados">
