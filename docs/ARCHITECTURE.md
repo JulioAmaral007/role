@@ -951,10 +951,95 @@ Regras (doc do Expo):
 | Dados de `development` entrarem nas métricas | `APP_ENV` em todo evento; filtrar `production`/`preview` na análise |
 | Comando `eas env:*` ter mudado | Confirmar com `--help` na Fase 13 antes de executar |
 
-## 13. Itens detalhados nas próximas tarefas da Fase 1
+## 13. Dependências planejadas
+
+**Status:** aceito em 02/10/2026. Consolida as dependências citadas nos ADRs das seções 6 a 12. **Regra de instalação:** só na fase que usa, sempre com `npx expo install <pacote>` (resolve a versão compatível com o SDK 57; para pacotes fora do Expo ele repassa ao `npm`), seguido de `npx expo-doctor`. O gerenciador do projeto é o **npm** (`package-lock.json`; não há `bun.lock`). Versões do Expo vêm do `bundledNativeModules.json` do SDK 57 instalado; as de terceiros são as mais recentes em 02/10/2026 (o `expo install` decide na hora).
+
+### 13.1 Já instaladas (não reinstalar)
+
+`expo` 57, `expo-router`, `expo-image`, `expo-font`, `expo-splash-screen`, `expo-linking`, `expo-constants`, `expo-status-bar`, `expo-system-ui`, `expo-web-browser`, `react-native-reanimated` 4.5, `react-native-worklets`, `react-native-gesture-handler`, `react-native-screens`, `react-native-safe-area-context`, `react-native-web` e `react-dom` (a web fica só como atalho de visualização, não é alvo).
+
+**Sem uso e candidatas à remoção** (restos do template; nenhum arquivo de `src/` as importa): `@expo/ui`, `expo-glass-effect`, `expo-symbols`, `expo-device`. Os ícones do app são SVG próprios, e o visual do protótipo não usa vidro nem SF Symbols. A remoção vira a primeira tarefa da Fase 2 (menos código nativo, build menor).
+
+### 13.2 Por fase
+
+| Fase | Pacote (versão) | Para quê | Código nativo / Expo Go |
+|---|---|---|---|
+| **2** | `expo-localization` (~57.0.2) | idioma do aparelho (seção 10) | nativo, **Expo Go ok** |
+| 2 | `i18next` (26.x), `react-i18next` (17.x) | tradução e plural | JS |
+| 2 | `@formatjs/intl-pluralrules` (6.x) | plural no Hermes (10.5) | JS |
+| 2 | `zustand` (5.x) | store de preferências com o idioma (`useLanguage`) | JS |
+| 2 | `@react-native-async-storage/async-storage` (2.2.0) | storage do `persist` do Zustand | nativo, Expo Go ok |
+| 2 | `react-native-svg` (15.15.4) | ícones do protótipo e o selo | nativo, Expo Go ok |
+| 2 | `@expo-google-fonts/bricolage-grotesque`, `.../instrument-sans`, `.../dm-mono` | as 3 famílias do protótipo, carregadas pelo `expo-font` | JS + fontes |
+| 2 | **dev:** `jest`, `jest-expo` (~57.0.5), `@types/jest`, `@testing-library/react-native` (14.x), `test-renderer`, `eslint-plugin-testing-library` | testes (seção 11.2) | JS |
+| **3** | `@tanstack/react-query` (5.x) | `QueryClient` no layout raiz | JS |
+| **4** | `@supabase/supabase-js` (2.x) | client (seção 8.4) | JS; **exige Node ≥ 22** (a máquina tem 22.21; ver 13.4) |
+| 4 | `react-native-url-polyfill` (4.0) | **só se** a Fase 4 confirmar que ainda é preciso no RN 0.86 (8.4) | JS |
+| 4 | **dev:** carregador do `.env` para o `test:db` (`dotenv`, ou o que o `jest-expo` já fizer) | testes do banco | JS |
+| **5** | `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` (5.x) | cache persistido (9.3) | JS |
+| 5 | `expo-network` (~57.0.2) | conectividade (9.2) | nativo, Expo Go ok |
+| 5 | `expo-crypto` (~57.0.3) | uuid v4 dos carimbos (`randomUUID`) | nativo, Expo Go ok |
+| **7** | `expo-location` (~57.0.20) | localização em primeiro plano; plugin com `locationWhenInUsePermission` | nativo, **Expo Go ok** (só o modo em segundo plano exigiria build, e não é usado) |
+| **10** | `expo-haptics` (~57.0.3) | impacto do selo (e do dock, se quisermos) | nativo, Expo Go ok |
+| **12** | `expo-notifications` (~57.0.21) | notificações **locais**, com o plugin (ícone e cor no Android) | nativo; **local funciona no Expo Go**, push no Android não (não usamos push) |
+| **13** | `expo-dev-client` (~57.0.19) | perfil `development` do EAS (`developmentClient`) | nativo, **build** |
+| 13 | `expo-updates` (~57.0.24) | EAS Update no canal `preview` | nativo, **build** |
+| 13 | crash: `expo-observe` (~57.0.24) **ou** `@sentry/react-native` (~7.11) | **depende da D14**; ambos nativos | nativo, **build** |
+| **14** | `react-native-purchases` (10.x) **ou** o provedor da D3 | assinatura | nativo, **build** |
+| **15** | `expo-secure-store` (~57.0.4) (+ `aesjs` e `react-native-get-random-values`) | sessão criptografada (8.4) | nativo, Expo Go ok |
+| 15 | `expo-apple-authentication` (~57.0.2) e login Google (`expo-auth-session` ~57.0.13 **ou** o pacote nativo do Google, a decidir) | vincular conta | nativo, **build** |
+| **18** | `@shopify/flash-list` (2.0.2) | só se uma lista real justificar (o bingo 4×4 não precisa, seção 3.2) | nativo, Expo Go ok |
+
+- **Evolução do selo como imagem** (`react-native-view-shot` 5.1 + `expo-sharing` ~57.0.22) **não entra no MVP**: o compartilhamento é texto com o `Share` do React Native (Fase 10).
+- **Maestro** não é dependência do projeto (é uma CLI instalada na máquina do usuário, seção 11.6).
+- **Ajuste do que as seções anteriores diziam:** a persistência do idioma coloca `zustand` e o `async-storage` na **Fase 2** (e não na 5); o `QueryClient` simples entra na **Fase 3** e só o cache persistido espera pela **Fase 5**.
+
+### 13.3 Escolhas que evitam dependência
+
+| Em vez de | Usamos | Motivo |
+|---|---|---|
+| `@react-native-community/netinfo` | `expo-network` | módulo oficial do Expo (9.2) |
+| `i18n-js` | `i18next` | chaves tipadas (10.1) |
+| MMKV | AsyncStorage | MMKV exige build e não ajuda no MVP (7.2) |
+| Redux, Jotai | Zustand | seção 7.2 |
+| `moment`, `dayjs`, `date-fns` | `Intl` + utilitário de fuso | ver 13.5 |
+| `uuid` | `expo-crypto` (`randomUUID`) | já é dependência planejada |
+| biblioteca de UI pronta | componentes próprios em `components/ui/` | visual próprio do protótipo |
+| `lodash` | funções nativas do JS | listas pequenas |
+| `react-native-svg-transformer` | ícones como componentes TSX | sem configuração extra no Metro |
+| `react-test-renderer` | `test-renderer` | par atual do Testing Library (11.2) |
+
+### 13.4 Pontos de atenção na instalação
+
+- **Config plugins** (`expo-localization` com `supportedLocales`, `expo-notifications`, `expo-location`) só valem em um **build**; no Expo Go os textos de permissão e o idioma por app **não** mudam. A verificação 👀 desses itens fica para a Fase 13 (build de preview).
+- **Node 22:** o `@supabase/supabase-js` declara `engines: node >= 22`. A máquina local atende; no `eas.json`, fixar `node: "22.x"` no perfil base para os builds na nuvem não usarem uma versão antiga (conferir o campo na doc na Fase 13).
+- **Peers do Jest:** o `jest-expo` 57 pede `@react-native/jest-preset`; o `test-renderer` é par do Testing Library. Ler os avisos do `npm` na primeira instalação e resolver na mesma tarefa.
+- **`npx expo install --fix`** e `npx expo-doctor` depois de cada instalação; se o doctor reclamar de versão, corrigir antes de commitar.
+- **Commit:** instalar dependência é um commit `build(<escopo>)` **separado** do código que a usa, como no resto do plano (ex.: `build(i18n): adiciona i18next e expo-localization`).
+- **Pacote com código nativo novo** (`expo-dev-client`, `expo-updates`, observabilidade, pagamentos, login Apple/Google) obriga a gerar um novo build; avisar o usuário no handoff da fase.
+
+### 13.5 Risco aberto: contas de data e hora por fuso
+
+O domínio precisa de datas **no fuso do usuário** (início da semana da ofensiva, "hoje") e **no fuso da cidade** (horário de funcionamento, `daylight_cutoff`). Sem biblioteca de datas, o caminho é o `Intl.DateTimeFormat` com `timeZone` (o Hermes suporta `format` e `resolvedOptions`, mas a doc dele **não** confirma `formatToParts` no iOS nem a consistência entre versões do Android).
+
+- **Decisão:** a **primeira tarefa da Fase 5** cria `src/utils/zonedTime.ts` (converte um instante em `{ ano, mês, dia, hora, minuto, diaDaSemana }` de um fuso) e **decide entre**: (a) `Intl.DateTimeFormat('en-CA', { timeZone, ...numéricos, hourCycle: 'h23' }).format()` com *parse* da string, **sem** `formatToParts`; ou (b) uma biblioteca pequena (`@date-fns/tz`, `luxon` ou um polyfill de `Temporal`), se a (a) não for confiável.
+- O utilitário é testado com virada de dia, de semana e de horário de verão, e entra na verificação 👀 da Fase 5 (mesmo resultado no Hermes de iOS e de Android).
+- Até lá, **nenhuma** função de `domain/` faz conta de fuso por conta própria.
+
+### 13.6 Riscos
+
+| Risco | Tratamento |
+|---|---|
+| Instalar cedo demais e carregar código sem uso | Regra "só na fase que usa" e a tabela 13.2 |
+| Versão incompatível com o SDK 57 | `npx expo install` + `npx expo-doctor` a cada instalação |
+| Pacote nativo novo sem build novo | Handoff avisa; perfil `development` do EAS (Fase 13) |
+| Dependência de terceiros abandonada | Preferir módulos do Expo; revisar na Fase 18 |
+| Fuso errado nas contas de semana | Utilitário único e testado (13.5) |
+
+## 14. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- Dependências planejadas
 - Convenções de nomenclatura
 - Decisões em aberto
