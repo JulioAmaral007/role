@@ -110,6 +110,8 @@ module.exports = defineConfig([
       'local/file-naming': 'error',
       '@typescript-eslint/naming-convention': [
         'error',
+        // nome fixo do Expo Router (`export const unstable_settings`): único snake_case permitido
+        { selector: 'variable', filter: { regex: '^unstable_settings$', match: true }, format: null },
         // variáveis: camelCase; PascalCase para componentes; UPPER_CASE para constantes
         {
           selector: 'variable',

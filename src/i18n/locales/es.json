@@ -24,6 +24,21 @@
     "message": "No pudimos abrir esta pantalla. ¿Probamos de nuevo?",
     "retry": "Intentar de nuevo"
   },
+  "onboarding": {
+    "welcome": {
+      "title": "Dime tu humor. Nosotros elegimos el lugar.",
+      "start": "Empezar"
+    },
+    "location": {
+      "title": "¿Dónde estás?",
+      "useLocation": "Usar mi ubicación",
+      "notNow": "Ahora no"
+    },
+    "noLocation": {
+      "title": "Sin ubicación, vamos a ciegas.",
+      "usePoint": "Usar este punto"
+    }
+  },
   "mood": {
     "curious": "Curioso",
     "lazy": "Perezoso",

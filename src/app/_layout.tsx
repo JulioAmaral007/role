@@ -5,6 +5,7 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useAppFonts } from '@/hooks/useAppFonts';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { useStoresHydrated } from '@/hooks/useStoresHydrated';
 import { I18nProvider } from '@/providers/I18nProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
@@ -18,6 +19,8 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const fontsReady = useAppFonts();
   const storesHydrated = useStoresHydrated();
+  // só vale depois de hidratar: antes disso é o valor inicial (`false`) e levaria todo mundo ao onboarding
+  const { onboardingDone } = useOnboarding();
   // A splash só sai com as fontes carregadas e os stores hidratados (seção 7.5): sem isso o app
   // piscaria valores iniciais (idioma, onboarding) antes dos salvos.
   const ready = fontsReady && storesHydrated;
@@ -33,7 +36,18 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <I18nProvider>
         <QueryProvider>
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* Gate do onboarding (seção 5.3 do ADR): o Expo Router só entrega as rotas liberadas. Quem
+                ainda não passou cai na `welcome`; depois de `completeOnboarding()` o guard muda e a
+                navegação vai sozinha para a primeira rota liberada, tirando o onboarding do histórico. */}
+            <Stack.Protected guard={!onboardingDone}>
+              <Stack.Screen name="onboarding" />
+            </Stack.Protected>
+            <Stack.Protected guard={onboardingDone}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="catalog" />
+            </Stack.Protected>
+          </Stack>
         </QueryProvider>
       </I18nProvider>
     </GestureHandlerRootView>

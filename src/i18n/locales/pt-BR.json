@@ -24,6 +24,21 @@
     "message": "Não deu pra abrir essa tela. Tenta de novo?",
     "retry": "Tentar de novo"
   },
+  "onboarding": {
+    "welcome": {
+      "title": "Diga seu humor. A gente escolhe o lugar.",
+      "start": "Começar"
+    },
+    "location": {
+      "title": "Onde você tá?",
+      "useLocation": "Usar minha localização",
+      "notNow": "Agora não"
+    },
+    "noLocation": {
+      "title": "Sem localização, a gente chuta no escuro.",
+      "usePoint": "Usar esse ponto"
+    }
+  },
   "mood": {
     "curious": "Curioso",
     "lazy": "Preguiçoso",

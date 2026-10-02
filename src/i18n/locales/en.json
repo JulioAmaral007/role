@@ -24,6 +24,21 @@
     "message": "We couldn't open this screen. Try again?",
     "retry": "Try again"
   },
+  "onboarding": {
+    "welcome": {
+      "title": "Tell us your mood. We pick the place.",
+      "start": "Get started"
+    },
+    "location": {
+      "title": "Where are you?",
+      "useLocation": "Use my location",
+      "notNow": "Not now"
+    },
+    "noLocation": {
+      "title": "Without a location, we're guessing in the dark.",
+      "usePoint": "Use this spot"
+    }
+  },
   "mood": {
     "curious": "Curious",
     "lazy": "Lazy",

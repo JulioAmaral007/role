@@ -363,7 +363,7 @@ Regras:
 ### 5.3 Gate de onboarding
 
 - **Mecanismo:** `Stack.Protected` com `guard` no `_layout.tsx` raiz, como na doc do Expo Router: o grupo `onboarding` protegido por `!onboardingDone`, e **todas as demais rotas da seção 5.2** (`(tabs)`, `suggestion`, `place/[id]`, `on-the-way`, `feedback`, `stamp`, `stamp/[id]`, `story`, `no-match`, `offline`, `report-problem`, `plus`, `language`) por `onboardingDone`. Não usar `<Redirect>` espalhado pelas telas.
-- **O onboarding agora são três telas** (`onboarding/welcome`, `location`, `no-location`), num `Stack` próprio do grupo. O guard protege o grupo inteiro; dentro dele o fluxo é o do grafo da 5.1.
+- **O onboarding agora são três telas** (`onboarding/welcome`, `location`, `no-location`), num `Stack` próprio do grupo. O guard protege o grupo inteiro; dentro dele o fluxo é o do grafo da 5.1. **Confirmado na implementação (Fase 3):** o `Stack.Protected` aceita o grupo `onboarding/` como **uma tela só** (`<Stack.Screen name="onboarding" />`) com `Stack` aninhado. O `onboarding/_layout.tsx` precisa de `export const unstable_settings = { initialRouteName: 'welcome' }`: sem isso o Expo Router abre a primeira rota por **ordem alfabética** (`location`), e não a `welcome`. Para as três telas poderem chamar `completeOnboarding()` sem importar o store, existe o hook `useOnboarding()` (`app/` não importa `stores/`, seção 4.2).
 - **Fonte da flag:** `onboardingDone` no `preferencesStore` (persistido em AsyncStorage). A flag só é lida **depois da reidratação** do store: a splash fica segurada (`SplashScreen.preventAutoHideAsync`) até terminarem a reidratação, as fontes e o init do i18n. Sem isso, o app piscaria o onboarding antes de abrir o Rolê.
 - **Concluir o onboarding:** `completeOnboarding()` grava `onboardingDone = true` e, junto, o que o usuário escolheu (`startPoint` se digitou um bairro ou ponto). O guard muda e o Expo Router leva sozinho à âncora `(tabs)`, removendo o grupo `onboarding` do histórico (comportamento documentado do `Stack.Protected`). Quem conclui: `location` (depois de "Usar minha localização" ou de escolher um bairro) e `no-location` (depois de "Usar esse ponto"). **A permissão de localização é pedida em `location`, nunca na abertura** (Fase 7).
 - **Termos e Privacidade:** o aceite entra como uma linha discreta na `welcome` ("Ao começar, você aceita…"), gravando `profiles.accepted_terms_at` (Fase 7). Não bloqueia o fluxo.
@@ -392,7 +392,6 @@ Não decididos aqui porque dependem de API que precisa ser lida na doc do SDK 57
 
 - como fechar o fluxo do carimbo e cair em `/passport` (`dismissAll`, `dismissTo` ou `navigate` com reset), e como voltar do `on-the-way` para a `suggestion` quando o app foi aberto por deep link (sem a `suggestion` embaixo): Fase 10;
 - `sheetAllowedDetents` e `formSheet` para `language` e `report-problem`, se o design pedir uma folha parcial em vez de modal cheio (limitação do Android: sem header nativo nem stack aninhado dentro de formSheet);
-- o `Stack.Protected` aceitar o grupo `onboarding/` como uma tela única do Stack raiz, com `Stack` aninhado (confirmar na implementação da Fase 3 e, se não aceitar, declarar as três telas direto no Stack raiz);
 - teste dos deep links com `npx uri-scheme open role://... ` feito pelo usuário (👀) na Fase 3.
 
 ## 6. ADR — Tab bar (dock flutuante) e recuo inferior
