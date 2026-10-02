@@ -238,7 +238,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 **Critérios de saída**
 - [x] O bundle compila (`npx expo export --platform android`) sem erros.
-- [ ] 👀 Usuário abre o app (`npx expo start`) e confirma a tela vazia sem erros.
+- [x] 👀 Usuário abre o app (`npx expo start`) e confirma a tela vazia sem erros.
 - [x] Lint e typecheck verdes.
 
 ---
@@ -719,13 +719,7 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 
 ## Bloqueios
 
-- **Fase 0: aguardando verificação manual 👀 (aberto em 02/10/2026).** Roteiro para o usuário:
-  1. Na raiz do projeto, rodar `npx expo start`.
-  2. Abrir no Android/iOS (Expo Go ou development build) ou na web (`w`).
-  3. Conferir que aparece uma tela vazia, sem erro vermelho e sem warning no terminal.
-  4. Avisar no chat ("Fase 0 ok" ou o erro que apareceu). O loop então marca o critério, integra `fase/00-preparacao` na `main` e começa a Fase 1.
-
-_(Bloqueio antigo resolvido: o bloqueio "Supabase local indisponível" foi resolvido em 02/10/2026: o Supabase passa a ser operado só pelo dashboard web, sem CLI e sem Docker.)_
+_(vazio — o bloqueio "Supabase local indisponível" foi resolvido em 02/10/2026: o Supabase passa a ser operado só pelo dashboard web, sem CLI e sem Docker.)_
 
 ## Registro de iterações
 
@@ -735,5 +729,6 @@ _(Bloqueio antigo resolvido: o bloqueio "Supabase local indisponível" foi resol
 | 2026-10-02 | 0 | Scripts `typecheck` e `test` no `package.json` | `git-commit` | Scripts adicionados (`test` = `jest --passWithNoTests`; o jest só é instalado na Fase 2). `tsc` e `expo lint` já falhavam antes, só no demo do template (`animated-icon.web`, `constants/theme.ts`, `use-color-scheme.web.ts`); a próxima tarefa remove esse código | `27ae9df` registrado acima; `7f55fa4` |
 | 2026-10-02 | 0 | `npx expo-doctor` | — | 21/21 checks passaram, nenhum problema detectado | `9280d1f` |
 | 2026-10-02 | 0 | Remover o demo do template | — | Removidos explore, animated-icon, app-tabs (+`.web`), hint-row, web-badge, themed-*, collapsible, external-link, constants/theme, global.css, hooks do template, imagens de demo e `scripts/reset-project.js` (+ script do `package.json`); `_layout` e `index` mínimos. `reset-project` não foi usado (apagaria `scripts/`). `expo lint` instalou `eslint` e `eslint-config-expo` e criou `eslint.config.js` (commit `build` separado). `tsc` e lint verdes; `expo export --platform android` gera o bundle. O item da Fase 3 "remover app-tabs" já está feito | `fa27e69` |
-| 2026-10-02 | 0 | Conferir Supabase CLI e Docker | — | Supabase CLI **não instalado**; Docker 29.8.1 instalado, mas o daemon (Docker Desktop) não está rodando. Registrado em Bloqueios; loop parado | este commit |
+| 2026-10-02 | 0 | Conferir Supabase CLI e Docker | — | Supabase CLI **não instalado**; Docker 29.8.1 instalado, mas o daemon (Docker Desktop) não está rodando. Registrado em Bloqueios; loop parado | `9a614c6` |
+| 2026-10-02 | 0 | Fim da fase: critérios de saída | — | Usuário confirmou "Fase 0 ok" (👀). Bloqueio removido. Fase 00 integrada na main, pronta para push manual | `9a614c6`; este commit |
 | 2026-10-02 | — | Revisão do plano (feita pelo usuário com o Claude, fora do loop) | — | Supabase só pelo dashboard web (sem CLI/Docker/local, handoffs 🖐, testes `test:db` + checagens SQL); bloqueio do CLI/Docker removido; o loop não roda o app (critérios 👀 verificados pelo usuário); nomenclatura em inglês | entra no próximo commit do loop |
