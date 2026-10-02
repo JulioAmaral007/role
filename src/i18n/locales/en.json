@@ -15,6 +15,9 @@
     "passport": "Passport",
     "crew": "Crew"
   },
+  "settings": {
+    "languageSystem": "Device language"
+  },
   "mood": {
     "curious": "Curious",
     "lazy": "Lazy",

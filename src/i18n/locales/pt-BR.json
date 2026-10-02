@@ -15,6 +15,9 @@
     "passport": "Passaporte",
     "crew": "Turma"
   },
+  "settings": {
+    "languageSystem": "Idioma do aparelho"
+  },
   "mood": {
     "curious": "Curioso",
     "lazy": "Preguiçoso",

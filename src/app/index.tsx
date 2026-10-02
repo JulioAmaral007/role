@@ -1,5 +1,6 @@
-import { View } from 'react-native';
+import { Redirect } from 'expo-router';
 
+// TEMPORÁRIO (Fase 2): abre direto o catálogo de componentes. A Fase 3 troca por o Rolê.
 export default function Index() {
-  return <View style={{ flex: 1 }} />;
+  return <Redirect href="/catalog" />;
 }

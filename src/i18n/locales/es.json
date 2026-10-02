@@ -15,6 +15,9 @@
     "passport": "Pasaporte",
     "crew": "Pandilla"
   },
+  "settings": {
+    "languageSystem": "Idioma del dispositivo"
+  },
   "mood": {
     "curious": "Curioso",
     "lazy": "Perezoso",
