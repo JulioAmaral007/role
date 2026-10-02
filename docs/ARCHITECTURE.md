@@ -1150,13 +1150,13 @@ Roda em `npx expo lint`, que o loop executa em **toda** iteração; erro bloquei
 | D1 | Lib de estado local | 🟡 | Zustand v5 + `persist` + AsyncStorage (reserva `expo-sqlite/kv-store`) | Seção 7 | 1 |
 | D2 | Tema escuro | 🟡 | Não: só tema claro; `userInterfaceStyle: light` | Seção 1 | 2 |
 | D3 | Provedor de pagamento e preços do Plus | ⛔ | Sugestão: RevenueCat (webhook fácil para uma Edge Function). **Não decidir o preço sem o usuário** | Seções 13.2 e 8.8 | 14 |
-| D4 | Escopo da aba Turma | 🟡 | Placeholder "Em breve" com dock e `useDockInset()`; o desenho real fica para o pós-MVP | Seção 5 | 17 |
+| D4 | Escopo da aba Turma | 🟡 | Desenhada na revisão do protótipo de 02/10/2026 (álbum compartilhado, convite, descobertas com "Quero ir"); no MVP continua o placeholder "Em breve" com dock e `useDockInset()`; o usuário confirma o escopo na Fase 17 | Seção 5 | 17 |
 | D5 | Backend | ✅ | Supabase | Seção 8 | 1 |
 | D5b | Como o catálogo é curado | 🟡 | Planilha própria → `buildCsv` → Import CSV no Table Editor | Seção 8.7 | 6 |
-| D6 | Check-in exige estar no local | 🟡 | Não no MVP (carimbo direto) | Plano | 16 |
+| D6 | Check-in exige estar no local | 🟡 | **Sim, já no MVP** (revisão do protótipo de 02/10/2026: "O carimbo só vale lá"). "Cheguei!" confere a posição no aparelho com raio de 150 m + precisão do GPS; sem permissão, não carimba e oferece ativar; a posição não vai para o servidor | Plano | 5 / 10 |
 | D7 | **Cidade inicial do catálogo** | ⛔ | — (**bloqueia a Fase 6**) | Plano | 6 |
 | D8 | Idiomas no lançamento | 🟡 | pt-BR (base), en, es | Seção 10 | 1 |
-| D9 | Onde fica o seletor de idioma | 🟡 | Em Ajustes, aberto pelo header do Passaporte | Seção 5 | 3 |
+| D9 | Onde fica o seletor de idioma | 🟡 | Na seção Ajustes da aba **Perfil** (revisão do protótipo de 02/10/2026; o Passaporte não tem mais botão de Ajustes). A seção 5 é atualizada na 1ª tarefa da Fase 3 | Seção 5 | 3 |
 | D10 | Moeda muda com o idioma | 🟡 | Não: sempre BRL; só a formatação segue o idioma | Seção 10.6 | 1 |
 | D11 | **Quem revisa as traduções en/es** | ⛔ | — (até lá, tradução própria, marcada como não revisada) | Seção 10.10 | 18 |
 | D12 | Cota no MVP | 🟡 | Ligada: 3/semana no servidor, por usuário anônimo; pedir sugestão exige internet; burla por reinstalação aceita | Seções 8.3, 8.6 e 9.4 | 4 |
@@ -1183,6 +1183,13 @@ Roda em `npx expo lint`, que o loop executa em **toda** iteração; erro bloquei
 | D28 | Sessão anônima em AsyncStorage (e não `LargeSecureStore`) | 🟡 | AsyncStorage no MVP; criptografar com `expo-secure-store` na Fase 15, quando a sessão tiver e-mail | Seção 8.4 | 15 |
 | D29 | Conectividade com `expo-network` (e não NetInfo) | 🟡 | `expo-network`, por ser módulo oficial do Expo | Seção 9.2 | 5 |
 | D30 | Chave pública do Supabase | ✅ | **Publishable key** (`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`); a `anon` está sendo descontinuada | Seção 8.4 | 4 |
+| D31 | Ícone oficial do app e splash | ✅ | **Opção A "Dado com pin"** da página "Ícone do app" do protótipo, usada também na splash (fundo `#FFD43B`); escolhida pelo usuário em 02/10/2026 | Plano, "Ícone do app e splash" | 3 / 13 |
+| D32 | Onde ficam as fotos e a lembrança do usuário | 🟡 | Foto só no aparelho no MVP (sem upload nem moderação); a lembrança (texto) vai no carimbo, visível só para o dono; backup das fotos num bucket privado na Fase 15 | Plano | 5 / 10 / 15 |
+| D33 | Tempo por modo no Detalhe do lugar | 🟡 | Estimativa local (linha reta × fator de rota, velocidade média por modo); "Abrir no mapa" dá a rota real; API de rotas só no pós-MVP | Plano | 5 / 9 / 16 |
+| D34 | Link "Já tenho conta" na Boas-vindas | 🟡 | Escondido no MVP (só usuário anônimo); aparece na Fase 15 | Plano | 7 / 15 |
+| D35 | Busca de cidade/bairro e ponto de partida | 🟡 | `Location.geocodeAsync` (`expo-location`, sem chave de API), limitado à cidade do catálogo; conferir na doc do SDK 57; reserva: lista de bairros da cidade | Plano | 7 |
+| D36 | Mapa do Detalhe do lugar | 🟡 | Ilustração do protótipo, sem SDK de mapas no MVP; o mapa real fica com o app de mapas do celular | Plano | 9 |
+| D37 | Nome e cidade no Perfil | 🟡 | Nome opcional, salvo só no aparelho (padrão "Você" / "VC"); cidade = a do catálogo; vai para a conta na Fase 15 | Plano | 11 / 15 |
 
 ### 15.3 O que o usuário precisa decidir, e quando
 
