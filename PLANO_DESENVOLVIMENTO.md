@@ -248,7 +248,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 > **Obrigatório:** começar esta fase invocando a skill **`react-native-architecture`** (Skill tool, ou `/react-native-architecture`) e ler `.claude/skills/react-native-architecture/references/details.md`. Todas as decisões abaixo devem seguir os padrões dela (estrutura de pastas, Expo Router, React Query offline-first, separação entre `services` e `stores`, fluxo de auth, boas práticas de performance), adaptados para Expo SDK 57 e Supabase.
 > Esta fase produz **documentação e esqueleto de pastas**, não features.
 
-- [ ] 🧭 ARCH: invocar `react-native-architecture` e resumir em `docs/ARCHITECTURE.md` os padrões adotados.
+- [x] 🧭 ARCH: invocar `react-native-architecture` e resumir em `docs/ARCHITECTURE.md` os padrões adotados.
 - [ ] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARCHITECTURE.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
 - [ ] Definir a **estrutura de pastas** em `docs/ARCHITECTURE.md`. Proposta inicial, a validar com a skill:
   ```
@@ -730,5 +730,6 @@ _(vazio — o bloqueio "Supabase local indisponível" foi resolvido em 02/10/202
 | 2026-10-02 | 0 | `npx expo-doctor` | — | 21/21 checks passaram, nenhum problema detectado | `9280d1f` |
 | 2026-10-02 | 0 | Remover o demo do template | — | Removidos explore, animated-icon, app-tabs (+`.web`), hint-row, web-badge, themed-*, collapsible, external-link, constants/theme, global.css, hooks do template, imagens de demo e `scripts/reset-project.js` (+ script do `package.json`); `_layout` e `index` mínimos. `reset-project` não foi usado (apagaria `scripts/`). `expo lint` instalou `eslint` e `eslint-config-expo` e criou `eslint.config.js` (commit `build` separado). `tsc` e lint verdes; `expo export --platform android` gera o bundle. O item da Fase 3 "remover app-tabs" já está feito | `fa27e69` |
 | 2026-10-02 | 0 | Conferir Supabase CLI e Docker | — | Supabase CLI **não instalado**; Docker 29.8.1 instalado, mas o daemon (Docker Desktop) não está rodando. Registrado em Bloqueios; loop parado | `9a614c6` |
-| 2026-10-02 | 0 | Fim da fase: critérios de saída | — | Usuário confirmou "Fase 0 ok" (👀). Bloqueio removido. Fase 00 integrada na main, pronta para push manual | `9a614c6`; este commit |
+| 2026-10-02 | 0 | Fim da fase: critérios de saída | — | Usuário confirmou "Fase 0 ok" (👀). Bloqueio removido. Fase 00 integrada na main, pronta para push manual | `9a614c6`, `1161601`, merge `a7e2fb8` |
+| 2026-10-02 | 1 | 🧭 ARCH: resumir padrões em `docs/ARCHITECTURE.md` | `react-native-architecture` (lido `references/details.md`) | Criado `docs/ARCHITECTURE.md` com os 6 padrões da skill, divergências do projeto (kebab-case, SVG próprio, `expo-image`, sessão do Supabase, tema só claro, tab bar custom) e regras de camadas. Só documentação; `tsc` e lint verdes | este commit |
 | 2026-10-02 | — | Revisão do plano (feita pelo usuário com o Claude, fora do loop) | — | Supabase só pelo dashboard web (sem CLI/Docker/local, handoffs 🖐, testes `test:db` + checagens SQL); bloqueio do CLI/Docker removido; o loop não roda o app (critérios 👀 verificados pelo usuário); nomenclatura em inglês | entra no próximo commit do loop |
