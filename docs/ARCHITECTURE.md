@@ -863,11 +863,98 @@ Cada fase registra, em **Bloqueios**, um roteiro curto e numerado do que testar,
 | Dependências de teste incompatíveis com o SDK 57 | Instalar com `npx expo install`; rodar o `expo-doctor` depois |
 | Teste dentro de `src/app/` virar rota | Testes de rota em `tests/app/` e regra de lint/revisão |
 
-## 12. Itens detalhados nas próximas tarefas da Fase 1
+## 12. ADR — Ambientes e segredos
+
+**Status:** aceito em 02/10/2026. **Base:** doc de variáveis de ambiente do Expo, doc de variáveis do EAS (ambientes, visibilidade, `eas env:*`), doc do `eas.json`, e as seções 8 (Supabase) e 11 (testes). Decisões já tomadas: D18 (`role-dev` e `role-mvp`, produção separada só no pós-MVP) e o princípio "tudo que vai no app é público".
+
+### 12.1 Ambientes
+
+| | **Desenvolvimento** | **Preview (MVP)** | **Produção** (pós-MVP) |
+|---|---|---|---|
+| Quem usa | você, no aparelho/emulador | grupo de teste (D17) | público |
+| Projeto Supabase | `role-dev` | `role-mvp` | `role-prod` (criado na Fase 19) |
+| `EXPO_PUBLIC_APP_ENV` | `development` | `preview` | `production` |
+| Origem das variáveis | arquivo **`.env`** local (ignorado pelo git) | ambiente **`preview`** do EAS | ambiente **`production`** do EAS |
+| Perfil do `eas.json` | `development` (`developmentClient`, `distribution: internal`) | `preview` (`distribution: internal`, Android `apk`) | `production` (`distribution: store`, Android `app-bundle`) |
+| Canal de EAS Update | — (o Metro serve o código) | `preview` | `production` |
+| Dados | `seed_dev.sql`; pode ser apagado à vontade | catálogo curado (Fase 6/13); dados reais de testadores | catálogo curado; dados reais |
+| Testes de integração | **`npm run test:db`** | só uma vez, antes dos testadores entrarem (12.4) | nunca |
+
+- **Nada de dado de produção em desenvolvimento e vice-versa:** os projetos não compartilham usuário, banco, bucket nem chave.
+- **O `role-prod` não existe no MVP.** Até a Fase 19 não há perfil `production` funcional; o plano já prevê a criação (Fase 19).
+- **Limites do plano gratuito do Supabase** (pausa por inatividade, cotas) devem ser conferidos na doc atual ao criar cada projeto, no `docs/SUPABASE_SETUP.md`; as docs consultadas hoje não os detalham.
+
+### 12.2 Variáveis
+
+Lista **completa e fechada** do app no MVP (tudo público por natureza, porque é inlinado no bundle):
+
+| Variável | Valor | Visibilidade no EAS |
+|---|---|---|
+| `EXPO_PUBLIC_APP_ENV` | `development` \| `preview` \| `production` | plain text |
+| `EXPO_PUBLIC_SUPABASE_URL` | URL do projeto | plain text |
+| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publishable key (`sb_publishable_...`, seção 8.4) | plain text |
+
+Regras (doc do Expo):
+
+1. **Só `EXPO_PUBLIC_*` entra no app** e **sempre por acesso estático** (`process.env.EXPO_PUBLIC_SUPABASE_URL`); `process.env[nome]` **não** é substituído no bundle.
+2. **Leitura em um único lugar:** `src/lib/env.ts` lê cada variável de forma literal, **valida** (presença, `APP_ENV` conhecido, URL com `https`) e exporta um objeto tipado `env`. Faltou variável → **erro claro e imediato** (em desenvolvimento, mensagem apontando o `.env.example`; em release, falha na abertura em vez de um app meio quebrado). `lib/supabase.ts` e o analytics usam `env`, nunca `process.env` direto.
+3. **Tipos:** `src/types/env.d.ts` declara as três variáveis em `ProcessEnv`.
+4. **Mudou o `.env`?** Recarregar o app por completo (a doc avisa que o valor é inlinado).
+5. **Arquivos `.env`:** o Expo carrega `.env`, `.env.local` e variantes por ordem de prioridade. O projeto usa **só o `.env`** (já no `.gitignore`, junto de `.env.*`, exceto `.env.example`). Não se troca de ambiente por `NODE_ENV`, como a doc manda: para apontar o local para outro projeto, edita-se o `.env` ou usa-se `eas env:pull`.
+6. **`.env.example`** é versionado, sem valores, com as três chaves acima e um comentário por linha.
+7. **`APP_ENV` vai junto de todo evento de analytics** (Fase 13), para o tráfego de `development` nunca contaminar as métricas do MVP.
+
+### 12.3 Segredos: o que existe e onde mora
+
+| Segredo | Onde fica | Nunca fica |
+|---|---|---|
+| Senha do banco do Supabase | com o usuário (gerenciador de senhas) | repositório, app, `.env`, conversa com o loop |
+| **Secret key / `service_role`** | só dentro do Supabase: a Edge Function a lê da variável de ambiente que o próprio Supabase injeta (seção 8.8) | repositório, app, `.env`, `eas.json`, `test:db`, CI |
+| Segredos de Edge Functions (ex.: webhook de pagamento, Fase 14) | *secrets* do editor de Edge Functions do dashboard | repositório |
+| Credenciais de assinatura (Apple, Google) | gerenciadas pelo **EAS** (Fase 18) | repositório |
+| `EXPO_TOKEN` para CI | cofre de segredos do provedor de CI (Fase 18) | repositório |
+| Token do Sentry/Observe para source maps (D14) | variável do EAS com visibilidade **secret** (a DSN pública pode ser `EXPO_PUBLIC_`) | repositório, bundle |
+
+- **Regra mestra do EAS (doc):** "tudo que vai no código do cliente é público". Por isso as três variáveis do app ficam como **plain text**; **não** se usa visibilidade *secret* para `EXPO_PUBLIC_*` (não faria sentido, o valor está no bundle) e **não** se cria `EXPO_PUBLIC_` para nada que seja segredo.
+- **O loop nunca pede, lê nem guarda** senha, secret key ou `service_role`. O que o loop precisa (URL e publishable key do `role-dev`) está no `.env` do usuário e **não é commitado**.
+- **Defesa em profundidade contra vazamento:**
+  - `.gitignore` já cobre `.env`, `.env.*` e `supabase/.temp`;
+  - antes de cada commit, o `git-commit` confere o `git status` (regra do plano);
+  - **busca de segredos** por `service_role`, `SERVICE_ROLE` e `sb_secret_` nos arquivos versionados (`git grep`), feita no critério de saída da Fase 4 e no fim de cada fase;
+  - se uma secret key vazar: **rotacionar no dashboard** (gerar nova e revogar a antiga) antes de qualquer outra ação; commit apagando o arquivo **não basta**, porque o histórico guarda o valor.
+- **Preview e produção não usam `.env`:** o `.env` fica fora do que o EAS envia (o upload segue o `.gitignore`; confirmar na Fase 13). Cada build lê as variáveis do **ambiente do EAS** escolhido pelo campo `environment` do perfil no `eas.json` (`development`, `preview` ou `production`), então um build de testador nunca sai apontando para o `role-dev` por engano.
+
+### 12.4 EAS, na prática (conferir os comandos na Fase 13)
+
+- **Variáveis:** `eas env:set --name EXPO_PUBLIC_SUPABASE_URL --value <url> --environment preview --visibility plaintext` (a página de gerenciamento da doc usa `env:set`; confirmar com `--help` ao executar), `eas env:list --environment preview` para conferir e `eas env:pull --environment development` para gerar o `.env` local quando for o caso.
+- **`eas.json`:** cada perfil declara `environment` (`development`, `preview` ou `production`) e, nos de distribuição, o `channel` do EAS Update. Com `extends` para não repetir.
+- **EAS Update:** desde o SDK 55 o `eas update` **exige** `--environment`; as correções para os testadores saem com `--environment preview` no canal `preview`.
+- **`test:db` e proteção do `role-mvp`:** o script **aborta** se `EXPO_PUBLIC_APP_ENV` não for `development`. O teste de integração que o plano pede no `role-mvp` (Fase 13, **antes** de os testadores entrarem) exige um override explícito (`ALLOW_DB_TEST_ON=preview`, só naquela execução, informado pelo usuário). Depois que houver testador real, o `test:db` nunca roda lá.
+- **Identificador do app (D20):** se for preciso instalar `development` e `preview` lado a lado no mesmo aparelho, o `app.config.ts` acrescenta um sufixo ao `bundleIdentifier`/`package` conforme o `APP_ENV`. Decisão junto da D20 (Fase 13); no MVP, o `app.json` atual basta.
+
+### 12.5 Evolução do banco entre ambientes
+
+- **Fluxo:** todo script SQL vai primeiro no `role-dev` e só depois no `role-mvp` (seção 8.2). O `APPLIED.md` mostra a diferença entre os dois ambientes, e o loop **não** marca uma fase como pronta com divergência não explicada.
+- **Antes dos testadores (até a Fase 13):** o `role-mvp` recebe tudo de uma vez, na ordem, num único handoff.
+- **Depois dos testadores:** mudança de schema só **aditiva e compatível com versões anteriores do app** (colunas novas opcionais, funções novas), porque há builds antigos em uso (a atualização por EAS Update só troca o JavaScript, não o que o aparelho já instalou). Remoção ou renomeação de coluna/RPC usa o padrão em duas etapas (adicionar o novo → migrar o app → remover o antigo depois).
+- **Configurações fora do SQL** (sign-in anônimo, rate limit, bucket, secrets da função) são **por projeto**: o `docs/SUPABASE_SETUP.md` traz o mesmo checklist para os dois, e o handoff do `role-mvp` o repete inteiro.
+
+### 12.6 Riscos
+
+| Risco | Tratamento |
+|---|---|
+| Build de testador apontar para o `role-dev` | `environment` obrigatório por perfil; `.env` fora do upload (confirmar na Fase 13); `APP_ENV` validado em `src/lib/env.ts` |
+| Secret key ou senha parar no repositório | `.gitignore`, `git grep` por fase, rotação imediata se vazar (12.3) |
+| `test:db` apagar ou poluir dados reais | Aborta fora de `development`; usuários e dados de teste prefixados e removidos (seção 11.5) |
+| Esquecer variável e o app abrir "meio quebrado" | `src/lib/env.ts` valida na abertura e falha com mensagem clara |
+| Divergência entre `role-dev` e `role-mvp` | `APPLIED.md` por projeto e checklist de configurações idêntico |
+| Dados de `development` entrarem nas métricas | `APP_ENV` em todo evento; filtrar `production`/`preview` na análise |
+| Comando `eas env:*` ter mudado | Confirmar com `--help` na Fase 13 antes de executar |
+
+## 13. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- Ambientes e segredos
 - Dependências planejadas
 - Convenções de nomenclatura
 - Decisões em aberto
