@@ -2,6 +2,7 @@
 const path = require('node:path');
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
+const testingLibrary = require('eslint-plugin-testing-library');
 
 // Convenções de nomenclatura: docs/ARCHITECTURE.md, seção 14.
 // O nome do arquivo (sem a extensão final .ts/.tsx) precisa casar com o padrão da pasta.
@@ -92,6 +93,11 @@ module.exports = defineConfig([
         { selector: 'enumMember', format: ['PascalCase', 'UPPER_CASE'] },
       ],
     },
+  },
+  {
+    // docs/ARCHITECTURE.md, seção 11.4 (regra 9); os testes do banco não usam Testing Library
+    files: ['src/**/*.test.{ts,tsx}', 'tests/app/**/*.{ts,tsx}'],
+    ...testingLibrary.configs['flat/react'],
   },
   {
     // espelha as colunas do banco (snake_case); a regra de nomes não se aplica aqui
