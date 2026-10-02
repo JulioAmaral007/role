@@ -19,6 +19,11 @@
   "settings": {
     "languageSystem": "Idioma do aparelho"
   },
+  "error": {
+    "title": "Algo deu errado",
+    "message": "Não deu pra abrir essa tela. Tenta de novo?",
+    "retry": "Tentar de novo"
+  },
   "mood": {
     "curious": "Curioso",
     "lazy": "Preguiçoso",

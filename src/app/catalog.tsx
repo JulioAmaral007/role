@@ -2,7 +2,7 @@
 // todos os componentes do design system, a troca de idioma e blocos de estresse de texto. Sai da
 // árvore depois da aprovação da Fase 2. Os títulos de seção abaixo são texto de desenvolvimento,
 // por isso ficam fora dos arquivos de idioma.
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -53,7 +53,6 @@ import { Text } from '@/components/ui/Text';
 import { TicketDivider } from '@/components/ui/TicketDivider';
 import { useDockInset } from '@/hooks/useDockInset';
 import { useLanguage } from '@/hooks/useLanguage';
-import i18n from '@/i18n';
 import { formatCurrency, formatDistance, formatStampDate, formatWeekdayShort } from '@/i18n/format';
 import { LANGUAGE_NAMES } from '@/i18n/languageNames';
 import { colors, space } from '@/theme/tokens';
@@ -127,11 +126,6 @@ export default function CatalogScreen() {
   const [distanceKm, setDistanceKm] = useState(5);
   const [avoid, setAvoid] = useState<string[]>(['nightclub']);
   const [switches, setSwitches] = useState({ accessible: false, reminder: true });
-
-  // Faz o papel do I18nProvider da Fase 3: aplica o idioma efetivo (inclusive o salvo ao reabrir).
-  useEffect(() => {
-    i18n.changeLanguage(locale).catch(() => {});
-  }, [locale]);
 
   const languageOptions: { value: LanguagePreference; label: string }[] = [
     { value: 'system', label: t('settings.languageSystem') },

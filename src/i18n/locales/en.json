@@ -19,6 +19,11 @@
   "settings": {
     "languageSystem": "Device language"
   },
+  "error": {
+    "title": "Something went wrong",
+    "message": "We couldn't open this screen. Try again?",
+    "retry": "Try again"
+  },
   "mood": {
     "curious": "Curious",
     "lazy": "Lazy",

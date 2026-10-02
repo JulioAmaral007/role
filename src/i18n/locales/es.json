@@ -19,6 +19,11 @@
   "settings": {
     "languageSystem": "Idioma del dispositivo"
   },
+  "error": {
+    "title": "Algo salió mal",
+    "message": "No pudimos abrir esta pantalla. ¿Probamos de nuevo?",
+    "retry": "Intentar de nuevo"
+  },
   "mood": {
     "curious": "Curioso",
     "lazy": "Perezoso",
