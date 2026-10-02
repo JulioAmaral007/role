@@ -664,11 +664,113 @@ Já definida na seção 7.3; aqui o comportamento.
 | Splash demorar para hidratar tudo | Medir na Fase 13; reserva `expo-sqlite/kv-store` (seção 7.2) |
 | Perder dados ao reinstalar | Fila e cache vivem no aparelho; o que já foi enviado está no servidor, o resto se perde (aceito no MVP, 8.3) |
 
-## 10. Itens detalhados nas próximas tarefas da Fase 1
+## 10. ADR — Estratégia de i18n
+
+**Status:** aceito em 02/10/2026. **Base:** doc de localização do Expo (SDK 57) e do `expo-localization`, doc do i18next (tipagem e plurais), doc do Hermes sobre `Intl` e doc do polyfill `@formatjs/intl-pluralrules`. Idiomas do lançamento (D8): **pt-BR (base), en, es**. Moeda separada do idioma (D10): valores sempre em BRL.
+
+### 10.1 Bibliotecas
+
+| Peça | Escolha | Por quê |
+|---|---|---|
+| Idioma do aparelho | `expo-localization` (`getLocales()`/`useLocales()`) | Módulo oficial do Expo |
+| Tradução | **`i18next` 26 + `react-i18next` 17** | Plurais e ordinais prontos, interpolação, tipagem forte das chaves por augmentation, `useTranslation` com seletor fino, e o plano já previa |
+| Plural em Hermes | **`@formatjs/intl-pluralrules`** (polyfill) | Ver 10.5: o Hermes não tem `Intl.PluralRules` e o i18next v24+ depende dele |
+
+Alternativa descartada: `i18n-js` (a que o guia do Expo mostra). É menor, mas tem plural manual e **não tipa as chaves**, e a tipagem é requisito do plano ("chave inexistente dá erro de compilação"). Lingui e outras exigem etapa de compilação/extração que o app não precisa com 3 idiomas.
+
+### 10.2 Resolução do idioma
+
+```
+escolha salva (preferencesStore.language) ─ se 'system' ─▶ idioma do aparelho ─ se não suportado ─▶ pt-BR
+```
+
+- **Tipo:** `Locale = 'pt-BR' | 'en' | 'es'` e `LanguagePreference = Locale | 'system'` (a escolha; o efetivo é derivado, seção 7.3).
+- **Mapa do aparelho** por `languageCode` de `getLocales()` (mesmo critério para todas as regiões): `pt` (inclui `pt-PT`) → `pt-BR`; `en` (`en-GB`, `en-AU`...) → `en`; `es` (`es-MX`, `es-AR`...) → `es`; qualquer outro (ex.: `fr`) → **`pt-BR`**, porque o mercado inicial é o Brasil. Função pura em `i18n/resolveLocale.ts`, testada.
+- **Acompanhar o aparelho:** com `language === 'system'`, o idioma efetivo segue `useLocales()`. No Android o usuário muda o idioma nas configurações sem reiniciar o app (e há idioma por app); por isso o `I18nProvider` também reavalia ao voltar ao primeiro plano (`AppState`), como a doc do Expo pede. No iOS o valor é constante durante a execução.
+- **Idioma por app do sistema:** o plugin `expo-localization` recebe `supportedLocales` (`ios` e `android`: `["pt-BR", "en", "es"]`), para o app aparecer nas configurações de idioma por app. Quando o usuário escolhe lá, `getLocales()` já devolve esse idioma e a opção "Idioma do aparelho" o segue.
+- **Perfil:** o idioma **efetivo** é gravado em `profiles.locale` (seção 8.5, o grant permite `update` de `locale`), pelo `services/account`, em segundo plano e sem tratar falha como erro. Se falhar, a divergência é corrigida na próxima abertura (compara o valor local com o do perfil). O dado serve para as notificações e comunicações futuras.
+
+### 10.3 Inicialização e troca em tempo real
+
+- **`src/i18n/index.ts`:** importa os polyfills (10.5) **antes** de tudo, cria a instância com os 3 JSON embutidos (`resources`), `fallbackLng: 'pt-BR'`, `interpolation: { escapeValue: false }` (não há HTML) e **init síncrono** (recursos locais; a opção se chama `initAsync` nas versões atuais, conferir na doc ao implementar). Começa com o idioma resolvido pelo aparelho, para o primeiro render nunca ficar sem texto.
+- **Aplicar a escolha salva:** o store de preferências hidrata de forma assíncrona (seção 7.5). Depois de hidratado, o `I18nProvider` chama `i18n.changeLanguage(effective)` **antes de a splash ser liberada** (acrescenta-se "idioma aplicado" à condição de pronto da seção 7.5). Assim o usuário nunca vê um idioma e depois outro.
+- **Troca:** `useLanguage().setLanguage(lang | 'system')` grava no store e o `I18nProvider` troca o idioma na hora; `react-i18next` re-renderiza só quem usa `t`. Sem reiniciar o app.
+- **Efeitos que dependem do idioma ao trocar:** (a) as entradas de `places` do React Query de **outros** idiomas são removidas e a do novo é buscada (seção 9.3); (b) as notificações locais agendadas são **reagendadas** com o texto do novo idioma; (c) o rótulo do dock é remedido (Fase 2); (d) `profiles.locale` é atualizado.
+- **Sem RTL:** nenhum dos idiomas é RTL; `supportsRTL` fica como está.
+
+### 10.4 Chaves, arquivos e tipagem
+
+- **Arquivos:** `src/i18n/locales/pt-BR.json` (base, texto igual ao do protótipo), `en.json` e `es.json`. **Um namespace só** (`translation`), porque são poucas telas.
+- **Estrutura:** objeto aninhado por tela/feature, nomes de chave em inglês `camelCase`: `home.title`, `suggestion.cta`, `plus.table.suggestions`, `common.cancel`. Textos de acessibilidade em `a11y.*` (ex.: `a11y.tab.passport`). Textos de notificação em `notifications.*`.
+- **Tipagem:** arquivo `src/i18n/i18next.d.ts` com a augmentation de `CustomTypeOptions` (`defaultNS: 'translation'`, `resources: { translation: typeof ptBR }`), tendo o **pt-BR como fonte dos tipos**. `resolveJsonModule` já vem ligado no `expo/tsconfig.base`. Resultado: `t('home.titulo')` não compila, e `t('suggestion.remaining', { count })` exige o `count`. A tipagem seletora nova (`enableSelector`) **não** entra agora; fica como evolução se o editor ficar lento.
+- **Interpolação:** `{{name}}`, `{{count}}`; sempre por parâmetro, nunca concatenando string (regra do plano).
+- **Plurais:** formato JSON v4 do i18next (`_one`, `_other`, e as categorias extras do idioma). **Atenção:** os idiomas não têm as mesmas categorias (em pt-BR e es existe `_many`, em en não). O teste de paridade (10.7) compara as chaves **sem o sufixo de plural** e exige `_other` em todo plural, em vez de exigir sufixos idênticos.
+- **Ordinais:** pelo recurso nativo do i18next (`t('key', { count, ordinal: true })`, chaves `key_ordinal_one`...), que usa o mesmo `Intl.PluralRules` com `type: 'ordinal'`. Não se escreve função de ordinal à mão.
+- **Nunca em `t()`:** nomes próprios do catálogo, rótulos vindos do banco, e valores calculados (data, número, moeda, distância), que usam os helpers da seção 10.6.
+
+### 10.5 Plural no Hermes (verificação pedida pelo plano)
+
+- **Fato conferido nas docs atuais:** o Hermes **não implementa `Intl.PluralRules`**; o i18next documenta que, desde a v24, sem ele só resolvem as formas `_one`/`_other` em inglês (pt-BR e es ficariam erradas).
+- **Decisão:** `src/i18n/polyfills.ts` importa `@formatjs/intl-pluralrules/polyfill-force.js` e os dados de `locale-data/pt.js`, `en.js` e `es.js`. O **`polyfill-force`** (e não o `polyfill`) é o indicado para o Hermes, porque a detecção do `polyfill` comum é lenta no Android. Para não depender de uma suposição, o import é condicionado a `typeof Intl.PluralRules === 'undefined'`; se um Hermes futuro trouxer o recurso, o polyfill não carrega. Instalação com `npx expo install` (ou `npm i`, se o pacote não estiver na lista do Expo; registrar na tarefa de dependências).
+- **Custo:** poucas centenas de KB e uma execução no início; medir na Fase 13 junto com a abertura.
+- **O teste no jest roda no Node**, que tem `Intl.PluralRules` nativo, então ele **não prova** o comportamento do Hermes. Vira critério 👀 da Fase 2: no aparelho, conferir "1 restante" × "2 restantes" nos três idiomas.
+- **Outros `Intl` no Hermes:** a doc do Hermes lista `NumberFormat`, `DateTimeFormat` e `Collator`; **não** cita `RelativeTimeFormat`, `ListFormat`, `DisplayNames` nem `Locale`. **Regra: não usar essas APIs.** Também **não usar `NumberFormat.formatToParts`** (só no Android) nem `signDisplay`/notação compacta (não suportados no iOS). O resultado do `Intl` pode variar com a versão do Android; por isso o que é visualmente crítico é validado no aparelho (👀).
+
+### 10.6 Formatação (`src/i18n/format.ts`)
+
+Funções puras que recebem o `Locale` (e não leem estado global), com testes. O hook chama com o idioma ativo.
+
+| Helper | Saída (pt-BR) | Implementação |
+|---|---|---|
+| `formatStampDate(date, tz)` | `02 · 10 · 2026` | Partes numéricas montadas à mão (dia e mês com 2 dígitos, ano), independentes do `Intl`, para o carimbo ser idêntico em qualquer aparelho |
+| `formatWeekdayShort(date, locale, tz)` | `SEX · 02 OUT` | `Intl.DateTimeFormat` com `weekday: 'short'` e `month: 'short'`, em maiúsculas e sem o ponto final (`sex.` → `SEX`). **Não** usa `formatToParts`. Se aparelhos divergirem no 👀, os nomes curtos passam para o JSON |
+| `formatDate(date, locale, tz)` | `2 de outubro` | `Intl.DateTimeFormat` |
+| `formatCurrency(value, locale)` | `R$ 30,00` / `R$30.00` | `Intl.NumberFormat` com `currency: 'BRL'` sempre (D10); só o formato segue o idioma |
+| `formatDistance(meters, locale)` | `1,8 km` / `1.8 km`; abaixo de 1 km, `350 m` | `Intl.NumberFormat` decimal (1 casa) + símbolo `km`/`m`, sem `style: 'unit'` (suporte incerto no iOS) |
+| ordinais | `3ª` | `t(..., { ordinal: true })` (10.4) |
+
+- **Fuso:** datas de carimbo e "semana" usam o **fuso do usuário** (`profiles.timezone`, seção 8.6), não o do servidor.
+- **Rótulos de faixa de preço** ("De graça", "Até R$30", "Até R$80") são **nomes de opção** fixos nos JSON, não valores calculados. Já o preço do lugar e os planos do Plus passam por `formatCurrency`.
+- **Texto igual ao protótipo** só no pt-BR; en e es são traduções (revisão: D11).
+
+### 10.7 Conteúdo do catálogo e do banco
+
+- `place_translations(place_id, locale, kind_label, reason_mood, reason_time, reason_money)`: o service busca `locale in (ativo, 'pt-BR')` e **mescla**, com o pt-BR como fallback **por campo**. Assim um lugar sem tradução em en ainda aparece, em português.
+- **No MVP, só o pt-BR do catálogo é obrigatório.** Traduzir os lugares é opcional e entra com a revisão do D11.
+- A **query key leva o idioma** (seção 9.3) e o cache de outros idiomas é limpo ao trocar.
+- Enums e IDs de domínio (`curious`, `2h`, `up_to_30`, `viewpoint`...) **nunca são traduzidos**; o rótulo vem de `mood.curious`, `budget.up_to_30`, `category.viewpoint` nos JSON.
+
+### 10.8 Textos nativos (fora do JS)
+
+- **Nome do app e permissões** (localização) por idioma, via a chave `locales` do `app.json`, apontando para arquivos em `src/i18n/native/pt-BR.json`, `en.json` e `es.json`. A doc do Expo mostra suporte a `CFBundleDisplayName`, descrições de permissão (iOS) e `app_name` (Android); o formato exato dos arquivos é conferido na Fase 13 (build). No iOS, `CFBundleAllowMixedLocalizations` ligado.
+- **Notificações locais:** o texto é resolvido com `t()` **no momento de agendar**, no idioma ativo, e reagendado quando o idioma muda (10.3). Entra nas chaves de todos os arquivos, como o plano exige.
+- **Paridade:** o teste de paridade também cobre `notifications.*`.
+
+### 10.9 Testes
+
+- **Paridade de chaves** (`i18n/locales.test.ts`): mesmas chaves-base nos 3 arquivos (ignorando o sufixo de plural, 10.4), mesmos placeholders (`{{count}}`, `{{name}}`) por chave, `_other` presente em todo plural, e nenhum valor vazio.
+- **`resolveLocale`:** `pt-PT`→`pt-BR`, `en-GB`→`en`, `es-MX`→`es`, `fr`→`pt-BR`, e a escolha salva ganhando do aparelho.
+- **`format.ts`:** cada helper nos 3 idiomas, com um fuso fixo (virada de dia incluída).
+- **Estouro de texto:** testes de layout dos componentes com strings ~40% maiores (critério da Fase 2), incluindo o maior rótulo do dock ("Passaporte"/"Passport"/"Pasaporte").
+- **Componente:** render em cada idioma troca o texto sem reiniciar.
+- **👀 no aparelho (Fase 2/3):** plural no Hermes (10.5), nome do dia/mês, troca de idioma em tempo real e persistência após reabrir.
+
+### 10.10 Riscos
+
+| Risco | Tratamento |
+|---|---|
+| Plural errado em pt-BR/es no Hermes | Polyfill com dados de pt/en/es + 👀 no aparelho (10.5) |
+| `Intl.DateTimeFormat` com saída diferente por aparelho/versão do Android | Carimbo montado sem `Intl`; nomes curtos normalizados; plano B: nomes no JSON |
+| Texto longo em en/es quebra o layout | Critério de 40% e teste de layout (Fase 2) |
+| Chave faltando em algum idioma | Teste de paridade + tipagem a partir do pt-BR |
+| Flash de idioma errado na abertura | Splash segurada até o idioma salvo ser aplicado (10.3) |
+| Polyfill pesar na abertura | `polyfill-force` + dados só de 3 idiomas; medir na Fase 13 |
+| Tradução ruim de en/es | Revisão humana (D11), antes da Fase 18 |
+
+## 11. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- Estratégia de i18n
 - Estratégia de testes
 - Ambientes e segredos
 - Dependências planejadas
