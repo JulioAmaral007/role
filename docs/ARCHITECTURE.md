@@ -96,7 +96,7 @@ Contexto técnico que muda a aplicação das regras: **React Compiler ligado** (
 - Stack do Expo Router (já nativo) para push e modais; `presentation: 'modal'`/`'fullScreenModal'`, e `formSheet` onde fizer sentido, em vez de bottom sheet em JS (`ui-native-modals`). **Nada de bottom sheet de biblioteca JS.**
 - Cabeçalho: usar as opções nativas do `Stack.Screen` quando o visual do protótipo permitir. As telas do Rolê têm cabeçalho próprio desenhado no conteúdo (logo, voltar, pílulas); nesses casos `headerShown: false` e o cabeçalho é um componente de `ui/`.
 - **Tabs: exceção** ao "native tabs" da skill, porque o dock flutuante exige `tabBar` customizado (ver 3.8 e o ADR da tab bar).
-- Menus e seletores: usar menu nativo (`ui-menus`, zeego) se um dia houver dropdown. No MVP o seletor de idioma é uma lista de linhas em Ajustes, sem menu.
+- Menus e seletores: usar menu nativo (`ui-menus`, zeego) se um dia houver dropdown. No MVP o seletor de idioma é uma lista de linhas na rota `language` (aberta pela linha "Idioma" do Perfil), sem menu.
 
 ### 3.5 UI (`ui-*`)
 
@@ -148,7 +148,7 @@ Divergências novas devem entrar nesta tabela e no Registro de iterações do pl
 
 ## 4. Estrutura de pastas
 
-Base da skill `react-native-architecture` (`app/`, `components/{ui,features}/`, `hooks/`, `services/`, `stores/`, `utils/`, `types/`), validada contra ela e acrescida de `domain/`, `lib/`, `providers/`, `theme/` e `i18n/` (seção 1). O grupo `(auth)` da skill **não existe** aqui: não há login (auth anônima). As pastas da árvore abaixo foram criadas (vazias, com `.gitkeep`) em 02/10/2026; dentro de `src/app/` só existem, por enquanto, `_layout.tsx` e `index.tsx`, e as demais rotas nascem nas fases 3 em diante. O `.gitkeep` é apagado quando o primeiro arquivo real entra na pasta.
+Base da skill `react-native-architecture` (`app/`, `components/{ui,features}/`, `hooks/`, `services/`, `stores/`, `utils/`, `types/`), validada contra ela e acrescida de `domain/`, `lib/`, `providers/`, `theme/` e `i18n/` (seção 1). O grupo `(auth)` da skill **não existe** aqui: não há login (auth anônima). As pastas da árvore abaixo foram criadas (vazias, com `.gitkeep`) em 02/10/2026; dentro de `src/app/` só existem, por enquanto, `_layout.tsx`, `index.tsx` e o `catalog.tsx` temporário da Fase 2, e as demais rotas nascem nas fases 3 em diante. O `.gitkeep` é apagado quando o primeiro arquivo real entra na pasta.
 
 ### 4.1 Árvore
 
@@ -168,35 +168,46 @@ src/
 ├── app/                           # SOMENTE rotas (Expo Router). Nomes em kebab-case: viram URL
 │   ├── _layout.tsx                # providers + Stack raiz + gate de onboarding
 │   ├── +not-found.tsx             # rota inexistente (deep link inválido)
-│   ├── onboarding.tsx
+│   ├── onboarding/                # grupo protegido pelo gate: Stack próprio, sem header
+│   │   ├── _layout.tsx
+│   │   ├── welcome.tsx            # Boas-vindas (inicial)
+│   │   ├── location.tsx           # "Onde você tá?"
+│   │   └── no-location.tsx        # "Sem localização"
 │   ├── (tabs)/
-│   │   ├── _layout.tsx            # <Tabs tabBar={FloatingTabBar}>
+│   │   ├── _layout.tsx            # <Tabs tabBar={AppTabBar}>, 4 abas
 │   │   ├── index.tsx              # Rolê (home)
 │   │   ├── passport.tsx
-│   │   └── crew.tsx               # Turma (placeholder "Em breve")
+│   │   ├── crew.tsx               # Turma (placeholder "Em breve")
+│   │   └── profile.tsx            # Perfil (preferências e Ajustes)
 │   ├── suggestion.tsx             # push
-│   ├── place/[id].tsx             # deep link role://place/<id>
-│   ├── stamp.tsx                  # fullScreenModal
-│   ├── feedback.tsx               # modal ("Como foi?")
+│   ├── place/[id].tsx             # push; deep link role://place/<id> (Detalhe do lugar)
+│   ├── on-the-way.tsx             # push, sem gesto de voltar (A caminho)
+│   ├── feedback.tsx               # modal ("Como foi")
+│   ├── stamp.tsx                  # fullScreenModal ("Carimbo novo")
+│   ├── stamp/[id].tsx             # push (Detalhe do carimbo)
+│   ├── story.tsx                  # modal (Story para compartilhar)
+│   ├── no-match.tsx               # push ("Nada bateu")
+│   ├── offline.tsx                # push ("Sem internet")
 │   ├── report-problem.tsx         # modal
 │   ├── plus.tsx                   # modal (paywall / fake door)
-│   └── settings.tsx               # modal (idioma, notificações, privacidade, apagar dados)
+│   └── language.tsx               # modal (escolha do idioma, aberto pelo Perfil)
 ├── components/
 │   ├── ui/                        # genéricos, sem domínio
 │   │   ├── Button.tsx  Chip.tsx  Pill.tsx  Card.tsx  Text.tsx  FloatingTabBar.tsx ...
 │   │   └── icons/                 # Logo.tsx, Bolt.tsx, Compass.tsx ... (react-native-svg)
 │   └── features/                  # conhecem o domínio, falam com hooks
-│       ├── home/  suggestion/  stamp/  passport/  plus/  settings/  feedback/  onboarding/  navigation/
-├── hooks/                         # useQuota.ts, useStreak.ts, useSuggestion.ts, usePlaces.ts, useLanguage.ts, useDockInset.ts
+│       ├── home/  suggestion/  place/  trip/  feedback/  stamp/  story/  passport/  profile/  crew/  plus/  onboarding/  navigation/
+├── hooks/                         # useQuota.ts, useStreak.ts, useSuggestion.ts, usePlaces.ts, useTrip.ts, useLanguage.ts, useDockInset.ts
 ├── providers/                     # QueryProvider.tsx, I18nProvider.tsx, AuthProvider.tsx
 ├── lib/
 │   └── supabase.ts                # client único; importado só por services/
 ├── services/                      # uma pasta por assunto; cada uma com index.ts como entrada pública
 │   ├── places/                    # placesRepository.ts (interface), supabasePlacesRepository.ts, inMemoryPlacesRepository.ts, index.ts
 │   ├── stamps/  quota/  feedback/  reports/  analytics/
+│   ├── media/                     # fotos do usuário no armazenamento do app (D32)
 │   └── location.ts  notifications.ts  share.ts  haptics.ts   # módulos nativos: um arquivo cada
-├── stores/                        # Zustand + AsyncStorage: preferencesStore.ts, syncQueueStore.ts, suggestionSessionStore.ts (ver ADR da seção 7)
-├── domain/                        # regras puras: recommend.ts, streak.ts, bingo.ts, monthlyGoal.ts, openingHours.ts, safety.ts
+├── stores/                        # Zustand + AsyncStorage: preferencesStore.ts, syncQueueStore.ts, tripStore.ts, lastSuggestionStore.ts, suggestionSessionStore.ts (ver ADR da seção 7)
+├── domain/                        # regras puras: recommend.ts, relaxations.ts, geo.ts, checkIn.ts, travelTime.ts, streak.ts, bingo.ts, monthlyGoal.ts, openingHours.ts, safety.ts
 ├── test/                          # só para testes: setup.ts, renderWithProviders.tsx, fábricas, services em memória
 ├── theme/                         # tokens.ts, typography.ts, fonts.ts
 ├── i18n/
@@ -251,81 +262,136 @@ Notas:
 
 Base: skill `react-native-architecture` (padrão 1, Expo Router) e a doc do Expo Router conferida em 02/10/2026 (`router/advanced/modals`, `protected`, `router-settings`, `custom-tabs`, `error-handling`). Typed Routes ligado: todo `href` é tipado, nunca montado por concatenação de string.
 
+**Revisão de 02/10/2026 (protótipo com 16 telas):** esta seção foi reescrita para as 11 telas novas, as 4 abas e o fluxo novo do carimbo ("Bora, tô indo" não carimba mais: abre o **A caminho**; o carimbo só sai depois de **"Cheguei!"** e do **Como foi**). Decisões novas: D4, D6, D9 e D32 a D38 (seção 15).
+
 ### 5.1 Grafo
 
 ```
 Stack raiz (src/app/_layout.tsx, headerShown: false, anchor: '(tabs)')
 │
 ├─ [guard: onboarding NÃO concluído]
-│    └─ onboarding ............................ tela cheia, sem voltar, sem gesto
+│    └─ onboarding/ ........................... Stack próprio, sem header
+│         welcome ──"Começar"──▶ location ──"Agora não"──▶ no-location
+│                                  │                          │
+│                                  └─ "Usar minha localização" ou bairro digitado ──▶ conclui
+│                                                             └─ "Usar esse ponto" ──▶ conclui
 │
 └─ [guard: onboarding concluído]
-     ├─ (tabs) ............................... Rolê · Passaporte · Turma (dock flutuante)
-     ├─ suggestion ........................... push        (Rolê → Sugestão)
-     ├─ place/[id] ........................... push        (deep link; placeholder no MVP)
-     ├─ stamp ................................ fullScreenModal (Sugestão "Bora, tô indo" → Carimbo)
-     ├─ feedback ............................. modal       ("Como foi?")
-     ├─ report-problem ....................... modal       (Sugestão/Carimbo → "Informar problema")
-     ├─ plus ................................. modal       (Sugestão "Outra" sem cota → Plus)
-     └─ settings ............................. modal       (botão no header do Passaporte)
+     ├─ (tabs) ............................... Rolê · Passaporte · Turma · Perfil (dock flutuante)
+     ├─ suggestion ........................... push
+     ├─ place/[id] ........................... push        (Detalhe do lugar)
+     ├─ on-the-way ........................... push        (A caminho; sem gesto de voltar)
+     ├─ feedback ............................. modal       (Como foi)
+     ├─ stamp ................................ fullScreenModal (Carimbo novo)
+     ├─ stamp/[id] ........................... push        (Detalhe do carimbo)
+     ├─ story ................................ modal       (Story para compartilhar)
+     ├─ no-match ............................. push        (Nada bateu)
+     ├─ offline .............................. push        (Sem internet)
+     ├─ report-problem ....................... modal       (Informar problema)
+     ├─ plus ................................. modal       (paywall / fake door)
+     └─ language ............................. modal       (escolha do idioma)
 ```
 
-Fluxo principal: `Rolê ──"Me tira da inércia"──▶ suggestion ──"Bora, tô indo"──▶ stamp ──"Ver meu passaporte"──▶ (tabs)/passport`. Ramo: `suggestion ──"Outra" sem cota──▶ plus ──fechar──▶ suggestion`.
+**Fluxo principal (empilhamento):**
+
+```
+(tabs)/index ─"Me tira da inércia"─▶ suggestion ─"Bora, tô indo"─▶ on-the-way ─"Cheguei!" (dentro do raio)─▶ feedback ─▶ stamp ─"Ver meu passaporte"─▶ (tabs)/passport
+```
+
+**Ramos:**
+
+| De | Ação | Para |
+|---|---|---|
+| `(tabs)/index` | recomendação sem resultado (não gasta cota) | `no-match` |
+| `(tabs)/index` ou `suggestion` | pedido falha por falta de rede | `offline` |
+| `(tabs)/index` | sem cota | `plus` |
+| `suggestion` | "Outra" sem cota | `plus` (fechar volta para `suggestion`) |
+| `suggestion` | "Detalhes" ou "Como chegar" | `place/[id]` |
+| `place/[id]` | "Bora" | `on-the-way` (cria o rolê, como na Sugestão) |
+| `place/[id]` | "Informar problema" | `report-problem` |
+| `on-the-way` | "Mudei de ideia" | `suggestion` (cancela o rolê, não gasta cota) |
+| `feedback` | "Depois" | `stamp` (carimbo sem avaliação) |
+| `stamp` | "Mandar pro grupo" | `story` |
+| `(tabs)/passport` | toque num carimbo | `stamp/[id]` |
+| `stamp/[id]` | "Mandar pro grupo" ou "Compartilhar carimbo" | `story` |
+| `(tabs)/profile` | card do plano | `plus` |
+| `(tabs)/profile` | linha "Idioma" | `language` |
+| `no-match` | uma das saídas | `suggestion` (nova tentativa); "Mudar tudo" volta para `(tabs)/index` |
+| `offline` | "Tentar de novo" | volta para quem chamou, que repete o pedido; "Ver meu passaporte" abre `(tabs)/passport` |
 
 ### 5.2 Tabela de rotas
 
 | Arquivo (`src/app/`) | URL | Apresentação | Deep link público | Parâmetros | Voltar |
 |---|---|---|---|---|---|
-| `onboarding.tsx` | `/onboarding` | tela cheia (stack, sem header) | não | — | desligado (`gestureEnabled: false`); sair só concluindo |
+| `onboarding/_layout.tsx` | — | Stack do grupo, sem header | não | — | — |
+| `onboarding/welcome.tsx` | `/onboarding/welcome` | tela cheia; **inicial** do grupo | não | — | desligado: não há de onde voltar |
+| `onboarding/location.tsx` | `/onboarding/location` | push dentro do grupo | não | — | botão voltar do desenho (→ `welcome`) |
+| `onboarding/no-location.tsx` | `/onboarding/no-location` | push dentro do grupo | não | — | botão voltar do desenho (→ `location`) |
 | `(tabs)/index.tsx` | `/` | tab | **sim** `role://` | — | sai do app (Android) |
 | `(tabs)/passport.tsx` | `/passport` | tab | **sim** `role://passport` | — | volta para a tab anterior |
-| `(tabs)/crew.tsx` | `/crew` | tab | não | — | idem |
-| `suggestion.tsx` | `/suggestion` | push | **sim** `role://suggestion` | nenhum: o filtro (humor, tempo, orçamento) vem do store de preferências | volta para o Rolê |
-| `place/[id].tsx` | `/place/<id>` | push | **sim** `role://place/<id>` | `id` (uuid do lugar) | volta para o Rolê (âncora) |
-| `stamp.tsx` | `/stamp?stampId=<uuid>` | `fullScreenModal` | não | `stampId`: o carimbo já existe no aparelho (criado offline, ver a seção de offline) | gesto desligado; sai por "Ver meu passaporte" ou fechar |
-| `feedback.tsx` | `/feedback?stampId=<uuid>` | `modal` | não | `stampId` | gesto de fechar ligado; nunca bloqueia |
+| `(tabs)/crew.tsx` | `/crew` | tab (placeholder "Em breve" no MVP, D4) | não | — | idem |
+| `(tabs)/profile.tsx` | `/profile` | tab | não | — | idem |
+| `suggestion.tsx` | `/suggestion` | push | **sim** `role://suggestion` | nenhum: o filtro (humor, tempo, orçamento) e as preferências vêm do `preferencesStore` | volta para o Rolê |
+| `place/[id].tsx` | `/place/<id>` | push | **sim** `role://place/<id>` | `id` (uuid do lugar) | volta para quem abriu; por deep link, para o Rolê (âncora) |
+| `on-the-way.tsx` | `/on-the-way` | push, `gestureEnabled: false` | **sim** `role://on-the-way` (só para a notificação da Fase 12) | nenhum: o rolê vem do `tripStore` | só pelo botão do desenho ou por "Mudei de ideia"; o gesto está desligado para o usuário não sair sem querer |
+| `feedback.tsx` | `/feedback` | `modal` | não | nenhum: o rolê vem do `tripStore` | gesto desligado (o carimbo depende dele); sai por "Pegar meu carimbo" ou "Depois" |
+| `stamp.tsx` | `/stamp?stampId=<uuid>` | `fullScreenModal` | não | `stampId`: o carimbo já existe no aparelho (criado offline, seção 9) | gesto desligado; sai por "Ver meu passaporte" ou fechar |
+| `stamp/[id].tsx` | `/stamp/<uuid>` | push | não | `id` (uuid do carimbo) | volta para o Passaporte |
+| `story.tsx` | `/story?stampId=<uuid>` | `modal` | não | `stampId` | gesto de fechar ligado |
+| `no-match.tsx` | `/no-match` | push | não | nenhum: o motivo e as saídas vêm da recomendação que acabou de falhar, em memória (`suggestionSessionStore`) | volta para o Rolê |
+| `offline.tsx` | `/offline` | push | não | nenhum: a última sugestão vem do `lastSuggestionStore` | volta para quem chamou |
 | `report-problem.tsx` | `/report-problem?placeId=<uuid>` | `modal` | não | `placeId` | gesto de fechar ligado |
-| `plus.tsx` | `/plus?source=<origem>` | `modal` | não | `source` (`quota`/`settings`, para métrica) | gesto de fechar ligado |
-| `settings.tsx` | `/settings` | `modal` | não | — | gesto de fechar ligado |
+| `plus.tsx` | `/plus?source=<origem>` | `modal` | não | `source` (`quota`/`profile`, para métrica) | gesto de fechar ligado |
+| `language.tsx` | `/language` | `modal` | não | — | gesto de fechar ligado; a troca vale na hora |
 | `+not-found.tsx` | qualquer URL sem rota | — | — | — | link para `/` |
 
 Regras:
 
 1. **Cabeçalho nativo desligado em tudo** (`headerShown: false`): cada tela desenha o próprio topo com componentes de `ui/` (seção 3.4).
-2. **Rota interna aberta por link sem parâmetro** (ex.: `role://stamp`): a tela detecta o parâmetro ausente e faz `<Redirect href="/" />`. Nada de crash nem tela vazia.
+2. **Rota interna aberta sem o que precisa** faz `<Redirect href="/" />`: parâmetro ausente (`role://stamp`), ou rolê em andamento ausente em `on-the-way` e `feedback` (o `tripStore` está vazio, por exemplo porque o rolê foi cancelado). Nada de crash nem tela vazia.
 3. **Parâmetros carregam só identificadores**, nunca objetos nem dados do usuário. O dado vem do hook (React Query ou store) a partir do `id`.
 4. **Localização nunca vai na URL.**
-5. Modais cobrem o dock porque ficam no Stack raiz, acima de `(tabs)`; o `suggestion` (push) também cobre o dock. Só as três tabs mostram o dock.
+5. **Só as quatro abas mostram o dock.** Todas as outras rotas ficam no Stack raiz, acima de `(tabs)`, e o cobrem sem código extra (push e modais).
 6. `fullScreenModal` no Android cai para `modal` (comportamento do Expo Router); o `stamp` precisa ficar correto nos dois, então não depende do tipo de apresentação para o visual (fundo azul próprio, ocupando a tela inteira).
-7. Esquema `role://` já está no `app.json` (`"scheme": "role"`). Links universais (`https://`) ficam para o pós-MVP, porque exigem domínio.
+7. Esquema `role://` já está no `app.json` (`"scheme": "role"`). Links universais (`https://`) ficam para o pós-MVP, porque exigem domínio. Os deep links públicos são só os da tabela; os demais não são alcançáveis de fora porque dependem de estado local.
+8. **`stamp.tsx` e `stamp/[id].tsx` convivem:** o primeiro é o "Carimbo novo" (modal, parâmetro por query) e o segundo o "Detalhe do carimbo" (push, parâmetro no caminho). Não há `stamp/index.tsx` nem `stamp/_layout.tsx`; no `Stack` raiz as duas telas se declaram por nome (`stamp` e `stamp/[id]`).
+9. **Sair do fluxo do carimbo:** "Ver meu passaporte" fecha todas as telas empilhadas acima das tabs e abre o Passaporte. O mecanismo exato (`dismissAll` seguido de `navigate`, ou `dismissTo`) é conferido na doc na Fase 10 (5.6).
+10. **Reabrir o app com um rolê em andamento (D38, default):** o app **não** redireciona à força para o `on-the-way`. A home mostra um atalho para voltar (Fase 8) e a notificação do rolê (Fase 12) abre `role://on-the-way`. O motivo é não surpreender quem desistiu e esqueceu de cancelar; o plano da Fase 10 diz "reabrir volta para cá", e o default acima é a leitura mais segura. **Se preferir o redirecionamento forçado, é uma linha no gate** (seção 5.3) e muda só a D38.
+11. **"Sem internet" é uma rota (`offline`), não um estado da home:** o plano deixou a decisão para este ADR. Ela é chamada de dois lugares (CTA da home e "Outra" da Sugestão), então um estado interno da home não serviria à Sugestão. A rota guarda a **última sugestão salva** num store próprio (seção 7.3) e "Tentar de novo" volta para quem chamou, que repete o pedido ao recuperar o foco (detalhe na Fase 9).
+12. **`no-match` não é erro:** é o resultado "nenhum lugar passa nos filtros", calculado no cliente (D16). Não gasta cota. As saídas ("Muda uma coisa só") aplicam uma mudança de filtro no `preferencesStore` e voltam a pedir a sugestão.
 
 ### 5.3 Gate de onboarding
 
-- **Mecanismo:** `Stack.Protected` com `guard` no `_layout.tsx` raiz, como na doc do Expo Router: `onboarding` protegido por `!onboardingDone` e as demais rotas por `onboardingDone`. Não usar `<Redirect>` espalhado pelas telas.
-- **Fonte da flag:** `onboardingDone` no store de preferências (persistido em AsyncStorage). A flag só é lida **depois da reidratação** do store: a splash fica segurada (`SplashScreen.preventAutoHideAsync`) até terminarem a reidratação, as fontes e o init do i18n. Sem isso, o app piscaria o onboarding antes de abrir o Rolê.
-- **Concluir o onboarding:** gravar `onboardingDone = true`. O guard muda e o Expo Router leva sozinho à âncora `(tabs)`, removendo `onboarding` do histórico (comportamento documentado do `Stack.Protected`).
+- **Mecanismo:** `Stack.Protected` com `guard` no `_layout.tsx` raiz, como na doc do Expo Router: o grupo `onboarding` protegido por `!onboardingDone`, e **todas as demais rotas da seção 5.2** (`(tabs)`, `suggestion`, `place/[id]`, `on-the-way`, `feedback`, `stamp`, `stamp/[id]`, `story`, `no-match`, `offline`, `report-problem`, `plus`, `language`) por `onboardingDone`. Não usar `<Redirect>` espalhado pelas telas.
+- **O onboarding agora são três telas** (`onboarding/welcome`, `location`, `no-location`), num `Stack` próprio do grupo. O guard protege o grupo inteiro; dentro dele o fluxo é o do grafo da 5.1.
+- **Fonte da flag:** `onboardingDone` no `preferencesStore` (persistido em AsyncStorage). A flag só é lida **depois da reidratação** do store: a splash fica segurada (`SplashScreen.preventAutoHideAsync`) até terminarem a reidratação, as fontes e o init do i18n. Sem isso, o app piscaria o onboarding antes de abrir o Rolê.
+- **Concluir o onboarding:** `completeOnboarding()` grava `onboardingDone = true` e, junto, o que o usuário escolheu (`startPoint` se digitou um bairro ou ponto). O guard muda e o Expo Router leva sozinho à âncora `(tabs)`, removendo o grupo `onboarding` do histórico (comportamento documentado do `Stack.Protected`). Quem conclui: `location` (depois de "Usar minha localização" ou de escolher um bairro) e `no-location` (depois de "Usar esse ponto"). **A permissão de localização é pedida em `location`, nunca na abertura** (Fase 7).
+- **Termos e Privacidade:** o aceite entra como uma linha discreta na `welcome` ("Ao começar, você aceita…"), gravando `profiles.accepted_terms_at` (Fase 7). Não bloqueia o fluxo.
 - **Âncora:** `export const unstable_settings = { anchor: '(tabs)' }` no `_layout.tsx` raiz. Assim, um deep link para `/suggestion` ou `/place/<id>` abre com o Rolê por baixo, e o voltar funciona.
-- **Deep link antes do onboarding:** cai no `onboarding` (primeira tela disponível) e, depois de concluir, vai ao Rolê; **o destino do link é descartado**. Aceito no MVP, porque o link só chega a quem já instalou e abriu o app.
+- **Deep link antes do onboarding:** cai na `onboarding/welcome` (primeira tela disponível) e, depois de concluir, vai ao Rolê; **o destino do link é descartado**. Aceito no MVP, porque o link só chega a quem já instalou e abriu o app.
 - **Limite da doc do SDK 57:** a opção `redirectTo` do `Stack.Protected` é do SDK 58+. Aqui vale o redirecionamento padrão (âncora/primeira tela), que atende ao fluxo acima.
 - **A auth anônima não entra no gate.** `signInAnonymously` roda em segundo plano (AuthProvider) e nunca bloqueia o onboarding nem o Rolê. Telas que dependem de sessão (cota, carimbos no servidor) tratam "sessão ainda não pronta" como estado de carregamento ou offline.
 
 ### 5.4 Tabs
 
-- Grupo `(tabs)` com três rotas: `index` (Rolê), `passport`, `crew`. Aba inicial: `index`.
-- O dock flutuante **não** usa `NativeTabs`. A decisão está no **ADR da tab bar** (seção 6): tabs JS de `expo-router/js-tabs` com a prop `tabBar` customizada.
+- Grupo `(tabs)` com **quatro** rotas, nesta ordem: `index` (Rolê), `passport`, `crew` (Turma) e `profile` (Perfil). Aba inicial: `index`.
+- A **Turma** é um placeholder "Em breve" no MVP (D4), já com dock e `useDockInset()`; a tela desenhada entra na Fase 17.
+- O **Perfil** concentra as preferências de recomendação e os Ajustes (D9): a linha "Idioma" abre a rota `language`. O Passaporte **não** tem mais botão de Ajustes.
+- O dock flutuante **não** usa `NativeTabs`. A decisão está no **ADR da tab bar** (seção 6): tabs JS de `expo-router/js-tabs` com a prop `tabBar` customizada, agora com 4 itens.
 - Cada tela de tab aplica `useDockInset()` no conteúdo, porque o dock fica por cima.
 
 ### 5.5 Erros e rotas inexistentes
 
 - **`+not-found.tsx`** personalizado: texto via `t()`, visual do app e botão que leva a `/`.
-- **`ErrorBoundary`** exportado pelo `_layout.tsx` raiz (padrão do Expo Router: o erro de uma rota sobe para o `ErrorBoundary` mais próximo): tela com mensagem traduzida e botão "Tentar de novo" (`retry`). Erros de rede **não** passam por aqui; viram estado `offline`/`error` da própria tela.
+- **`ErrorBoundary`** exportado pelo `_layout.tsx` raiz (padrão do Expo Router: o erro de uma rota sobe para o `ErrorBoundary` mais próximo): tela com mensagem traduzida e botão "Tentar de novo" (`retry`). Erros de rede **não** passam por aqui; viram o estado `offline`/`error` da própria tela (ou a rota `offline`, regra 11).
 
 ### 5.6 Pontos que ficam para a implementação (conferir na doc antes de usar)
 
 Não decididos aqui porque dependem de API que precisa ser lida na doc do SDK 57 na hora de codar:
 
-- como fechar `stamp` e `suggestion` de uma vez e cair em `/passport` (`dismissAll`, `dismissTo` ou `navigate` com reset): Fase 10;
-- `sheetAllowedDetents` e `formSheet` para `feedback`/`report-problem`, se o design pedir uma folha parcial em vez de modal cheio (limitação do Android: sem header nativo nem stack aninhado dentro de formSheet);
+- como fechar o fluxo do carimbo e cair em `/passport` (`dismissAll`, `dismissTo` ou `navigate` com reset), e como voltar do `on-the-way` para a `suggestion` quando o app foi aberto por deep link (sem a `suggestion` embaixo): Fase 10;
+- `sheetAllowedDetents` e `formSheet` para `language` e `report-problem`, se o design pedir uma folha parcial em vez de modal cheio (limitação do Android: sem header nativo nem stack aninhado dentro de formSheet);
+- o `Stack.Protected` aceitar o grupo `onboarding/` como uma tela única do Stack raiz, com `Stack` aninhado (confirmar na implementação da Fase 3 e, se não aceitar, declarar as três telas direto no Stack raiz);
 - teste dos deep links com `npx uri-scheme open role://... ` feito pelo usuário (👀) na Fase 3.
 
 ## 6. ADR — Tab bar (dock flutuante) e recuo inferior
@@ -356,7 +422,8 @@ Isso é a exceção já registrada à regra `navigation-native-navigators` (seç
    >
      <Tabs.Screen name="index"    options={{ title: t('tabs.home'),     sceneStyle: { backgroundColor: colors.yellow } }} />
      <Tabs.Screen name="passport" options={{ title: t('tabs.passport'), sceneStyle: { backgroundColor: colors.cream } }} />
-     <Tabs.Screen name="crew"     options={{ title: t('tabs.crew'),     sceneStyle: { backgroundColor: colors.yellow } }} />
+     <Tabs.Screen name="crew"     options={{ title: t('tabs.crew'),     sceneStyle: { backgroundColor: colors.cream } }} />
+     <Tabs.Screen name="profile"  options={{ title: t('tabs.profile'),  sceneStyle: { backgroundColor: colors.cream } }} />
    </Tabs>
    ```
    O layout usa `useTranslation()`, então os títulos (e o dock) se atualizam ao trocar o idioma. `sceneStyle` dá o fundo por aba, sem faixa de outra cor atrás do dock.
@@ -365,8 +432,10 @@ Isso é a exceção já registrada à regra `navigation-native-navigators` (seç
 6. **Como o recuo é aplicado:** `contentContainerStyle={{ paddingBottom: dockInset }}` no scroll da tela (seção 3.5: padding estático, não `contentInset`). Telas sem scroll somam o valor ao padding inferior do contêiner.
 7. **Animação** (detalhada na tarefa do `FloatingTabBar`, Fase 2): só `transform` e `opacity`, largura do item ativo constante, um shared value `activeIndex` como fonte de verdade, sincronizado a partir de `state.index` (`.set()`/`.get()`, React Compiler). Medir a largura útil uma vez com `onLayout`.
 8. **Acessibilidade:** contêiner com `accessibilityRole="tablist"`; cada item `accessibilityRole="tab"`, `accessibilityState={{ selected }}` e `accessibilityLabel` traduzido (nos inativos, só ícone, é o único nome). Alvo de toque ≥ 44 (itens têm 52).
-9. **Ícones por rota** ficam num mapa tipado no adaptador (`Record<'index' | 'passport' | 'crew', IconComponent>`), então uma rota nova sem ícone quebra o `tsc`.
-10. **Dock só nas três abas.** Push (`suggestion`, `place/[id]`) e modais ficam no Stack raiz, acima de `(tabs)`, e cobrem o dock sem código extra (seção 5.2).
+9. **Ícones por rota** ficam num mapa tipado no adaptador (`Record<'index' | 'passport' | 'crew' | 'profile', IconComponent>`), então uma rota nova sem ícone quebra o `tsc`.
+10. **Dock só nas quatro abas** (Rolê, Passaporte, Turma e Perfil). Push (`suggestion`, `place/[id]`, `on-the-way`...) e modais ficam no Stack raiz, acima de `(tabs)`, e cobrem o dock sem código extra (seção 5.2).
+
+11. **Revisão de 02/10/2026 (4 abas):** o item inativo passa de 64 para **60** de largura (`dock.inactiveItemWidth`), porque com 4 itens o ativo ficaria apertado; o passo da pílula vira `60 + 4 = 64`. Os números dos testes de `dockLayout` e `FloatingTabBar` são refeitos para 4 itens na tarefa de design system da Fase 3. O restante do ADR (camadas, `AppTabBar`, animação só em `transform`/`opacity`, `useDockInset`) não muda.
 
 ### 6.3 Riscos e como foram tratados
 
@@ -374,9 +443,9 @@ Isso é a exceção já registrada à regra `navigation-native-navigators` (seç
 |---|---|
 | API de `tabBar` mudar no próximo SDK | Isolada em `AppTabBar`; `FloatingTabBar` não depende dela. Reserva: opção B |
 | Sombra do dock diferente no Android | `boxShadow` com as duas camadas do protótipo; conferir no critério 👀 da Fase 2 |
-| Label maior em en/es estourar o item ativo | Largura ativa constante (202 em 390): teste de layout com o maior label entre idiomas ("Passaporte"/"Passport"/"Pasaporte") |
+| Label maior em en/es estourar o item ativo | Largura ativa constante: **146 em 390 com 4 abas** (`338 − 3 × 60 − 3 × 4`; eram 202 com 3 abas de 64). O label tem `146 − 2 × 10 − 22 − 8 = 96` de largura útil; acima disso vira reticências (`maxLabelWidth`). Teste de layout com o maior label entre idiomas ("Passaporte"/"Passport"/"Pasaporte") |
 | Conteúdo escondido atrás do dock | `useDockInset()` obrigatório em toda tela de aba |
-| Aparelho com largura bem menor | A largura ativa sai da largura medida (`338 − 128 − 8` em 390); mínimo a validar no 👀 |
+| Aparelho com largura bem menor | A largura ativa sai da largura medida (`338 − 180 − 12` em 390 com 4 abas); mínimo a validar no 👀 |
 
 ## 7. ADR — Estratégia de estado
 
@@ -410,13 +479,16 @@ Zustand v5 + `persist` é pequeno, tipado, usa seletor por padrão (regra `list-
 
 | Store (arquivo) | Persistido? | Conteúdo |
 |---|---|---|
-| `preferencesStore.ts` | **sim** (`role.preferences`, `version: 1`) | `language` (`'system'` \| `'pt-BR'` \| `'en'` \| `'es'`; começa `'system'`), `onboardingDone`, `mood`/`timeSlot`/`budget` (começam `undefined`, regra `react-state-fallback`), preferências de notificação |
-| `syncQueueStore.ts` | **sim** (`role.syncQueue`, `version: 1`) | fila de carimbos ainda não enviados: `{ id (uuid), placeId, number, stampedAt, attempts }[]`, com `enqueue`, `acknowledge(id)` e `markFailed(id)` |
-| `suggestionSessionStore.ts` | **não** | ids de lugares já mostrados nesta sessão (para "sortear sem repetir") e o lugar atual |
+| `preferencesStore.ts` | **sim** (`role.preferences`, `version: 1`; sobe de versão ao ganhar campo que exija migração) | `language` (`'system'` \| `'pt-BR'` \| `'en'` \| `'es'`; começa `'system'`), `onboardingDone`, `mood`/`timeSlot`/`budget` (começam `undefined`, regra `react-state-fallback`), **preferências do Perfil** (`maxDistanceKm`, começa `undefined` = 5 km; `avoidTags: AvoidTag[]`; `accessibleOnly`), `startPoint` (`{ label, latitude, longitude }`, o ponto de partida digitado, D35), `profileName` (opcional, D37; padrão "Você"/"VC"), preferências de notificação (lembrete semanal da ofensiva, aviso de cota renovada) |
+| `syncQueueStore.ts` | **sim** (`role.syncQueue`, `version: 1`) | fila de carimbos ainda não enviados: `{ id (uuid), placeId, number, stampedAt, mood, timeSlot, budget, memory, feedback, attempts }[]` (a avaliação vai junto, para o `upsert` do carimbo e do `place_feedback` ser um só), com `enqueue`, `acknowledge(id)` e `markFailed(id)` |
+| `tripStore.ts` | **sim** (`role.trip`, `version: 1`) | o **rolê em andamento**: `trip: { place: { id, name, address, latitude, longitude }, travelMode, departedAt, initialDistanceMeters } \| undefined`. Guarda um **resumo do lugar** (e não só o `id`) para o A caminho abrir sem rede e depois de o app ser fechado; `initialDistanceMeters` é a base do anel de progresso. Ações: `startTrip`, `cancelTrip`, `finishTrip`. Sobrevive ao app fechado (por isso é persistido) |
+| `lastSuggestionStore.ts` | **sim** (`role.lastSuggestion`, `version: 1`) | a **última sugestão vista**, para a rota `offline`: `{ place (resumo), openUntil, savedAt } \| undefined`. É uma cópia **proposital** de dado que também vive no cache do catálogo, porque precisa existir quando o cache falhar ou expirar (exceção justificada à regra de ouro da 7.1) |
+| `suggestionSessionStore.ts` | **não** | ids de lugares já mostrados nesta sessão (para "sortear sem repetir"), o lugar atual e o **resultado da última recomendação sem lugar** (`noMatch`: motivo e saídas), que a rota `no-match` lê |
 
 Observações:
 
 - **Sem `passportCacheStore`.** A árvore inicial previa um cache do passaporte em store; ele **duplicaria** os carimbos que já ficam no cache persistido do React Query. O passaporte offline vem do cache do React Query **mais** os itens pendentes da `syncQueueStore`, juntados por um hook (`usePassport`) com `domain/`.
+- **Fotos e lembrança do usuário (D32):** a foto do "Como foi" é um arquivo no armazenamento do app (`services/media`, `expo-file-system`), num caminho previsível por carimbo (`stamps/<stampId>/foto-N.jpg`): **não existe store para elas**, a lista sai do diretório. A lembrança (texto) vai no carimbo (`memory`). Nada de foto sobe para o servidor no MVP.
 - **Localização não é persistida.** As coordenadas ficam só em memória (hook de localização), nunca em store persistido nem enviadas ao servidor (regra de privacidade do plano).
 - O idioma efetivo é derivado: `language === 'system' ? idioma do aparelho : language`; o store guarda só a **escolha** do usuário.
 
@@ -434,7 +506,7 @@ Observações:
 
 A doc do Zustand avisa que, com storage assíncrono, o store **não está hidratado no primeiro render** e mostraria os valores iniciais antes dos persistidos. Para o Rolê isso quebraria o gate de onboarding e o idioma. Decisão:
 
-- cada store persistido expõe se já hidratou (`persist.hasHydrated()` e `persist.onFinishHydration()`), encapsulado em um hook `useStoresHydrated()`;
+- cada store persistido (`preferencesStore`, `syncQueueStore`, `tripStore`, `lastSuggestionStore`) expõe se já hidratou (`persist.hasHydrated()` e `persist.onFinishHydration()`), encapsulado em um hook `useStoresHydrated()` que só fica `true` quando **todos** hidratarem;
 - o `_layout.tsx` raiz **mantém a splash** (`SplashScreen.preventAutoHideAsync`) até: store(s) hidratados, fontes carregadas e i18n inicializado (seção 5.3);
 - nenhum componente decide nada com base em valor de store antes disso.
 
@@ -976,6 +1048,8 @@ Regras (doc do Expo):
 | 2 | `@expo-google-fonts/bricolage-grotesque`, `.../instrument-sans`, `.../dm-mono` | as 3 famílias do protótipo, carregadas pelo `expo-font` | JS + fontes |
 | 2 | **dev:** `jest`, `jest-expo` (~57.0.5), `@types/jest`, `@testing-library/react-native` (14.x), `test-renderer`, `eslint-plugin-testing-library` | testes (seção 11.2) | JS |
 | **3** | `@tanstack/react-query` (5.x) | `QueryClient` no layout raiz | JS |
+| 3 | **dev:** `@resvg/resvg-js` (ou outra lib de rasterização escolhida na tarefa) | gerar os PNGs do ícone e da splash a partir do SVG-mestre (`scripts/brand/buildIcons.ts`, D31) | roda no Node, não entra no app |
+| 3 | `@expo/ui` (**a reavaliar**) ou componente nativo | `Switch` e `Slider` do Perfil; a Fase 2 removeu o `@expo/ui` por falta de uso, e a revisão de 02/10/2026 passa a precisar desses dois controles | nativo; decidir na tarefa de design system da Fase 3 pela skill `expo-ui` e pela doc do SDK 57 |
 | **4** | `@supabase/supabase-js` (2.x) | client (seção 8.4) | JS; **exige Node ≥ 22** (a máquina tem 22.21; ver 13.4) |
 | 4 | `react-native-url-polyfill` (4.0) | **só se** a Fase 4 confirmar que ainda é preciso no RN 0.86 (8.4) | JS |
 | 4 | **dev:** carregador do `.env` para o `test:db` (`dotenv`, ou o que o `jest-expo` já fizer) | testes do banco | JS |
@@ -984,6 +1058,9 @@ Regras (doc do Expo):
 | 5 | `expo-crypto` (~57.0.3) | uuid v4 dos carimbos (`randomUUID`) | nativo, Expo Go ok |
 | **7** | `expo-location` (~57.0.20) | localização em primeiro plano; plugin com `locationWhenInUsePermission` | nativo, **Expo Go ok** (só o modo em segundo plano exigiria build, e não é usado) |
 | **10** | `expo-haptics` (~57.0.3) | impacto do selo (e do dock, se quisermos) | nativo, Expo Go ok |
+| 10 | `expo-image-picker` | foto do "Como foi" (câmera ou galeria, com explicação antes da permissão) | nativo; **conferir na doc do SDK 57** se roda no Expo Go |
+| 5 / 10 | `expo-file-system` | `services/media`: guardar e apagar as fotos do usuário no aparelho (D32) | nativo, Expo Go ok |
+| 10 | `react-native-view-shot` e `expo-sharing` | renderizar o Story em imagem e compartilhar | nativo; conferir no Expo Go. Antes só estavam como "evolução"; a revisão de 02/10/2026 os trouxe para o MVP |
 | **12** | `expo-notifications` (~57.0.21) | notificações **locais**, com o plugin (ícone e cor no Android) | nativo; **local funciona no Expo Go**, push no Android não (não usamos push) |
 | **13** | `expo-dev-client` (~57.0.19) | perfil `development` do EAS (`developmentClient`) | nativo, **build** |
 | 13 | `expo-updates` (~57.0.24) | EAS Update no canal `preview` | nativo, **build** |
@@ -993,7 +1070,7 @@ Regras (doc do Expo):
 | 15 | `expo-apple-authentication` (~57.0.2) e login Google (`expo-auth-session` ~57.0.13 **ou** o pacote nativo do Google, a decidir) | vincular conta | nativo, **build** |
 | **18** | `@shopify/flash-list` (2.0.2) | só se uma lista real justificar (o bingo 4×4 não precisa, seção 3.2) | nativo, Expo Go ok |
 
-- **Evolução do selo como imagem** (`react-native-view-shot` 5.1 + `expo-sharing` ~57.0.22) **não entra no MVP**: o compartilhamento é texto com o `Share` do React Native (Fase 10).
+- **Selo como imagem (Story):** a revisão de 02/10/2026 **traz para o MVP** o que antes era evolução: o Story (`react-native-view-shot` 5.1 + `expo-sharing` ~57.0.22) é uma imagem 9:16; o texto com o `Share` do React Native continua como alternativa.
 - **Maestro** não é dependência do projeto (é uma CLI instalada na máquina do usuário, seção 11.6).
 - **Ajuste do que as seções anteriores diziam:** a persistência do idioma coloca `zustand` e o `async-storage` na **Fase 2** (e não na 5); o `QueryClient` simples entra na **Fase 3** e só o cache persistido espera pela **Fase 5**.
 
@@ -1094,6 +1171,15 @@ O domínio precisa de datas **no fuso do usuário** (início da semana da ofensi
 | Fila offline | `syncQueue` | | Quanto quer gastar | `budget` |
 | Dock (tab bar) | `FloatingTabBar` / `dock` | | Primeira abertura | `onboarding` |
 | "Outra" | `other` | | "Bora, tô indo" | `go` |
+| Perfil | `profile` | | Boas-vindas | `welcome` |
+| Detalhe do lugar | `place` (`place/[id]`) | | Detalhe do carimbo | `stamp/[id]` |
+| A caminho / rolê em andamento | `onTheWay` / `trip` | | "Cheguei!" (conferência) | `checkIn` / `check_in` |
+| "Mudei de ideia" | `cancel` | | "Como foi" (avaliação) | `feedback` |
+| Lembrança | `memory` | | Story para compartilhar | `story` |
+| Nada bateu | `noMatch` / `no-match` | | "Muda uma coisa só" | `relaxation` |
+| Sem internet | `offline` | | Ponto de partida | `startPoint` |
+| Distância máxima | `maxDistanceKm` | | "Não quero sugestões de" | `avoidTags` / `avoid_tags` |
+| Modo de transporte | `travelMode` | | Álbum da turma | `crewAlbum` |
 
 Termos que surgiram nas decisões de arquitetura e passam a valer: sessão anônima = `anonymous session`; cidade = `city`; cache de servidor = `queryCache`; fuso do usuário = `timeZone`; instante da criação do carimbo = `stampedAt` / `stamped_at`; idioma efetivo = `locale`; escolha do usuário (`'system'` ou idioma) = `language`.
 
@@ -1106,7 +1192,11 @@ Iguais no app, no banco e nas chaves de i18n; **nunca são traduzidos** (o rótu
 - **budget:** `free` (De graça), `up_to_30` (Até R$30), `up_to_80` (Até R$80), `any` (Tanto faz)
 - **category (bingo):** `viewpoint` (Mirante), `used_bookstore` (Sebo), `short_trail` (Trilha curta), `hidden_cafe` (Café escondido), `street_market` (Feira de bairro), `small_museum` (Museu pequeno), `street_cinema` (Cinema de rua), `garden` (Jardim), `open_studio` (Ateliê aberto), `free_show` (Show grátis), `new_square` (Praça nova), `bookstore` (Livraria), `neighborhood_bar` (Bar de bairro), `rooftop` (Rooftop), `library` (Biblioteca), `lake` (Lago)
 - **report_reason:** `closed`, `wrong_info`, `unsafe`, `other`
-- **suggestion action:** `shown`, `other`, `go`
+- **suggestion action:** `shown`, `other`, `go`, `cancel`, `check_in`
+- **feedback rating:** `spot_on` (Na mosca), `ok` (De boa), `miss` (Não rolou)
+- **feedback tag:** `calm` (Tranquilo), `good_for_talking` (Bom pra conversar), `good_price` (Bom preço), `good_food` (Comida boa), `too_crowded` (Cheio demais), `too_far` (Longe demais)
+- **avoid tag:** `bar` (Bar), `nightclub` (Balada), `long_trail` (Trilha longa), `crowded` (Lugar lotado), `mall` (Shopping)
+- **travel mode:** `walk` (A pé), `bus` (Ônibus), `car` (Carro)
 - **plan:** `free`, `plus`
 - **language preference:** `system`, `pt-BR`, `en`, `es` (o idioma efetivo, `Locale`, é só `pt-BR` \| `en` \| `es`)
 
@@ -1156,7 +1246,7 @@ Roda em `npx expo lint`, que o loop executa em **toda** iteração; erro bloquei
 | D6 | Check-in exige estar no local | 🟡 | **Sim, já no MVP** (revisão do protótipo de 02/10/2026: "O carimbo só vale lá"). "Cheguei!" confere a posição no aparelho com raio de 150 m + precisão do GPS; sem permissão, não carimba e oferece ativar; a posição não vai para o servidor | Plano | 5 / 10 |
 | D7 | **Cidade inicial do catálogo** | ⛔ | — (**bloqueia a Fase 6**) | Plano | 6 |
 | D8 | Idiomas no lançamento | 🟡 | pt-BR (base), en, es | Seção 10 | 1 |
-| D9 | Onde fica o seletor de idioma | 🟡 | Na seção Ajustes da aba **Perfil** (revisão do protótipo de 02/10/2026; o Passaporte não tem mais botão de Ajustes). A seção 5 é atualizada na 1ª tarefa da Fase 3 | Seção 5 | 3 |
+| D9 | Onde fica o seletor de idioma | 🟡 | Na seção Ajustes da aba **Perfil** (revisão do protótipo de 02/10/2026; o Passaporte não tem mais botão de Ajustes). A linha "Idioma" abre a rota `language` (seção 5.2) | Seção 5 | 3 |
 | D10 | Moeda muda com o idioma | 🟡 | Não: sempre BRL; só a formatação segue o idioma | Seção 10.6 | 1 |
 | D11 | **Quem revisa as traduções en/es** | ⛔ | — (até lá, tradução própria, marcada como não revisada) | Seção 10.10 | 18 |
 | D12 | Cota no MVP | 🟡 | Ligada: 3/semana no servidor, por usuário anônimo; pedir sugestão exige internet; burla por reinstalação aceita | Seções 8.3, 8.6 e 9.4 | 4 |
@@ -1190,6 +1280,7 @@ Roda em `npx expo lint`, que o loop executa em **toda** iteração; erro bloquei
 | D35 | Busca de cidade/bairro e ponto de partida | 🟡 | `Location.geocodeAsync` (`expo-location`, sem chave de API), limitado à cidade do catálogo; conferir na doc do SDK 57; reserva: lista de bairros da cidade | Plano | 7 |
 | D36 | Mapa do Detalhe do lugar | 🟡 | Ilustração do protótipo, sem SDK de mapas no MVP; o mapa real fica com o app de mapas do celular | Plano | 9 |
 | D37 | Nome e cidade no Perfil | 🟡 | Nome opcional, salvo só no aparelho (padrão "Você" / "VC"); cidade = a do catálogo; vai para a conta na Fase 15 | Plano | 11 / 15 |
+| D38 | Reabrir o app com rolê em andamento | 🟡 | **Sem redirecionamento forçado:** a home mostra um atalho para o A caminho (Fase 8) e a notificação abre `role://on-the-way` (Fase 12). O plano da Fase 10 diz "reabrir volta para cá"; se preferir o redirecionamento, é uma linha no gate | Seção 5.2 (regra 10) | 5 / 8 / 10 |
 
 ### 15.3 O que o usuário precisa decidir, e quando
 
