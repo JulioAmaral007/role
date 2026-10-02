@@ -455,11 +455,122 @@ O detalhe de cache e de offline fica na tarefa da estratégia offline-first; aqu
 | Fila offline crescer sem controle | `attempts` por item e teto a definir na estratégia offline (descartar ou alertar ao passar do limite) |
 | Duplicar dado entre React Query e store | Regra de ouro (7.1) e remoção do `passportCacheStore` |
 
-## 8. Itens detalhados nas próximas tarefas da Fase 1
+## 8. ADR — Arquitetura Supabase
+
+**Status:** aceito em 02/10/2026. **Base:** skill `react-native-architecture` (fluxo de auth e camada de serviços) e a doc atual do Supabase (quickstart de React Native, tutorial de Expo, Auth anônima, RLS, API keys, Storage, Edge Functions pelo dashboard e referência de `startAutoRefresh`). Os detalhes de API são conferidos de novo na tarefa de implementação (Fase 4), porque o Supabase muda rápido.
+
+### 8.1 Decisão em uma tabela
+
+| Tema | Decisão |
+|---|---|
+| Operação | **Só pelo dashboard web.** Sem CLI, sem Docker, sem Supabase local |
+| Identidade | **Auth anônima** (`signInAnonymously`) na primeira abertura; sem cadastro no MVP |
+| Sessão | `supabase-js` com `AsyncStorage`, `autoRefreshToken` e `AppState` |
+| Chave no app | **Publishable key** (`sb_publishable_...`), nunca a secret nem a `service_role` |
+| Segurança de dados | **RLS em todas as tabelas** + grants mínimos + RPCs `security definer` para o que o cliente não pode escrever |
+| Cota | No servidor, por `auth.uid()` e fuso de `profiles.timezone` (D12) |
+| Recomendação | No cliente, sobre o catálogo da cidade em cache (D16) |
+| Fotos | Storage, bucket público `place-photos` (só leitura), servido com `expo-image` |
+| Apagar dados | Edge Function `delete-my-data`, colada no editor do dashboard |
+
+### 8.2 Fluxo de operação (sem CLI)
+
+```
+ escrever SQL em supabase/sql/NNN_*.sql ─▶ usuário cola no SQL Editor (role-dev) ─▶ confirma no chat
+        ▲                                                                                │
+        └─── loop registra em supabase/APPLIED.md ◀─────────────────────────────────────┘
+```
+
+- Script aplicado **não se edita**; a mudança vai num script novo. Idempotente sempre que der.
+- Mudança feita na UI do dashboard é transcrita pelo loop para um script ou para `docs/SUPABASE_SETUP.md`.
+- Tipos: `src/types/database.ts` à mão no início, trocado pelo gerado no dashboard se existir (a doc atual é conferida na Fase 4).
+- Ambientes (D18): `role-dev` para desenvolvimento e `test:db`; `role-mvp` recebe todos os scripts de uma vez na Fase 13.
+
+### 8.3 Auth anônima
+
+- **Como funciona (doc atual):** o usuário anônimo recebe o role Postgres `authenticated` e a claim `is_anonymous = true` no JWT. Para o RLS, ele é igual a qualquer usuário logado; `auth.uid()` identifica o aparelho. O role `anon` (sem login) **não tem acesso a nada**: o app sempre loga antes de consultar.
+- **Quando loga:** no primeiro render do `AuthProvider` (`providers/AuthProvider.tsx`), em segundo plano, **sem bloquear o onboarding**. Falha de rede → retry com espera crescente e estado `signingIn | ready | error`. Sem sessão, o app mostra só o que não precisa de servidor.
+- **Quem chama:** `services/auth` (`ensureSession()`), nunca uma tela. Hooks de dados usam `enabled: !!userId`; o `userId` sai do `AuthProvider`.
+- **Política do RLS no MVP:** não há nada exclusivo de usuário permanente, então **não é preciso** policy restritiva por `is_anonymous`. Quando existir conta (Fase 15), `updateUser()` (e-mail) ou `linkIdentity()` (Apple/Google) convertem o **mesmo** `user_id`, e o passaporte continua.
+- **Abuso:** o Supabase limita criação de anônimos a **30 por hora por IP** (ajustável no dashboard) e recomenda captcha. No MVP: manter o limite padrão e **subir só se o grupo de teste dividir a mesma rede**; captcha (Turnstile) exige WebView e fica para o pós-MVP (risco aceito, ver 8.10).
+- **Limpeza:** o Supabase não apaga anônimos antigos sozinho. Nada a fazer no MVP; se um dia precisar, um script SQL manual que apaga só contas **sem carimbos** e antigas.
+- **Custo conhecido:** a sessão vive no aparelho. Desinstalar ou limpar os dados **perde o passaporte** até existir conta (Fase 15). É o mesmo trade-off da D12; o texto de Ajustes e do onboarding não promete "backup entre aparelhos".
+
+### 8.4 Client e sessão (`src/lib/supabase.ts`)
+
+Um único client, importado **só por `services/`** (regra 2 da seção 2):
+
+```ts
+createClient(url, publishableKey, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false, // não há URL de OAuth no MVP
+  },
+})
+```
+
+- **AppState:** um único listener registrado no módulo (`active` → `supabase.auth.startAutoRefresh()`; qualquer outro estado → `stopAutoRefresh()`). No celular o refresh roda continuamente em segundo plano, então ele é amarrado ao primeiro plano, como pede a referência do `supabase-js`.
+- **Onde a sessão fica:** o tutorial do Supabase usa `LargeSecureStore` (SecureStore + criptografia em AsyncStorage, com `aesjs` e `react-native-get-random-values`). **No MVP usamos AsyncStorage puro:** a sessão é anônima, sem dado pessoal, e evita três dependências nativas/de polyfill. **Reserva:** trocar o `storage` pelo `LargeSecureStore` na Fase 15, quando a sessão passar a ter e-mail.
+- **Polyfill:** o guia lista `react-native-url-polyfill`. Conferir na Fase 4 se ainda é necessário no RN 0.86 antes de instalar.
+- **Chave e variáveis:** a doc atual manda usar a **publishable key** (`sb_publishable_...`) no cliente e avisa que `anon` e `service_role` serão descontinuadas até o fim de 2026. Variáveis: `EXPO_PUBLIC_SUPABASE_URL` e **`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** (nome que substitui o `..._ANON_KEY` citado antes no plano). O `supabase-js` aceita a nova chave sem mudar o código. A secret key nunca entra no app nem no repositório.
+
+### 8.5 Schema e RLS: regras que valem para todos os scripts
+
+1. **RLS ligado em toda tabela do schema `public`**, sem exceção, e coberto por teste (`test:db`).
+2. **Grants mínimos:** como a doc manda, `revoke all` de `anon` e `authenticated` e `grant` só do necessário (por exemplo, `select` em `places`; `select, insert` em `stamps`). Tabela sem grant não é alcançável nem por engano.
+3. **Policies sempre `to authenticated`**, escritas com `(select auth.uid())` (avaliado uma vez por consulta, não por linha) e com índice em `user_id`.
+4. **O cliente nunca escolhe o dono:** `with check ((select auth.uid()) = user_id)` em todo insert, e `user_id` com default `auth.uid()`.
+5. **Colunas sensíveis protegidas:** `profiles.plan` **não** é gravável pelo cliente. Só `locale` e `timezone` entram no grant de `update`; o plano muda por RPC/webhook (Fase 14). Sem isso, qualquer um viraria Plus com um `update`.
+6. **Funções `security definer`** (`consume_suggestion`, `quota_status`, o trigger de `profiles`): `set search_path = ''` com nomes qualificados, `revoke execute ... from public, anon` e `grant execute ... to authenticated`. Elas usam `auth.uid()` por dentro e **não recebem `user_id` como parâmetro**.
+7. **`suggestion_events` só por RPC** (sem `insert` direto), para a cota não ser burlada gravando eventos a mais ou a menos.
+8. **`events` e `plus_interest`: só insert**, sem leitura pelo cliente; `place_reports`: só insert pelo dono.
+9. **Catálogo** (`cities`, `places`, `place_translations`, `place_hours`): `select` para `authenticated`; `places` só mostra `active`. Escrita só pelo dashboard.
+10. **Exclusão em cascata:** toda tabela de usuário tem `user_id uuid references auth.users on delete cascade`. Apagar o usuário apaga tudo (é o que `delete-my-data` usa).
+
+### 8.6 Cota (D12)
+
+- `quota_week_start(ts, tz)`: função pura que devolve a segunda 00:00 do fuso (testada em `supabase/checks/`).
+- `consume_suggestion(place_id)` → `{ allowed, remaining, resets_at }`; `quota_status()` → o mesmo sem consumir. Plus não tem limite.
+- O fuso vem de `profiles.timezone`. O app grava o IANA do aparelho (`Intl.DateTimeFormat().resolvedOptions().timeZone`) no primeiro login e quando mudar; a função valida o nome e cai em `America/Sao_Paulo` se for inválido.
+- **Sem internet não há sugestão nova** (a cota é do servidor); o app mostra a tela de "sem conexão". Isso é o contrato da seção 7.6 (mutação sem otimismo).
+
+### 8.7 Catálogo e fotos
+
+- **Catálogo:** o app baixa a cidade inteira (`places` + `place_translations` + `place_hours`, no idioma ativo com fallback `pt-BR`), guarda no React Query persistido e filtra com `domain/recommend.ts` (D16). A query key leva `cityId` e idioma.
+- **Fotos:** bucket `place-photos` **público**. Pela doc, bucket público dispensa policy de leitura, mas **upload, delete e move continuam protegidos**; por isso `005_storage_policies.sql` **não** cria policy de escrita para `authenticated`, e só o dashboard sobe fotos. A URL pública é montada no service a partir de `photo_path`.
+- **Tamanho:** a transformação de imagens do Storage depende do plano e não foi confirmada, então o MVP **não depende dela**: as fotos entram já redimensionadas (a definir na curadoria, Fase 6) e o `expo-image` faz o cache e o placeholder listrado.
+
+### 8.8 Edge Function `delete-my-data`
+
+- **Código versionado em `supabase/functions/delete-my-data/index.ts`.** O editor do dashboard **não tem versionamento**, então o repositório é a fonte de verdade e o usuário cola o código lá. Cada mudança é um novo handoff.
+- **O que faz:** lê o usuário pelo JWT do `Authorization`, confere que existe e chama `auth.admin.deleteUser(id)` com a chave de serviço, que só existe **dentro da função** (variável de ambiente do próprio Supabase). A cascata (8.5, regra 10) apaga os dados.
+- **Cliente:** `deleteMyData()` em `services/account`, via `supabase.functions.invoke('delete-my-data')`; depois faz `signOut` local, limpa o cache do React Query e os stores e volta ao onboarding (novo usuário anônimo na próxima abertura).
+- **A conferir na Fase 4:** o nome exato da variável da chave de serviço (por causa da migração para secret keys), se a verificação de JWT vem ligada por padrão e como configurá-la no editor. A doc consultada não detalha esses pontos.
+
+### 8.9 Camada de serviços
+
+- Cada assunto é uma pasta de `services/` (`places`, `stamps`, `quota`, `feedback`, `reports`, `analytics`, `auth`, `account`), com **interface pequena + implementação Supabase + implementação em memória** para teste (regra 4 da seção 2). Os hooks recebem o service por contexto/parâmetro, o que permite testar sem rede.
+- O service **converte** linha do banco (`database.ts`, `snake_case`) em tipo de domínio (`camelCase`) e os erros do Supabase em um erro nosso (`AppError` com `code`), para que nada acima de `services/` dependa do formato do Supabase.
+- Hooks de leitura usam React Query (7.6); escrita de carimbo passa pela fila (7.3); cota é mutação sem otimismo.
+
+### 8.10 Riscos
+
+| Risco | Tratamento |
+|---|---|
+| Limite de 30 anônimos/hora por IP barrar o grupo de teste na mesma rede | Subir o limite no dashboard se acontecer; captcha no pós-MVP |
+| Reinstalar perde o passaporte e reseta a cota (burla aceita) | D12; conta na Fase 15; texto honesto no onboarding e em Ajustes |
+| Cliente alterar `plan`, `user_id` ou a cota | Grants por coluna, `with check`, RPCs `security definer` e testes em `test:db` |
+| Editor de Edge Functions sem versionamento | Repositório como fonte de verdade; handoff a cada mudança |
+| `anon`/`service_role` descontinuadas até o fim de 2026 | App já nasce com a publishable key; função confere o nome da variável da chave de serviço na Fase 4 |
+| Detalhe de API divergir da doc (polyfill, nome de variável, JWT da função) | Conferir a doc atual no início de cada tarefa de banco/auth, antes de escrever |
+| Anônimos acumulando sem limpeza | Sem custo relevante no MVP; script manual se preciso |
+
+## 9. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- ADR da arquitetura Supabase
 - Estratégia offline-first
 - Estratégia de i18n
 - Estratégia de testes
