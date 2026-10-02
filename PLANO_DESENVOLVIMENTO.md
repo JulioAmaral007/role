@@ -64,19 +64,23 @@ Comando sugerido:
 
 | O quê | Padrão | Exemplo |
 |---|---|---|
-| Arquivos e pastas | `kebab-case` (padrão já usado no template: `themed-text.tsx`, `use-color-scheme.ts`) | `floating-tab-bar.tsx`, `opening-hours.ts`, `monthly-goal.ts` |
-| Rotas (Expo Router) | `kebab-case` em inglês | `suggestion.tsx` → `/suggestion`, `report-problem.tsx` |
-| Hooks | arquivo `use-*.ts`, função `useCamelCase` | `use-dock-inset.ts` → `useDockInset()` |
+| Componentes e providers (arquivo) | `PascalCase.tsx`, igual ao nome do componente, como na skill `react-native-architecture` (`components/ui/Button.tsx`, `providers/AuthProvider.tsx`) | `FloatingTabBar.tsx`, `TicketCard.tsx`, `QueryProvider.tsx` |
+| Variantes de plataforma | `PascalCase.<plataforma>.tsx` | `Button.ios.tsx`, `FloatingTabBar.android.tsx` |
+| Demais arquivos `.ts` (domain, services, stores, utils, lib, i18n, theme) | `camelCase.ts`, como na skill (`services/haptics.ts`) | `openingHours.ts`, `monthlyGoal.ts`, `syncQueue.ts`, `tokens.ts` |
+| Pastas | minúsculas, em `camelCase` quando houver mais de uma palavra | `components/ui/`, `features/suggestion/`, `syncQueue/` |
+| Rotas (`src/app/`, Expo Router) | **exceção:** minúsculas em `kebab-case`, porque o nome do arquivo vira a URL/deep link (a skill também usa `app/(tabs)/_layout.tsx`, `profile/[id].tsx`) | `suggestion.tsx` → `/suggestion`, `report-problem.tsx` |
+| Hooks | arquivo `useCamelCase.ts`, igual ao nome do hook (como `hooks/useProducts.ts` na skill) | `useDockInset.ts` → `useDockInset()` |
 | Componentes, tipos, interfaces, classes | `PascalCase` | `FloatingTabBar`, `PlacesRepository`, `QuotaStatus` |
 | Funções e variáveis | `camelCase`, começando com verbo nas funções | `formatDistance()`, `consumeSuggestion()`, `isOpenDuring()` |
 | Constantes | `UPPER_SNAKE_CASE` | `FREE_WEEKLY_QUOTA = 3`, `DOCK_BASE_INSET = 106` |
 | Tokens do tema | `camelCase` | `colors.yellow`, `colors.ink`, `shadow.dock` |
 | Banco (tabelas, colunas, enums, RPCs) | `snake_case` | `suggestion_events`, `consume_suggestion()` |
-| Edge Functions e scripts | `kebab-case` | `delete-my-data`, `scripts/catalog/validate.ts` |
+| Edge Functions | pasta em `kebab-case` (vira a URL da função) | `supabase/functions/delete-my-data/index.ts` |
+| Scripts Node | `camelCase.ts` | `scripts/catalog/validate.ts`, `scripts/catalog/buildCsv.ts` |
 | Scripts SQL do Supabase | `NNN_snake_case.sql` (número sequencial) | `001_initial_schema.sql`, `003_quota.sql` |
 | Chaves de i18n | `feature.camelCaseKey`, com sufixo de plural do i18next | `home.title`, `suggestion.remaining_one` |
 | Eventos de analytics | `snake_case` | `stamp_created`, `go_tapped` |
-| Testes | `<arquivo>.test.ts(x)` ao lado do arquivo testado | `streak.test.ts` |
+| Testes | `<Arquivo>.test.ts(x)` ao lado do arquivo testado, mantendo o case do original | `streak.test.ts`, `FloatingTabBar.test.tsx` |
 | Branches e escopo de commit | escopo = nome do módulo em inglês | `feat(stamp): ...` |
 
 **Glossário de domínio (PT → EN)**
@@ -249,7 +253,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 > Esta fase produz **documentação e esqueleto de pastas**, não features.
 
 - [x] 🧭 ARCH: invocar `react-native-architecture` e resumir em `docs/ARCHITECTURE.md` os padrões adotados.
-- [ ] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARCHITECTURE.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
+- [x] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARCHITECTURE.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
 - [ ] Definir a **estrutura de pastas** em `docs/ARCHITECTURE.md`. Proposta inicial, a validar com a skill:
   ```
   supabase/                      # SEM CLI: tudo aqui é aplicado pelo usuário no dashboard
@@ -278,14 +282,15 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   │   ├── plus.tsx               # modal (paywall / fake door)
   │   └── settings.tsx           # Ajustes (modal): idioma, notificações, privacidade, apagar dados
   ├── components/
-  │   ├── ui/                    # button.tsx (Button), chip.tsx, pill.tsx, card.tsx, floating-tab-bar.tsx, icons/...
+  │   ├── ui/                    # Button.tsx, Chip.tsx, Pill.tsx, Card.tsx, FloatingTabBar.tsx, icons/Logo.tsx...
   │   └── features/              # home/, suggestion/, stamp/, passport/, plus/, settings/, feedback/, onboarding/
-  ├── hooks/                     # use-quota.ts (useQuota), use-streak.ts, use-suggestion.ts, use-language.ts, use-dock-inset.ts...
+  ├── hooks/                     # useQuota.ts, useStreak.ts, useSuggestion.ts, useLanguage.ts, useDockInset.ts...
+  ├── providers/                 # QueryProvider.tsx, I18nProvider.tsx, AuthProvider.tsx (como na skill)
   ├── lib/
   │   └── supabase.ts            # client único (sessão persistida)
   ├── services/                  # places, stamps, quota, feedback, reports, analytics, location, notifications, share
   ├── stores/                    # estado local persistido (preferências, fila offline, cache do passaporte)
-  ├── domain/                    # regras puras: recommend.ts, streak.ts, bingo.ts, monthly-goal.ts, opening-hours.ts, safety.ts
+  ├── domain/                    # regras puras: recommend.ts, streak.ts, bingo.ts, monthlyGoal.ts, openingHours.ts, safety.ts
   ├── theme/                     # tokens, fontes, tipografia
   ├── i18n/
   │   ├── index.ts               # init do i18next + detecção do idioma do aparelho
@@ -320,7 +325,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Definir a **estratégia de testes**: jest-expo para `domain/`, hooks e services (com o Supabase mockado), Testing Library para componentes, teste de paridade de chaves de i18n, **testes de integração do banco (`npm run test:db`) contra o `role-dev` e checagens SQL** no SQL Editor (sem pgTAP/CLI) e, opcionalmente, Maestro para E2E.
 - [ ] Definir **ambientes e segredos**: projetos `role-dev` e `role-mvp` no dashboard (sem Supabase local); `.env`/`.env.example` apontando para o `role-dev`; variáveis `EXPO_PUBLIC_*` por perfil do EAS (preview → `role-mvp`).
 - [ ] Listar as **dependências planejadas** (instalar só na fase que usar), sempre via `npx expo install`: `@supabase/supabase-js` (e o que o guia oficial pedir para RN), `react-native-svg`, `@react-native-async-storage/async-storage`, `@tanstack/react-query` (+ persister), `zustand`, `expo-localization`, `i18next`, `react-i18next`, `expo-haptics`, `expo-location`, `expo-notifications`, `expo-sharing`/`Share` do RN, `expo-crypto` (uuid) e as fontes do `@expo-google-fonts`.
-- [ ] Registrar em `docs/ARCHITECTURE.md` a seção **Convenções de nomenclatura** (tabela de padrões, Glossário e IDs de domínio deste plano) e, se der, reforçar com regras de lint (ex.: `@typescript-eslint/naming-convention` e checagem de nome de arquivo em kebab-case).
+- [ ] Registrar em `docs/ARCHITECTURE.md` a seção **Convenções de nomenclatura** (tabela de padrões, Glossário e IDs de domínio deste plano) e, se der, reforçar com regras de lint (ex.: `@typescript-eslint/naming-convention` e uma checagem de nome de arquivo: `PascalCase` para componentes, `useX` para hooks, `camelCase` para o resto e `kebab-case` só em `src/app/`).
 - [ ] Criar as pastas vazias, com `index.ts` ou `.gitkeep`, e o alias `@/` no `tsconfig` (conferir se já existe).
 - [ ] Registrar em `docs/ARCHITECTURE.md` as **Decisões em aberto** (seção no fim) com o default escolhido.
 
@@ -339,7 +344,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] `src/i18n/locales/pt-BR.json` com **todos os textos do protótipo** (ver "Referência rápida"), além de `en.json` e `es.json` traduzidos.
 - [ ] Tipagem das chaves (module augmentation do `react-i18next`), para que uma chave errada quebre o `tsc`.
 - [ ] `src/i18n/format.ts`: `formatDate`, `formatStampDate` ("02 · 10 · 2026"), `formatWeekdayShort` ("SEX · 02 OUT"), `formatCurrency`, `formatDistance` ("1,8 km" / "1.8 km") e `formatOrdinal`, todos lendo o idioma ativo. Com testes.
-- [ ] Hook `useLanguage()` (`src/hooks/use-language.ts`): idioma atual, `setLanguage(lang | 'system')` e persistência no store de preferências, com troca imediata.
+- [ ] Hook `useLanguage()` (`src/hooks/useLanguage.ts`): idioma atual, `setLanguage(lang | 'system')` e persistência no store de preferências, com troca imediata.
 - [ ] Teste de paridade: todos os idiomas têm exatamente as mesmas chaves e placeholders (`{{count}}`, `{{name}}`).
 
 **Design system**
@@ -348,13 +353,13 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] `src/theme/typography.ts` com as variantes: `display`, `title`, `cta`, `body`, `label` (mono em caixa alta) e `stat`.
 - [ ] Ícones SVG do protótipo como componentes (`Logo`, `Bolt`, `Compass`, `Passport`, `Users`, `Arrow`, `Back`, `Close`, `Pin`, `Clock`, `Wallet`, `Smile`, `Refresh`, `Calendar`, `Share`, `Check`), mais `Settings`, `Flag` (informar problema) e `WifiOff`.
 - [ ] Componentes `ui/`: `Button` (primary, outline, cream), `Chip` (seleção única, `aria-pressed` → `accessibilityState`), `SegmentedGrid`, `Pill`, `SectionLabel`, `Card`, `TicketDivider` (picote), `ProgressSegments`, `EmptyState`, `ErrorState`, `OfflineBanner`.
-- [ ] Componente `FloatingTabBar` (`src/components/ui/floating-tab-bar.tsx`, o dock) fiel à seção "Tab bar — dock flutuante":
+- [ ] Componente `FloatingTabBar` (`src/components/ui/FloatingTabBar.tsx`, o dock) fiel à seção "Tab bar — dock flutuante":
   - pílula `ink` absoluta com sombra `shadow.dock` (no Android, conferir `boxShadow`/`elevation` e se a sombra fica parecida);
   - item ativo expandido em `yellow` com ícone e label; inativos de 64 só com ícone `sand`;
   - **animação** de troca: o item ativo encolhe e o novo expande (largura e cor) com Reanimated, mais um haptic leve opcional. Seguir as regras `animation-` da `vercel-react-native-skills` (animar só no thread de UI, sem re-render por frame);
   - acessibilidade: `accessibilityRole="tab"`, `accessibilityState={{ selected }}` e `accessibilityLabel` traduzido nos itens só com ícone;
   - i18n: o label ativo usa `t()` e o teste de layout cobre o maior label entre os idiomas ("Passaporte" / "Passport" / "Pasaporte").
-- [ ] Hook `useDockInset()` (`src/hooks/use-dock-inset.ts`), que devolve o recuo inferior (base de 106 + safe area) para as telas com tabs.
+- [ ] Hook `useDockInset()` (`src/hooks/useDockInset.ts`), que devolve o recuo inferior (base de 106 + safe area) para as telas com tabs.
 - [ ] Definir `userInterfaceStyle` como `light` (ver D2).
 
 **Critérios de saída**
@@ -443,11 +448,11 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 - [ ] Configurar a cobertura do jest para `domain/`.
 - [ ] Tipos de domínio em `src/types` derivados de `database.ts`: `Place` (com tradução e horários resolvidos), `Stamp`, `WeekStatus`, `QuotaStatus`, `Plan`. Humores, tempos, orçamentos e categorias do bingo são **IDs em inglês** conforme o Glossário (`curious`, `2h`, `up_to_30`, `viewpoint`...); o rótulo vem sempre do i18n.
-- [ ] `domain/opening-hours.ts`: diz se o lugar fica aberto durante toda a janela escolhida (agora + duração), no fuso da cidade, incluindo horário que vira a meia-noite. Com testes.
+- [ ] `domain/openingHours.ts`: diz se o lugar fica aberto durante toda a janela escolhida (agora + duração), no fuso da cidade, incluindo horário que vira a meia-noite. Com testes.
 - [ ] `domain/safety.ts`: lugares `daylight_only` não aparecem depois do `daylight_cutoff` da cidade (ver D19). Com testes.
 - [ ] `domain/recommend.ts`: filtrar por humor, tempo, orçamento, horário e segurança; ordenar por distância compatível com o tempo; priorizar nunca carimbados; sortear sem repetir na sessão; fallback quando nada combina ("afrouxar" o orçamento e depois o humor, avisando o usuário).
 - [ ] `domain/streak.ts`: ofensiva semanal e histórico das últimas 8 semanas.
-- [ ] `domain/bingo.ts` e `domain/monthly-goal.ts`.
+- [ ] `domain/bingo.ts` e `domain/monthlyGoal.ts`.
 - [ ] `services/places`: `PlacesRepository` com `SupabasePlacesRepository` (catálogo da cidade + traduções + horários) e `InMemoryPlacesRepository` para testes. Exposto por um hook React Query com cache persistido.
 - [ ] `services/quota`: `consume()` e `status()` chamando as RPCs; erro de rede vira o estado "offline".
 - [ ] `services/stamps`: criar o carimbo localmente (uuid + número) → fila offline → `upsert` idempotente; listar os carimbos do usuário.
@@ -467,11 +472,11 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] ⛔ Usuário define a **cidade inicial** (D7) e o processo de curadoria (D5b).
 - [ ] Planilha-modelo (`scripts/catalog/template.csv`) com todos os campos de `places`, `place_hours` e `place_translations`, mais um guia de preenchimento em `docs/CURATION.md` (o que é um bom "motivo", tom de voz, como tirar ou escolher a foto).
 - [ ] Script `scripts/catalog/validate.ts`: todo lugar tem horários, coordenadas, categoria (ID do Glossário), as 3 razões em **todos** os idiomas, foto e `verified_at` recente. Aponta as combinações de filtro sem nenhum lugar.
-- [ ] Script `scripts/catalog/build-csv.ts`: transforma a planilha em **3 CSVs** com exatamente as colunas das tabelas (`places.csv`, `place_hours.csv`, `place_translations.csv`), prontos para o **Import CSV do Table Editor** do dashboard. Não usa service role nem acessa o Supabase.
+- [ ] Script `scripts/catalog/buildCsv.ts`: transforma a planilha em **3 CSVs** com exatamente as colunas das tabelas (`places.csv`, `place_hours.csv`, `place_translations.csv`), prontos para o **Import CSV do Table Editor** do dashboard. Não usa service role nem acessa o Supabase.
 - [ ] Relatório de cobertura: quantos lugares por categoria do bingo, por humor, por faixa de preço e por duração. Meta do MVP: **≥ 60 lugares**, com todas as 16 categorias cobertas.
 - [ ] `supabase/sql/006_reports_view.sql`: view `reports_pending` para a revisão semanal.
 - [ ] Rotina de manutenção em `docs/CURATION.md`: revisar `reports_pending` toda semana pelo dashboard, desativar lugares fechados (`active = false` no Table Editor) e reverificar lugares com `verified_at` antigo.
-- [ ] ⛔ Usuário preenche o catálogo real; o loop roda `validate` e `build-csv`.
+- [ ] ⛔ Usuário preenche o catálogo real; o loop roda `validate` e `buildCsv`.
 - [ ] 🖐 Handoff em **Bloqueios**:
   1. rodar `006_reports_view.sql` no `role-dev`;
   2. importar os 3 CSVs pelo Table Editor, **nessa ordem**: `places` → `place_hours` → `place_translations`;
@@ -517,7 +522,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 - [ ] Header com voltar, resumo do filtro (montado a partir dos rótulos traduzidos) e pílula "N restantes" (plural `_one`/`_other`).
 - [ ] Card-ingresso: foto (`expo-image` vinda do Storage, com placeholder listrado), tags, nome, endereço com distância, picote e os 3 motivos traduzidos.
-- [ ] Mostrar "Aberto até HH:MM" no card (vindo de `domain/opening-hours.ts`).
+- [ ] Mostrar "Aberto até HH:MM" no card (vindo de `domain/openingHours.ts`).
 - [ ] "Outra": consome cota, troca de lugar com uma animação de troca de card (Reanimated) e vai para o Plus quando a cota acabar. Opcionalmente pergunta o motivo em um toque (chips: "longe", "caro", "não curti o tipo"), que vai para `suggestion_events.reason`. Nunca bloqueia a troca.
 - [ ] "Reservar" (abre `reservation_url` no WebBrowser) ou "Como chegar" (abre o app de mapas com `Linking`), conforme `reservable`.
 - [ ] Botão discreto **"Informar problema"** → modal `/report-problem` (fechou, informação errada, inseguro, outro + nota) → `place_reports`.
@@ -700,7 +705,7 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | D3 | Provedor de pagamento e preços do Plus | — (sugestão: RevenueCat, que tem webhook fácil para o Supabase) | 14 |
 | D4 | Escopo da aba Turma | Placeholder "Em breve" | 17 |
 | D5 | Backend / banco de dados | ✅ **Decidido: Supabase** | 1 |
-| D5b | Como o catálogo é curado | Curadoria própria em planilha → `build-csv` → **Import CSV no Table Editor** do dashboard; manutenção pelo dashboard | 6 |
+| D5b | Como o catálogo é curado | Curadoria própria em planilha → `buildCsv` → **Import CSV no Table Editor** do dashboard; manutenção pelo dashboard | 6 |
 | D6 | Check-in exige estar no local? | MVP: não (carimbo direto); avaliar no pós-MVP | 16 |
 | D7 | Cidade inicial do catálogo | — **(bloqueia a Fase 6)** | 6 |
 | D8 | Idiomas suportados no lançamento | pt-BR (base), en, es | 1 |
@@ -731,5 +736,7 @@ _(vazio — o bloqueio "Supabase local indisponível" foi resolvido em 02/10/202
 | 2026-10-02 | 0 | Remover o demo do template | — | Removidos explore, animated-icon, app-tabs (+`.web`), hint-row, web-badge, themed-*, collapsible, external-link, constants/theme, global.css, hooks do template, imagens de demo e `scripts/reset-project.js` (+ script do `package.json`); `_layout` e `index` mínimos. `reset-project` não foi usado (apagaria `scripts/`). `expo lint` instalou `eslint` e `eslint-config-expo` e criou `eslint.config.js` (commit `build` separado). `tsc` e lint verdes; `expo export --platform android` gera o bundle. O item da Fase 3 "remover app-tabs" já está feito | `fa27e69` |
 | 2026-10-02 | 0 | Conferir Supabase CLI e Docker | — | Supabase CLI **não instalado**; Docker 29.8.1 instalado, mas o daemon (Docker Desktop) não está rodando. Registrado em Bloqueios; loop parado | `9a614c6` |
 | 2026-10-02 | 0 | Fim da fase: critérios de saída | — | Usuário confirmou "Fase 0 ok" (👀). Bloqueio removido. Fase 00 integrada na main, pronta para push manual | `9a614c6`, `1161601`, merge `a7e2fb8` |
-| 2026-10-02 | 1 | 🧭 ARCH: resumir padrões em `docs/ARCHITECTURE.md` | `react-native-architecture` (lido `references/details.md`) | Criado `docs/ARCHITECTURE.md` com os 6 padrões da skill, divergências do projeto (kebab-case, SVG próprio, `expo-image`, sessão do Supabase, tema só claro, tab bar custom) e regras de camadas. Só documentação; `tsc` e lint verdes | este commit |
+| 2026-10-02 | 1 | 🧭 ARCH: resumir padrões em `docs/ARCHITECTURE.md` | `react-native-architecture` (lido `references/details.md`) | Criado `docs/ARCHITECTURE.md` com os 6 padrões da skill, divergências do projeto (kebab-case, SVG próprio, `expo-image`, sessão do Supabase, tema só claro, tab bar custom) e regras de camadas. Só documentação; `tsc` e lint verdes | `9df20e9` |
 | 2026-10-02 | — | Revisão do plano (feita pelo usuário com o Claude, fora do loop) | — | Supabase só pelo dashboard web (sem CLI/Docker/local, handoffs 🖐, testes `test:db` + checagens SQL); bloqueio do CLI/Docker removido; o loop não roda o app (critérios 👀 verificados pelo usuário); nomenclatura em inglês | entra no próximo commit do loop |
+| 2026-10-02 | — | Revisão do plano (fora do loop) | `react-native-architecture` | Nomes de arquivo passam a seguir a skill: `PascalCase.tsx` para componentes e providers, `useX.ts` para hooks, `camelCase.ts` para o resto; rotas de `src/app/` seguem em kebab-case. Pasta `providers/` adicionada. A linha de divergência do `docs/ARCHITECTURE.md` foi corrigida | entra no próximo commit do loop |
+| 2026-10-02 | 1 | ⚡ VRN: seção "Convenções de implementação" em `docs/ARCHITECTURE.md` | `vercel-react-native-skills` (lido `AGENTS.md` compilado com as 38 regras) | Nova seção 3 com as regras por prefixo (`rendering-`, `list-performance-`, `animation-`, `navigation-`, `ui-`, `react-state-`, `react-compiler-`, `design-system-`, `js-`, `fonts-`) e a tabela de 7 exceções (tabs custom, largura animada só no dock, `useFonts` até a Fase 13, padding em vez de `contentInset`, escala tipográfica própria, grades fixas sem virtualizador, sem `memo`/`useCallback` por padrão). Pendência anotada: conferir `runOnJS` × `scheduleOnRN` na doc do Reanimated 4 antes de usar. Só documentação | este commit |
