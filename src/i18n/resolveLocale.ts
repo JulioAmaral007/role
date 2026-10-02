@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type LanguagePreference, type Locale } from './types';
+import { DEFAULT_LOCALE, type LanguagePreference, type Locale } from '@/types/language';
 
 // Mesmo critério para todas as regiões: só o código do idioma conta (docs/ARCHITECTURE.md, seção 10.2).
 const LOCALE_BY_LANGUAGE_CODE: Record<string, Locale> = {

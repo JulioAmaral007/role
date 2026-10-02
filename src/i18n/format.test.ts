@@ -5,7 +5,7 @@ import {
   formatStampDate,
   formatWeekdayShort,
 } from './format';
-import { LOCALES } from './types';
+import { LOCALES } from '@/types/language';
 
 const SAO_PAULO = 'America/Sao_Paulo';
 const TOKYO = 'Asia/Tokyo';

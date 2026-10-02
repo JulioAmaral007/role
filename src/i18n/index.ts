@@ -8,7 +8,7 @@ import en from './locales/en.json';
 import es from './locales/es.json';
 import ptBR from './locales/pt-BR.json';
 import { resolveLocale } from './resolveLocale';
-import { DEFAULT_LOCALE } from './types';
+import { DEFAULT_LOCALE } from '@/types/language';
 
 const i18n = createInstance();
 

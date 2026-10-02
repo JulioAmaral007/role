@@ -1,4 +1,4 @@
-import type { Locale } from './types';
+import type { Locale } from '@/types/language';
 
 // Funções puras: recebem o idioma (e o fuso) em vez de ler estado global. Regras do Hermes em
 // docs/ARCHITECTURE.md, seção 10.5: nada de formatToParts, RelativeTimeFormat, ListFormat,

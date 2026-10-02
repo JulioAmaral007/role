@@ -7,3 +7,8 @@ export type Locale = (typeof LOCALES)[number];
 export type LanguagePreference = Locale | 'system';
 
 export const DEFAULT_LOCALE: Locale = 'pt-BR';
+
+/** Valida um valor vindo de fora (storage, rede) antes de tratá-lo como escolha de idioma. */
+export function isLanguagePreference(value: unknown): value is LanguagePreference {
+  return value === 'system' || LOCALES.some((locale) => locale === value);
+}
