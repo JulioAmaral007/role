@@ -68,6 +68,36 @@ const localPlugin = {
   },
 };
 
+// Seletores das regras de "nada solto" (ver o uso em `defineConfig` abaixo).
+const FONT_SIZE_RULE = {
+  selector: "Property[key.name='fontSize']",
+  message: 'Use as variantes de src/theme/typography.ts em vez de escrever fontSize.',
+};
+const COLOR_RULES = [
+  {
+    selector: String.raw`Literal[value=/^#[0-9a-fA-F]{3,8}$/]`,
+    message: 'Cor solta: use um token de src/theme/tokens.ts.',
+  },
+  {
+    selector: String.raw`Literal[value=/^(rgb|hsl)a?\(/]`,
+    message: 'Cor solta: use um token de src/theme/tokens.ts.',
+  },
+];
+const TEXT_ATTRIBUTES =
+  'label|title|message|placeholder|actionLabel|retryLabel|accessibilityLabel|accessibilityHint';
+const TEXT_MESSAGE = 'Texto solto na tela: use t() com uma chave de src/i18n/locales.';
+const TEXT_RULES = [
+  { selector: String.raw`JSXText[value=/\S/]`, message: TEXT_MESSAGE },
+  {
+    selector: String.raw`JSXElement > JSXExpressionContainer > Literal[value=/\S/]`,
+    message: TEXT_MESSAGE,
+  },
+  {
+    selector: `JSXAttribute[name.name=/^(${TEXT_ATTRIBUTES})$/] > Literal`,
+    message: TEXT_MESSAGE,
+  },
+];
+
 module.exports = defineConfig([
   expoConfig,
   {
@@ -94,18 +124,34 @@ module.exports = defineConfig([
       ],
     },
   },
+  // Regras do design system e do i18n (plano, Fase 2, critérios de saída). Cada grupo de arquivos
+  // recebe uma lista só, porque no flat config uma regra repetida substitui a anterior.
   {
-    // Nenhum `fontSize` solto: os tamanhos vivem em src/theme/typography.ts (plano, Fase 2)
+    // telas e componentes: sem fontSize, sem cor e sem texto soltos
     files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/theme/**',
+      'src/test/**',
+      'src/**/*.test.{ts,tsx}',
+      'src/app/catalog.tsx', // temporário: texto de desenvolvimento (sai na Fase 3)
+    ],
+    rules: {
+      'no-restricted-syntax': ['error', FONT_SIZE_RULE, ...COLOR_RULES, ...TEXT_RULES],
+    },
+  },
+  {
+    // o catálogo temporário pode ter texto de desenvolvimento, mas não cor nem fontSize soltos
+    files: ['src/app/catalog.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error', FONT_SIZE_RULE, ...COLOR_RULES],
+    },
+  },
+  {
+    // theme/: é onde as cores vivem; só o typography.ts pode escrever fontSize
+    files: ['src/theme/**/*.{ts,tsx}'],
     ignores: ['src/theme/typography.ts', 'src/**/*.test.{ts,tsx}'],
     rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "Property[key.name='fontSize']",
-          message: 'Use as variantes de src/theme/typography.ts em vez de escrever fontSize.',
-        },
-      ],
+      'no-restricted-syntax': ['error', FONT_SIZE_RULE],
     },
   },
   {
