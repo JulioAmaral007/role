@@ -1276,7 +1276,7 @@ Roda em `npx expo lint`, que o loop executa em **toda** iteração; erro bloquei
 | D31 | Ícone oficial do app e splash | ✅ | **Opção A "Dado com pin"** da página "Ícone do app" do protótipo, usada também na splash (fundo `#FFD43B`); escolhida pelo usuário em 02/10/2026 | Plano, "Ícone do app e splash" | 3 / 13 |
 | D32 | Onde ficam as fotos e a lembrança do usuário | 🟡 | Foto só no aparelho no MVP (sem upload nem moderação); a lembrança (texto) vai no carimbo, visível só para o dono; backup das fotos num bucket privado na Fase 15 | Plano | 5 / 10 / 15 |
 | D33 | Tempo por modo no Detalhe do lugar | 🟡 | Estimativa local (linha reta × fator de rota, velocidade média por modo); "Abrir no mapa" dá a rota real; API de rotas só no pós-MVP | Plano | 5 / 9 / 16 |
-| D34 | Link "Já tenho conta" na Boas-vindas | 🟡 | Escondido no MVP (só usuário anônimo); aparece na Fase 15 | Plano | 7 / 15 |
+| D34 | Conta: telas Criar conta e Entrar | ✅ | **Só na Fase 15** (decisão do usuário em 02/10/2026). O MVP continua anônimo: "Começar" vai direto para Localização e "Já tenho conta" fica escondido; na Fase 15 o onboarding vira Boas-vindas → Criar conta → Localização, com login por e-mail e senha, Google e Apple | Plano | 7 / 15 |
 | D35 | Busca de cidade/bairro e ponto de partida | 🟡 | `Location.geocodeAsync` (`expo-location`, sem chave de API), limitado à cidade do catálogo; conferir na doc do SDK 57; reserva: lista de bairros da cidade | Plano | 7 |
 | D36 | Mapa do Detalhe do lugar | 🟡 | Ilustração do protótipo, sem SDK de mapas no MVP; o mapa real fica com o app de mapas do celular | Plano | 9 |
 | D37 | Nome e cidade no Perfil | 🟡 | Nome opcional, salvo só no aparelho (padrão "Você" / "VC"); cidade = a do catálogo; vai para a conta na Fase 15 | Plano | 11 / 15 |
