@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Silhueta de uma cor só (ícone temático do Android 13+): o dado é opaco, os pips e o pin são
+       vazados, e o furo do pin volta a ser opaco. -->
+  <g transform="rotate(-10 50 50)">
+    <path fill="#000000" fill-rule="evenodd" d="M36 22H64A14 14 0 0 1 78 36V64A14 14 0 0 1 64 78H36A14 14 0 0 1 22 64V36A14 14 0 0 1 36 22Z M34 29a5 5 0 1 0 0 10a5 5 0 1 0 0-10Z M66 61a5 5 0 1 0 0 10a5 5 0 1 0 0-10Z M50 37.5c-6.2 0-10.8 4.6-10.8 10.5 0 7.5 10.8 17.2 10.8 17.2s10.8-9.7 10.8-17.2c0-5.9-4.6-10.5-10.8-10.5Z"/>
+    <circle cx="50" cy="48.2" r="3.8" fill="#000000"/>
+  </g>
+</svg>
