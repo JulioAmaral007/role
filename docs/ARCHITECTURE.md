@@ -767,11 +767,106 @@ Funções puras que recebem o `Locale` (e não leem estado global), com testes. 
 | Polyfill pesar na abertura | `polyfill-force` + dados só de 3 idiomas; medir na Fase 13 |
 | Tradução ruim de en/es | Revisão humana (D11), antes da Fase 18 |
 
-## 11. Itens detalhados nas próximas tarefas da Fase 1
+## 11. ADR — Estratégia de testes
+
+**Status:** aceito em 02/10/2026. **Base:** doc de testes do Expo (SDK 57: `jest-expo`, Testing Library), doc de testes do Expo Router (`renderRouter`), doc do Reanimated 4 e do Worklets sobre Jest, doc do Maestro e a seção 8 (Supabase sem CLI). Regra do projeto: **o loop nunca roda o app**, então a confiança vem de testes automáticos rodando em Node + critérios 👀 verificados pelo usuário.
+
+### 11.1 Pirâmide
+
+| Camada | Ferramenta | Roda onde | O que cobre | Quando |
+|---|---|---|---|---|
+| **1. Domínio** (`src/domain/`) | Jest puro | loop | `recommend`, `streak`, `bingo`, `monthlyGoal`, `openingHours`, `safety`, `syncQueue` (9.5) | Fase 5 em diante; **cobertura mínima de 90%** (linhas e ramos) |
+| **2. i18n e formatação** | Jest | loop | paridade de chaves, `resolveLocale`, `format.ts` (seção 10.9) | Fase 2 |
+| **3. Services** (`src/services/`) | Jest com `lib/supabase` mockado | loop | mapeamento linha→domínio, conversão de erro em `AppError`, montagem das queries | Fase 5 |
+| **4. Hooks** | `renderHook` do Testing Library + `QueryClient` de teste + services em memória | loop | `useQuota`, `useSuggestion`, `useSyncQueue`, `usePassport`, `useLanguage` | Fases 5 a 10 |
+| **5. Componentes** (`ui/` e `features/`) | `@testing-library/react-native` | loop | comportamento e acessibilidade (papel, rótulo, estado), estouro de texto, animação do dock | Fase 2 em diante |
+| **6. Rotas e navegação** | `renderRouter` (`expo-router/testing-library`) | loop | gate de onboarding, apresentação das rotas, deep links, `+not-found` | Fase 3 |
+| **7. Banco** | `npm run test:db` + `supabase/checks/*.sql` | usuário aplica os scripts; o loop roda o `test:db` depois | RLS, cota, idempotência, `delete-my-data` | Fase 4 em diante |
+| **8. E2E** | **Maestro** (opcional) | **usuário** | fluxo completo no aparelho | Fase 13, depois do MVP estável |
+| **9. 👀 no aparelho** | usuário | usuário | o que só existe com o app aberto: Hermes, safe area, gestos, animação, permissões | fim de cada fase |
+
+Os testes ficam mais **baratos e numerosos na base** (domínio, i18n) e **raros e caros no topo** (E2E).
+
+### 11.2 Configuração
+
+- **Pacotes (dev):** `jest`, `jest-expo`, `@types/jest` (instalados com `npx expo install ... --dev`, como a doc do Expo manda), `@testing-library/react-native` (v14+, exigida pelo `renderRouter`), `test-renderer` (o par que a doc atual do Testing Library pede, no lugar do `react-test-renderer`, por causa do React 19) e `eslint-plugin-testing-library`. O `jest-expo` 57 declara `@react-native/jest-preset` como peer; confirmar os avisos do `npm` na instalação.
+- **`jest.config.js`** (projeto de app, rodado por `npm test`): `preset: 'jest-expo'`, `setupFilesAfterEnv` com `src/test/setup.ts`, `transformIgnorePatterns` da doc do Expo, e o alias `@/` (`moduleNameMapper`). O script `test` atual (`jest --passWithNoTests`) continua; **sem `--watchAll`** no script, porque o loop precisa de execução única (a doc do Expo usa `--watchAll`; deixamos `test:watch` à parte).
+- **`src/test/setup.ts`:** matchers do `expo-router/testing-library/expect`; `setUpTests()` do Reanimated; mock do Worklets (`react-native-worklets/src/mock`); mock oficial do `AsyncStorage`; mock do `expo-network`, `expo-haptics`, `expo-localization` e `expo-crypto`; `process.env.TZ = 'UTC'` para as datas serem determinísticas. A tarefa de implementação confere na doc o que o `jest-expo` já mocka.
+- **`tsconfig.json`:** acrescentar `"jest"` em `types` (doc do Expo).
+- **`jest.db.config.js`:** projeto **separado** (ambiente `node`, sem o preset de UI), só com `tests/db/`, `testTimeout` maior e `maxWorkers: 1`. Lê o `.env` do `role-dev`. A forma exata (preset `jest-expo` com `testEnvironment: 'node'`, ou o preset node do pacote) e como as variáveis `EXPO_PUBLIC_*` chegam ao teste são conferidas na Fase 4. `npm test` **exclui** `tests/db/` (precisa de rede e do `role-dev`).
+- **Scripts:** `test` (app, uma execução), `test:watch`, `test:coverage`, `test:db`, além de `typecheck` e `lint` que já existem.
+
+### 11.3 Onde ficam os testes e como se chamam
+
+- **Ao lado do arquivo testado**, com o mesmo case (`streak.test.ts`, `FloatingTabBar.test.tsx`), como diz a nomenclatura do plano.
+- **Exceção, rotas:** a doc do Expo Router manda **nunca** colocar teste dentro de `src/app/` (viraria rota). Testes de navegação ficam em **`tests/app/`** (ex.: `tests/app/onboardingGate.test.tsx`).
+- **Banco:** `tests/db/*.test.ts` (já na árvore da seção 4).
+- **Apoio:** `src/test/` com `setup.ts`, `renderWithProviders.tsx` (i18n + `QueryClient` de teste sem retry e sem persistência), fábricas (`makePlace()`, `makeStamp()`) e os services em memória. `src/test/` só é importado por testes; o lint proíbe importá-lo de código de produção.
+- **Descrições dos testes em inglês**, como todo nome técnico (`it('blocks the 4th suggestion of the week')`).
+
+### 11.4 Regras de escrita
+
+1. **Domínio é determinístico:** nenhuma função de `domain/` chama `Date.now()`/`new Date()` ou lê o fuso do sistema. Recebem `now` e `timeZone` por parâmetro, o que dispensa timers falsos e torna o teste da virada de semana trivial.
+2. **Testar comportamento, não implementação:** componentes por papel, rótulo e texto (`getByRole`, `getByLabelText`), que é também o que garante a acessibilidade. `testID` só quando não houver alternativa.
+3. **Sem snapshot de UI.** A própria doc do Expo recomenda cautela e prefere E2E para UI. Snapshot só para dados serializados pequenos e estáveis, se ajudar.
+4. **Services em memória, não mock por chamada:** os hooks são testados contra a versão em memória do service (seção 2, regra 4), que **falha de propósito** quando o teste pede (rede caiu, 4xx). Mock de `lib/supabase` fica só nos testes do service real.
+5. **Animação:** timers falsos + `toHaveAnimatedStyle` do Reanimated. O dock é conferido pela posição final (`translateX` × índice ativo) e pela opacidade do label, nunca por tempo de tela.
+6. **Idiomas:** componentes com texto rodam nos três idiomas quando a largura importa (dock, botões, chips, pílulas).
+7. **Isolamento:** cada teste limpa os stores (`setState` inicial) e o `QueryClient`; nada depende da ordem.
+8. **Sem rede real** em testes de app; só `test:db` fala com o Supabase.
+9. **Lint de teste:** `eslint-plugin-testing-library` nos arquivos `*.test.ts(x)` (configurado junto com as regras de nomenclatura, na tarefa de convenções).
+
+### 11.5 Testes do banco (sem CLI)
+
+Detalhe do que o plano pede, agora com as decisões do ADR:
+
+- **Usuários de teste:** o Supabase limita criação de anônimos a **30 por hora por IP** (seção 8.3). Por isso o `test:db` cria **no máximo 2 usuários por execução** (A e B), em um `globalSetup`, e os reutiliza em todos os arquivos. No fim, os dois são apagados por `delete-my-data`, que também é testada. Duas execuções por hora cabem com folga; mais que ~12 por hora consomem a cota de IP, e o teste avisa isso na mensagem de falha.
+- **Casos obrigatórios** (cada um com um caso negativo): A não lê nem escreve dados de B; **o cliente não consegue alterar `profiles.plan`** nem inserir direto em `suggestion_events`; a **4ª sugestão da semana é bloqueada**; repetir o `request_id` não cobra a cota duas vezes (seção 9.4); só `places` ativos aparecem, e lugar inativo já carimbado continua legível (9.5); **`stamps` com o mesmo `id` não duplica**; `anon` (sem login) não lê nada; `delete-my-data` apaga tudo do usuário (cascata).
+- **O que `test:db` não alcança** vai para **`supabase/checks/*.sql`** (virada de semana, horário de verão, fusos): cada linha devolve `test, ok`, e todos os `ok` precisam ser `true`.
+- **Quem roda:** o usuário aplica os scripts e preenche o `.env`; o loop só roda `npm run test:db` depois disso e quando a tarefa mexe no banco (protocolo, passo 5).
+- **Dados de teste** carregam um prefixo reconhecível e são removidos no fim; nunca se toca nos dados do `seed_dev.sql`.
+
+### 11.6 E2E (Maestro): opcional e fora do loop
+
+- **Decisão:** **não entra antes da Fase 13.** Os fluxos são escritos pelo loop em `.maestro/` e **executados pelo usuário**, porque o loop não roda o app. Valor: um *smoke* do caminho principal (onboarding → Rolê → sugestão → carimbo → passaporte) e do modo avião.
+- **Requisitos (doc atual):** Java 17+, o Maestro (no Windows, o `maestro.zip` no PATH) e um **dispositivo/emulador rodando**. Em **development build** usa-se `launchApp` com o `appId` (D20); no Expo Go seria `openLink` com a URL de desenvolvimento. iOS exige macOS; no Windows, **só Android**. A doc consultada não detalha o formato dos fluxos; conferir na Fase 13.
+- Se o custo de manter os fluxos superar o ganho, o E2E vira só o roteiro 👀 do plano.
+
+### 11.7 Verificação manual 👀 (o complemento dos testes)
+
+O que os testes em Node **não** provam, e portanto continua com o usuário:
+
+- Hermes: `Intl.PluralRules` (seção 10.5), nomes de dia/mês, fontes e renderização de texto;
+- safe area, dock e home indicator, gestos de voltar, teclado;
+- animações (fluidez a 60 fps, sombra do dock no Android);
+- permissões (localização, notificações) e modo avião;
+- desempenho de abertura e de lista.
+
+Cada fase registra, em **Bloqueios**, um roteiro curto e numerado do que testar, como o plano já exige.
+
+### 11.8 Portões de qualidade
+
+- **A cada iteração do loop** (antes de marcar a tarefa): `npx expo lint`, `npx tsc --noEmit`, `npx jest` (a partir da Fase 2). Se a tarefa mexer no banco e os scripts já estiverem aplicados: `npm run test:db`. Tarefa que muda dependência ou rota também roda `npx expo export --platform android` (só gera o bundle).
+- **A cada fim de fase:** `npx expo-doctor` e `jest --coverage` (confere o mínimo do `domain/`).
+- **CI** (EAS Workflows ou GitHub Actions, a decidir na Fase 18): `lint`, `typecheck` e `test`; `test:db` fica **fora do CI** (depende de um projeto Supabase e de segredo de ambiente).
+- **Cobertura:** limite **só em `domain/`** (90%). Nenhum limite global, para não incentivar teste vazio.
+
+### 11.9 Riscos
+
+| Risco | Tratamento |
+|---|---|
+| Teste em Node passar e o Hermes falhar (plural, `Intl`, fontes) | Critérios 👀 por fase (11.7) |
+| `test:db` estourar o limite de 30 anônimos/hora | No máximo 2 usuários por execução, reuso em `globalSetup` (11.5) |
+| Mocks demais escondendo bug de integração | Services em memória nos hooks; integração real no `test:db` |
+| Teste de animação frágil | Assertar posição final e opacidade, não o tempo |
+| Suíte lenta atrasando o loop | Camadas separadas; `test:db` fora do `npm test`; domínio sem React |
+| Dependências de teste incompatíveis com o SDK 57 | Instalar com `npx expo install`; rodar o `expo-doctor` depois |
+| Teste dentro de `src/app/` virar rota | Testes de rota em `tests/app/` e regra de lint/revisão |
+
+## 12. Itens detalhados nas próximas tarefas da Fase 1
 
 Esta seção é um índice. Cada item abaixo é uma tarefa própria do plano e vira uma seção deste documento quando for feita:
 
-- Estratégia de testes
 - Ambientes e segredos
 - Dependências planejadas
 - Convenções de nomenclatura
