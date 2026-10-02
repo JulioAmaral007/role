@@ -57,26 +57,30 @@ Comando sugerido:
 - **Skills durante todo o desenvolvimento:** `react-native-architecture` define *onde* e *como estruturar*; `vercel-react-native-skills` define *como implementar bem*. Quando as duas entrarem em conflito, prevalece o `docs/ARCHITECTURE.md` aprovado. Registre a divergência no Registro de iterações.
 - No Registro de iterações, anotar quais skills foram usadas e quais regras da `vercel-react-native-skills` foram aplicadas (pelo prefixo, ex.: `animation-`, `list-performance-`).
 
-**Nomenclatura — tudo em inglês**
+**Nomenclatura — tudo em inglês** (a fonte canônica é a seção 14 de `docs/ARCHITECTURE.md`; o `eslint.config.js` valida nome de arquivo, de pasta e de identificadores a cada `npx expo lint`)
 - **Todo nome técnico é em inglês:** arquivos, pastas, rotas (e as URLs/deep links que elas geram), componentes, funções, hooks, variáveis, tipos, constantes, tokens do tema, chaves de i18n, IDs de domínio, tabelas, colunas, enums, RPCs, Edge Functions, scripts, eventos de analytics, query keys e stores.
 - **Português só no que o usuário lê:** textos dentro de `src/i18n/locales/pt-BR.json`, documentação e mensagens de commit.
 - Se um nome não estiver no Glossário abaixo, escolher o termo em inglês mais simples e **acrescentá-lo ao Glossário** na mesma iteração, para manter a consistência.
 
 | O quê | Padrão | Exemplo |
 |---|---|---|
-| Arquivos e pastas | `kebab-case` (padrão já usado no template: `themed-text.tsx`, `use-color-scheme.ts`) | `floating-tab-bar.tsx`, `opening-hours.ts`, `monthly-goal.ts` |
-| Rotas (Expo Router) | `kebab-case` em inglês | `suggestion.tsx` → `/suggestion`, `report-problem.tsx` |
-| Hooks | arquivo `use-*.ts`, função `useCamelCase` | `use-dock-inset.ts` → `useDockInset()` |
+| Componentes e providers (arquivo) | `PascalCase.tsx`, igual ao nome do componente, como na skill `react-native-architecture` (`components/ui/Button.tsx`, `providers/AuthProvider.tsx`) | `FloatingTabBar.tsx`, `TicketCard.tsx`, `QueryProvider.tsx` |
+| Variantes de plataforma | `PascalCase.<plataforma>.tsx` | `Button.ios.tsx`, `FloatingTabBar.android.tsx` |
+| Demais arquivos `.ts` (domain, services, stores, utils, lib, i18n, theme) | `camelCase.ts`, como na skill (`services/haptics.ts`) | `openingHours.ts`, `monthlyGoal.ts`, `syncQueue.ts`, `tokens.ts` |
+| Pastas | minúsculas, em `camelCase` quando houver mais de uma palavra | `components/ui/`, `features/suggestion/`, `syncQueue/` |
+| Rotas (`src/app/`, Expo Router) | **exceção:** minúsculas em `kebab-case`, porque o nome do arquivo vira a URL/deep link (a skill também usa `app/(tabs)/_layout.tsx`, `profile/[id].tsx`) | `suggestion.tsx` → `/suggestion`, `report-problem.tsx` |
+| Hooks | arquivo `useCamelCase.ts`, igual ao nome do hook (como `hooks/useProducts.ts` na skill) | `useDockInset.ts` → `useDockInset()` |
 | Componentes, tipos, interfaces, classes | `PascalCase` | `FloatingTabBar`, `PlacesRepository`, `QuotaStatus` |
 | Funções e variáveis | `camelCase`, começando com verbo nas funções | `formatDistance()`, `consumeSuggestion()`, `isOpenDuring()` |
 | Constantes | `UPPER_SNAKE_CASE` | `FREE_WEEKLY_QUOTA = 3`, `DOCK_BASE_INSET = 106` |
 | Tokens do tema | `camelCase` | `colors.yellow`, `colors.ink`, `shadow.dock` |
 | Banco (tabelas, colunas, enums, RPCs) | `snake_case` | `suggestion_events`, `consume_suggestion()` |
-| Edge Functions e scripts | `kebab-case` | `delete-my-data`, `scripts/catalog/validate.ts` |
+| Edge Functions | pasta em `kebab-case` (vira a URL da função) | `supabase/functions/delete-my-data/index.ts` |
+| Scripts Node | `camelCase.ts` | `scripts/catalog/validate.ts`, `scripts/catalog/buildCsv.ts` |
 | Scripts SQL do Supabase | `NNN_snake_case.sql` (número sequencial) | `001_initial_schema.sql`, `003_quota.sql` |
 | Chaves de i18n | `feature.camelCaseKey`, com sufixo de plural do i18next | `home.title`, `suggestion.remaining_one` |
 | Eventos de analytics | `snake_case` | `stamp_created`, `go_tapped` |
-| Testes | `<arquivo>.test.ts(x)` ao lado do arquivo testado | `streak.test.ts` |
+| Testes | `<Arquivo>.test.ts(x)` ao lado do arquivo testado, mantendo o case do original. **Exceção:** testes de rota ficam em `tests/app/` (a doc do Expo Router proíbe teste dentro de `src/app/`) e os do banco em `tests/db/`. Descrições dos testes em inglês | `streak.test.ts`, `FloatingTabBar.test.tsx`, `tests/app/onboardingGate.test.tsx` |
 | Branches e escopo de commit | escopo = nome do módulo em inglês | `feat(stamp): ...` |
 
 **Glossário de domínio (PT → EN)**
@@ -130,7 +134,7 @@ Comando sugerido:
   - **integração** (`npm run test:db`, jest com config própria) contra o projeto `role-dev`, usando só a chave pública: cria usuários anônimos e verifica RLS, cota e leitura de lugares, apagando os próprios dados no fim;
   - **checagens SQL** em `supabase/checks/*.sql`, que o usuário roda no SQL Editor; cada linha devolve `test, ok`, e todos os `ok` precisam ser `true`. Servem para o que não dá para testar de fora (ex.: virada da semana da cota).
 - **RLS ligado em todas as tabelas**, com policy explícita e coberta por teste.
-- No app só entram `EXPO_PUBLIC_SUPABASE_URL` e a chave pública (anon/publishable), via `.env` (o usuário preenche a partir do `.env.example`). A **service role nunca vai para o app nem para o repositório**. `.env` no `.gitignore` e `.env.example` versionado.
+- No app só entram `EXPO_PUBLIC_SUPABASE_URL` e a chave pública (**publishable**, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; a `anon` está sendo descontinuada), via `.env` (o usuário preenche a partir do `.env.example`). A **service role nunca vai para o app nem para o repositório**. `.env` no `.gitignore` e `.env.example` versionado.
 - O app conversa com o Supabase **só pela camada `services/`**. Telas e componentes nunca importam o client direto.
 - **Ambientes (D18):** projeto `role-dev`, para desenvolvimento e testes de integração, e projeto `role-mvp`, para os testadores. Todo script vai primeiro no `role-dev`; o `role-mvp` recebe tudo de uma vez na Fase 13.
 - **Handoffs agrupados:** para não parar o loop a cada script, as tarefas de banco de uma fase são preparadas **todas antes** e entregues num único handoff 🖐, com um checklist numerado em Bloqueios.
@@ -163,6 +167,17 @@ Os nomes dos tokens são em inglês (`colors.<token>` em `src/theme/tokens.ts`).
 | `shadow.dock` | `0 12 32 rgba(20,20,20,.28)` + `0 2 6 rgba(20,20,20,.18)` | sombra da tab bar flutuante |
 
 - **Fontes:** Bricolage Grotesque 700/800 (títulos, CTAs, números), Instrument Sans 400–700 (corpo), DM Mono 400/500 (rótulos em CAIXA ALTA, letter-spacing 0.08em).
+- **Escala tipográfica (decisão de 02/10/2026):** o protótipo usa ~18 tamanhos; o app consolida o **corpo e os rótulos em 4 tamanhos**, conforme a regra `ui-styling` da `vercel-react-native-skills`, e mantém os **tamanhos de display** do protótipo:
+
+  | Token | Tamanho | Substitui no protótipo | Uso |
+  |---|---|---|---|
+  | `size.xs` | 12 | 11, 12, 13 | rótulos mono em CAIXA ALTA, tags, legendas, pílulas |
+  | `size.sm` | 14 | 14, 15 | corpo, chips, botões secundários, label do dock |
+  | `size.md` | 16 | 16, 17, 18 | parágrafos de destaque, títulos de card, preço do plano |
+  | `size.lg` | 20 | 19, 20, 21 | CTAs principais |
+  | `display.*` | 28, 32, 34, 38, 44, 50, 64 | iguais ao protótipo | títulos de tela, estatísticas, "Carimbo novo!", "Nº 14" |
+
+  Dentro do mesmo tamanho, a hierarquia vem de **peso e cor**, como pede a skill.
 - **Forma:** bordas sólidas de 2px na cor `ink`; pílulas com raio 999; botões com raio 14/16/18; cards com raio 20/24.
 - **Layout:** padding de 52 em cima e 20 nas laterais; CTA principal com 58–62 de altura; alvos de toque ≥ 44.
 
@@ -248,9 +263,9 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 > **Obrigatório:** começar esta fase invocando a skill **`react-native-architecture`** (Skill tool, ou `/react-native-architecture`) e ler `.claude/skills/react-native-architecture/references/details.md`. Todas as decisões abaixo devem seguir os padrões dela (estrutura de pastas, Expo Router, React Query offline-first, separação entre `services` e `stores`, fluxo de auth, boas práticas de performance), adaptados para Expo SDK 57 e Supabase.
 > Esta fase produz **documentação e esqueleto de pastas**, não features.
 
-- [ ] 🧭 ARCH: invocar `react-native-architecture` e resumir em `docs/ARCHITECTURE.md` os padrões adotados.
-- [ ] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARCHITECTURE.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
-- [ ] Definir a **estrutura de pastas** em `docs/ARCHITECTURE.md`. Proposta inicial, a validar com a skill:
+- [x] 🧭 ARCH: invocar `react-native-architecture` e resumir em `docs/ARCHITECTURE.md` os padrões adotados.
+- [x] ⚡ VRN: invocar `vercel-react-native-skills`, ler as regras em `.agents/skills/vercel-react-native-skills/` e registrar em `docs/ARCHITECTURE.md` uma seção **Convenções de implementação** com as regras que valem para o projeto (prioridade: listas, animação, navegação e UI).
+- [x] Definir a **estrutura de pastas** em `docs/ARCHITECTURE.md`. Proposta inicial, a validar com a skill:
   ```
   supabase/                      # SEM CLI: tudo aqui é aplicado pelo usuário no dashboard
   ├── sql/                       # 001_initial_schema.sql, 002_rls_policies.sql... (SQL Editor, em ordem)
@@ -272,20 +287,23 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   │   │   ├── passport.tsx       # Passaporte
   │   │   └── crew.tsx           # Turma
   │   ├── suggestion.tsx         # Sugestão (Stack push)
+  │   ├── place/[id].tsx         # deep link role://place/<id>
+  │   ├── +not-found.tsx         # rota inexistente (deep link inválido)
   │   ├── stamp.tsx              # Carimbo (fullScreenModal)
   │   ├── feedback.tsx           # "Como foi?" (modal)
   │   ├── report-problem.tsx     # "Informar problema" (modal)
   │   ├── plus.tsx               # modal (paywall / fake door)
   │   └── settings.tsx           # Ajustes (modal): idioma, notificações, privacidade, apagar dados
   ├── components/
-  │   ├── ui/                    # button.tsx (Button), chip.tsx, pill.tsx, card.tsx, floating-tab-bar.tsx, icons/...
-  │   └── features/              # home/, suggestion/, stamp/, passport/, plus/, settings/, feedback/, onboarding/
-  ├── hooks/                     # use-quota.ts (useQuota), use-streak.ts, use-suggestion.ts, use-language.ts, use-dock-inset.ts...
+  │   ├── ui/                    # Button.tsx, Chip.tsx, Pill.tsx, Card.tsx, FloatingTabBar.tsx, icons/Logo.tsx...
+  │   └── features/              # home/, suggestion/, stamp/, passport/, plus/, settings/, feedback/, onboarding/, navigation/ (AppTabBar)
+  ├── hooks/                     # useQuota.ts, useStreak.ts, useSuggestion.ts, useLanguage.ts, useDockInset.ts...
+  ├── providers/                 # QueryProvider.tsx, I18nProvider.tsx, AuthProvider.tsx (como na skill)
   ├── lib/
   │   └── supabase.ts            # client único (sessão persistida)
   ├── services/                  # places, stamps, quota, feedback, reports, analytics, location, notifications, share
-  ├── stores/                    # estado local persistido (preferências, fila offline, cache do passaporte)
-  ├── domain/                    # regras puras: recommend.ts, streak.ts, bingo.ts, monthly-goal.ts, opening-hours.ts, safety.ts
+  ├── stores/                    # estado local (preferências e fila offline persistidas; sessão de sugestão em memória)
+  ├── domain/                    # regras puras: recommend.ts, streak.ts, bingo.ts, monthlyGoal.ts, openingHours.ts, safety.ts
   ├── theme/                     # tokens, fontes, tipografia
   ├── i18n/
   │   ├── index.ts               # init do i18next + detecção do idioma do aparelho
@@ -294,21 +312,21 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   ├── types/                     # inclui database.ts gerado pelo Supabase
   └── utils/
   ```
-- [ ] Definir o **mapa de navegação** (tipos de apresentação: push, modal e fullScreenModal; gate de onboarding; deep links com o scheme `role://`, por exemplo `role://suggestion` e `role://place/<id>`).
-- [ ] Definir a **implementação da tab bar** (ADR curto): o dock flutuante do protótipo exige **tabs JS do Expo Router com `tabBar` customizado**, e não `NativeTabs`/tab bar nativa, que não permitem esse visual. Definir também como as telas recebem o recuo inferior (hook `useDockInset()` = altura do dock + margem + safe area), já que o dock fica sobreposto ao conteúdo. Conferir a API de tabs do Expo Router no SDK 57.
-- [ ] Definir a **estratégia de estado**: estado de servidor com React Query (catálogo, carimbos, cota) e estado local persistido (preferências, filtros, fila offline) com uma lib de store + AsyncStorage. Justificar a escolha (ex.: Zustand) em um ADR curto.
-- [ ] Definir a **arquitetura Supabase** (ADR):
+- [x] Definir o **mapa de navegação** (tipos de apresentação: push, modal e fullScreenModal; gate de onboarding; deep links com o scheme `role://`, por exemplo `role://suggestion` e `role://place/<id>`).
+- [x] Definir a **implementação da tab bar** (ADR curto): o dock flutuante do protótipo exige **tabs JS do Expo Router com `tabBar` customizado**, e não `NativeTabs`/tab bar nativa, que não permitem esse visual. Definir também como as telas recebem o recuo inferior (hook `useDockInset()` = altura do dock + margem + safe area), já que o dock fica sobreposto ao conteúdo. Conferir a API de tabs do Expo Router no SDK 57.
+- [x] Definir a **estratégia de estado**: estado de servidor com React Query (catálogo, carimbos, cota) e estado local persistido (preferências, filtros, fila offline) com uma lib de store + AsyncStorage. Justificar a escolha (ex.: Zustand) em um ADR curto.
+- [x] Definir a **arquitetura Supabase** (ADR):
   - **Operação só pelo dashboard web**, sem CLI e sem Docker. O fluxo é: scripts versionados em `supabase/sql/` → usuário aplica no SQL Editor → `APPLIED.md` (ver a seção "Supabase" das Regras gerais).
   - **Auth anônima** (`signInAnonymously`) na primeira abertura, sem cadastro. Cada aparelho ganha um `user_id`, o que dá backup do passaporte e cota no servidor desde o MVP. A conta definitiva (vincular e-mail, Apple ou Google) fica para a Fase 15.
   - Sessão persistida conforme o guia oficial do Supabase para Expo, com refresh automático ligado ao `AppState`.
   - Schema conforme o "Modelo de dados inicial", com RLS e as RPCs `consume_suggestion()` e `quota_status()` (fuso do usuário em `profiles.timezone`).
   - **Recomendação no cliente** no MVP: baixar e cachear o catálogo da cidade e filtrar no aparelho (ver D16).
   - Fotos dos lugares no **Supabase Storage** (bucket público só leitura), servidas com `expo-image`.
-- [ ] Definir a **estratégia offline-first** (Pattern 3 da skill):
+- [x] Definir a **estratégia offline-first** (Pattern 3 da skill):
   - catálogo cacheado (React Query persistido), com o passaporte funcionando sem internet;
   - carimbos criados offline com `id` uuid no cliente, colocados numa fila e enviados por `upsert` idempotente quando a conexão voltar;
   - **pedir uma sugestão nova exige internet** no MVP, porque a cota é consumida no servidor (ver D12), com uma tela clara de "sem conexão".
-- [ ] Definir a **estratégia de i18n** (consultar o guia de localização do Expo SDK 57):
+- [x] Definir a **estratégia de i18n** (consultar o guia de localização do Expo SDK 57):
   - **Libs:** `expo-localization` (idioma e região do aparelho) + `i18next` + `react-i18next`. Justificar em um ADR curto; a alternativa é `i18n-js`.
   - **Resolução do idioma:** escolha salva pelo usuário → idioma do aparelho → `pt-BR` como fallback. O idioma ativo também fica salvo em `profiles.locale`, para as notificações.
   - **Troca em tempo real** (sem reiniciar o app), com a escolha persistida no store de preferências.
@@ -317,57 +335,66 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   - **Formatação** com `Intl.DateTimeFormat` ("SEX · 02 OUT"), `Intl.NumberFormat` (moeda e km) e moeda separada do idioma (ver D10).
   - **Conteúdo do catálogo** vem da tabela `place_translations`, com fallback para pt-BR. A query key do React Query inclui o idioma.
   - **Textos nativos** (permissões e nome do app) via `locales` no `app.json`.
-- [ ] Definir a **estratégia de testes**: jest-expo para `domain/`, hooks e services (com o Supabase mockado), Testing Library para componentes, teste de paridade de chaves de i18n, **testes de integração do banco (`npm run test:db`) contra o `role-dev` e checagens SQL** no SQL Editor (sem pgTAP/CLI) e, opcionalmente, Maestro para E2E.
-- [ ] Definir **ambientes e segredos**: projetos `role-dev` e `role-mvp` no dashboard (sem Supabase local); `.env`/`.env.example` apontando para o `role-dev`; variáveis `EXPO_PUBLIC_*` por perfil do EAS (preview → `role-mvp`).
-- [ ] Listar as **dependências planejadas** (instalar só na fase que usar), sempre via `npx expo install`: `@supabase/supabase-js` (e o que o guia oficial pedir para RN), `react-native-svg`, `@react-native-async-storage/async-storage`, `@tanstack/react-query` (+ persister), `zustand`, `expo-localization`, `i18next`, `react-i18next`, `expo-haptics`, `expo-location`, `expo-notifications`, `expo-sharing`/`Share` do RN, `expo-crypto` (uuid) e as fontes do `@expo-google-fonts`.
-- [ ] Registrar em `docs/ARCHITECTURE.md` a seção **Convenções de nomenclatura** (tabela de padrões, Glossário e IDs de domínio deste plano) e, se der, reforçar com regras de lint (ex.: `@typescript-eslint/naming-convention` e checagem de nome de arquivo em kebab-case).
-- [ ] Criar as pastas vazias, com `index.ts` ou `.gitkeep`, e o alias `@/` no `tsconfig` (conferir se já existe).
-- [ ] Registrar em `docs/ARCHITECTURE.md` as **Decisões em aberto** (seção no fim) com o default escolhido.
+- [x] Definir a **estratégia de testes**: jest-expo para `domain/`, hooks e services (com o Supabase mockado), Testing Library para componentes, teste de paridade de chaves de i18n, **testes de integração do banco (`npm run test:db`) contra o `role-dev` e checagens SQL** no SQL Editor (sem pgTAP/CLI) e, opcionalmente, Maestro para E2E.
+- [x] Definir **ambientes e segredos**: projetos `role-dev` e `role-mvp` no dashboard (sem Supabase local); `.env`/`.env.example` apontando para o `role-dev`; variáveis `EXPO_PUBLIC_*` por perfil do EAS (preview → `role-mvp`).
+- [x] Listar as **dependências planejadas** (instalar só na fase que usar), sempre via `npx expo install`: `@supabase/supabase-js` (e o que o guia oficial pedir para RN), `react-native-svg`, `@react-native-async-storage/async-storage`, `@tanstack/react-query` (+ persister), `zustand`, `expo-localization`, `i18next`, `react-i18next`, `expo-haptics`, `expo-location`, `expo-notifications`, `expo-sharing`/`Share` do RN, `expo-crypto` (uuid) e as fontes do `@expo-google-fonts`.
+- [x] Registrar em `docs/ARCHITECTURE.md` a seção **Convenções de nomenclatura** (tabela de padrões, Glossário e IDs de domínio deste plano) e, se der, reforçar com regras de lint (ex.: `@typescript-eslint/naming-convention` e uma checagem de nome de arquivo: `PascalCase` para componentes, `useX` para hooks, `camelCase` para o resto e `kebab-case` só em `src/app/`).
+- [x] Criar as pastas vazias, com `index.ts` ou `.gitkeep`, e o alias `@/` no `tsconfig` (conferir se já existe).
+- [x] Registrar em `docs/ARCHITECTURE.md` as **Decisões em aberto** (seção no fim) com o default escolhido.
 
 **Critérios de saída**
-- [ ] `docs/ARCHITECTURE.md` completo (pastas, navegação, estado, Supabase, offline, i18n, testes, ambientes, dependências).
-- [ ] Skill `react-native-architecture` citada como base da arquitetura e `vercel-react-native-skills` como base das convenções de implementação.
-- [ ] Usuário revisou e aprovou a arquitetura (**parar o loop aqui até aprovação**).
+- [x] `docs/ARCHITECTURE.md` completo (pastas, navegação, estado, Supabase, offline, i18n, testes, ambientes, dependências).
+- [x] Skill `react-native-architecture` citada como base da arquitetura e `vercel-react-native-skills` como base das convenções de implementação.
+- [x] Usuário revisou e aprovou a arquitetura (**parar o loop aqui até aprovação**). Aprovada em 02/10/2026 ("arquitetura aprovada"), com os defaults 🟡 da seção 15 de `docs/ARCHITECTURE.md`.
 
 ---
 
 ## Fase 2 — Design system e infraestrutura de i18n ⚡ VRN
 
 **i18n (fazer primeiro, para que os componentes já nasçam traduzíveis)**
-- [ ] Instalar `expo-localization`, `i18next` e `react-i18next` e configurar jest-expo (necessário para o teste de paridade).
-- [ ] `src/i18n/index.ts`: init com recursos locais, `fallbackLng: 'pt-BR'` e detecção via `getLocales()`.
+- [ ] 🧹 Remover do `package.json` as dependências do template sem uso (`@expo/ui`, `expo-glass-effect`, `expo-symbols`, `expo-device`; conferir com busca em `src/` e `app.json`), rodando `npx expo-doctor` depois. Commit `build(deps)`.
+- [ ] Instalar `expo-localization`, `i18next`, `react-i18next` e `@formatjs/intl-pluralrules` (o Hermes não tem `Intl.PluralRules`; ver ADR em `docs/ARCHITECTURE.md` seção 10.5), configurar o plugin `expo-localization` com `supportedLocales` e configurar jest-expo (necessário para o teste de paridade). As demais dependências da fase (`zustand`, `@react-native-async-storage/async-storage`, `react-native-svg`, `@expo-google-fonts/*` e as de teste) entram na tarefa que as usa, via `npx expo install` (lista completa na seção 13.2 do ADR).
+- [ ] `src/i18n/polyfills.ts` (PluralRules com dados de pt, en e es, só se `Intl.PluralRules` não existir), `src/i18n/resolveLocale.ts` (escolha salva → aparelho → pt-BR) e `src/i18n/index.ts`: init síncrono com recursos locais e `fallbackLng: 'pt-BR'`.
 - [ ] `src/i18n/locales/pt-BR.json` com **todos os textos do protótipo** (ver "Referência rápida"), além de `en.json` e `es.json` traduzidos.
 - [ ] Tipagem das chaves (module augmentation do `react-i18next`), para que uma chave errada quebre o `tsc`.
-- [ ] `src/i18n/format.ts`: `formatDate`, `formatStampDate` ("02 · 10 · 2026"), `formatWeekdayShort` ("SEX · 02 OUT"), `formatCurrency`, `formatDistance` ("1,8 km" / "1.8 km") e `formatOrdinal`, todos lendo o idioma ativo. Com testes.
-- [ ] Hook `useLanguage()` (`src/hooks/use-language.ts`): idioma atual, `setLanguage(lang | 'system')` e persistência no store de preferências, com troca imediata.
-- [ ] Teste de paridade: todos os idiomas têm exatamente as mesmas chaves e placeholders (`{{count}}`, `{{name}}`).
+- [ ] `src/i18n/format.ts`: `formatDate`, `formatStampDate` ("02 · 10 · 2026", montado sem `Intl`), `formatWeekdayShort` ("SEX · 02 OUT"), `formatCurrency` (sempre BRL) e `formatDistance` ("1,8 km" / "1.8 km"), funções puras que recebem o idioma. Ordinais pelo recurso `ordinal: true` do i18next. Sem `formatToParts`, `RelativeTimeFormat` nem `ListFormat` (seção 10.5). Com testes.
+- [ ] Hook `useLanguage()` (`src/hooks/useLanguage.ts`): idioma atual, `setLanguage(lang | 'system')` e persistência no store de preferências, com troca imediata.
+- [ ] Teste de paridade: todos os idiomas têm as mesmas chaves-base (ignorando o sufixo de plural, porque pt-BR e es têm `_many` e en não; todo plural exige `_other`) e os mesmos placeholders (`{{count}}`, `{{name}}`).
 
 **Design system**
 - [ ] `src/theme/tokens.ts` com cores, espaçamentos, raios, bordas e alturas de toque (ver tabela acima).
 - [ ] Carregar as fontes Bricolage Grotesque, Instrument Sans e DM Mono (via `expo-font`/`@expo-google-fonts`) e segurar a splash até elas carregarem.
-- [ ] `src/theme/typography.ts` com as variantes: `display`, `title`, `cta`, `body`, `label` (mono em caixa alta) e `stat`.
+- [ ] `src/theme/typography.ts` com a escala da seção "Escala tipográfica": `size.xs/sm/md/lg` (12/14/16/20) para corpo e rótulos, e `display.*` com os tamanhos grandes do protótipo. Variantes prontas para uso: `display`, `title`, `cta`, `body`, `label` (mono em caixa alta) e `stat`. Nenhum `fontSize` solto fora desse arquivo.
 - [ ] Ícones SVG do protótipo como componentes (`Logo`, `Bolt`, `Compass`, `Passport`, `Users`, `Arrow`, `Back`, `Close`, `Pin`, `Clock`, `Wallet`, `Smile`, `Refresh`, `Calendar`, `Share`, `Check`), mais `Settings`, `Flag` (informar problema) e `WifiOff`.
 - [ ] Componentes `ui/`: `Button` (primary, outline, cream), `Chip` (seleção única, `aria-pressed` → `accessibilityState`), `SegmentedGrid`, `Pill`, `SectionLabel`, `Card`, `TicketDivider` (picote), `ProgressSegments`, `EmptyState`, `ErrorState`, `OfflineBanner`.
-- [ ] Componente `FloatingTabBar` (`src/components/ui/floating-tab-bar.tsx`, o dock) fiel à seção "Tab bar — dock flutuante":
+- [ ] Componente `FloatingTabBar` (`src/components/ui/FloatingTabBar.tsx`, o dock) fiel à seção "Tab bar — dock flutuante":
   - pílula `ink` absoluta com sombra `shadow.dock` (no Android, conferir `boxShadow`/`elevation` e se a sombra fica parecida);
   - item ativo expandido em `yellow` com ícone e label; inativos de 64 só com ícone `sand`;
-  - **animação** de troca: o item ativo encolhe e o novo expande (largura e cor) com Reanimated, mais um haptic leve opcional. Seguir as regras `animation-` da `vercel-react-native-skills` (animar só no thread de UI, sem re-render por frame);
+  - **animação de troca só com `transform` e `opacity`** (regra `animation-gpu-properties`, **sem exceção**). O truque é que a largura do item ativo é **constante**: `largura útil − (n−1) × 64 − (n−1) × 4`, ou seja, 338 − 128 − 8 = **202** num aparelho de 390. Assim:
+    - a pílula amarela é **um único elemento** de largura fixa, posicionado de forma absoluta, que **desliza** com `translateX` até `índiceAtivo × (64 + 4)`;
+    - cada ícone **desliza** com `translateX` até a posição do seu slot (antes, dentro ou depois do item ativo), e a cor muda de `sand` para `ink` por `interpolateColor`;
+    - o label **aparece e some** com `opacity` (e um pequeno `translateX`, se ajudar);
+    - um shared value `activeIndex` animado com spring é a única fonte de verdade (`state-ground-truth`), e as posições saem por `interpolate`;
+    - a largura útil é medida uma vez com `onLayout` no container (`ui-measure-views`). A largura de cada label é medida por idioma, para centralizar o conjunto ícone + label, e é refeita ao trocar de idioma;
+    - as áreas de toque seguem o layout final de cada estado, e o haptic leve é opcional;
+    - **não** usar `scaleX` para esticar a pílula, porque isso deforma os cantos arredondados;
   - acessibilidade: `accessibilityRole="tab"`, `accessibilityState={{ selected }}` e `accessibilityLabel` traduzido nos itens só com ícone;
   - i18n: o label ativo usa `t()` e o teste de layout cobre o maior label entre os idiomas ("Passaporte" / "Passport" / "Pasaporte").
-- [ ] Hook `useDockInset()` (`src/hooks/use-dock-inset.ts`), que devolve o recuo inferior (base de 106 + safe area) para as telas com tabs.
+- [ ] Hook `useDockInset()` (`src/hooks/useDockInset.ts`), que devolve o recuo inferior (base de 106 + safe area) para as telas com tabs.
 - [ ] Definir `userInterfaceStyle` como `light` (ver D2).
 
 **Critérios de saída**
 - [ ] Tela temporária de "catálogo de componentes" mostrando todos os componentes (remover depois), com um botão para alternar o idioma ali mesmo.
 - [ ] Nenhuma cor hardcoded fora de `theme/` e nenhum texto hardcoded fora de `i18n/locales/`.
 - [ ] Componentes de texto aguentam strings até ~40% maiores que o pt-BR sem estourar (botões, chips, pílulas e o item ativo do dock).
+- [ ] 👀 No aparelho: plural ("1 restante" × "2 restantes") correto nos três idiomas e nome do dia/mês do carimbo certo (o jest roda no Node e não prova o Hermes).
 - [ ] 👀 Dock conferido num iPhone com home indicator e num Android com navegação por gestos e por botões (o safe area está correto e nada fica cortado).
 
 ---
 
 ## Fase 3 — Navegação e esqueleto das telas 🧭 ARCH ⚡ VRN
 
-- [ ] `_layout.tsx` raiz com providers (i18n inicializado antes do primeiro render, QueryClient, fontes/splash, error boundary) e Stack.
+- [ ] `_layout.tsx` raiz com providers (i18n inicializado antes do primeiro render, `QueryClient` simples com `@tanstack/react-query`; o cache persistido só na Fase 5, fontes/splash, error boundary) e Stack.
 - [ ] Gate de onboarding: na primeira abertura vai para `/onboarding`; depois, direto para as tabs (flag persistida).
 - [ ] Grupo `(tabs)` com Rolê, Passaporte e Turma, usando o `FloatingTabBar` da Fase 2 via `tabBar` customizado (labels via `t()`). Todas as telas com tabs aplicam `useDockInset()` no conteúdo/scroll.
 - [ ] Remover o `app-tabs.tsx` do template (e a variante `.web`), substituído pelo dock.
@@ -396,12 +423,12 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   - como colar e rodar scripts no SQL Editor;
   - como criar e publicar uma Edge Function pelo editor do dashboard;
   - como baixar os tipos TypeScript, se o dashboard oferecer.
-- [ ] `.env.example` com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` (sem valores).
-- [ ] `supabase/sql/001_initial_schema.sql`: tabelas do "Modelo de dados inicial", enums (`category`, `mood`, `time_slot`, `budget`, `report_reason`) com os IDs do Glossário, índices e trigger de `updated_at`.
-- [ ] `supabase/sql/002_rls_policies.sql`: **RLS em todas as tabelas**, com policies conforme a tabela do modelo.
+- [ ] `.env.example` com `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (sem valores, um comentário por linha; o app lê as três só por `src/lib/env.ts`, que valida, ver seção 12.2 do ADR; a doc atual do Supabase recomenda a publishable key no lugar da `anon`, ver ADR em `docs/ARCHITECTURE.md` seção 8).
+- [ ] `supabase/sql/001_initial_schema.sql`: tabelas do "Modelo de dados inicial" (`stamps.id` é a chave primária; **sem** índice único em `(user_id, number)`, ver seção 9.5 do ADR offline), enums (`category`, `mood`, `time_slot`, `budget`, `report_reason`) com os IDs do Glossário, índices e trigger de `updated_at`.
+- [ ] `supabase/sql/002_rls_policies.sql`: **RLS em todas as tabelas**, com policies conforme a tabela do modelo e as regras da seção 8.5 do ADR Supabase. A leitura de `places` também libera lugares **inativos que o usuário já carimbou** (seção 9.5).
 - [ ] `supabase/sql/003_quota.sql`:
   - função pura `quota_week_start(ts, tz)` (segunda 00:00 no fuso do usuário);
-  - RPC `consume_suggestion(place_id)`, `security definer`: valida a cota semanal, registra em `suggestion_events` e retorna `{ allowed, remaining, resets_at }`; Plus não tem limite;
+  - RPC `consume_suggestion(place_id, request_id uuid)`, `security definer` (o `request_id` torna o reenvio idempotente: índice único em `suggestion_events (user_id, request_id)` e mesma resposta na repetição, ver ADR offline em `docs/ARCHITECTURE.md` seção 9.4): valida a cota semanal, registra em `suggestion_events` e retorna `{ allowed, remaining, resets_at }`; Plus não tem limite;
   - RPC `quota_status()`: devolve o restante e a data de renovação, sem consumir.
 - [ ] `supabase/sql/004_profiles_trigger.sql`: cria `profiles` automaticamente quando um usuário (inclusive anônimo) é criado.
 - [ ] `supabase/sql/005_storage_policies.sql`: policies do bucket `place-photos`.
@@ -409,11 +436,13 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] `supabase/functions/delete-my-data/index.ts`: apaga o usuário autenticado e todos os dados dele (a service role só dentro da função).
 - [ ] `supabase/checks/001_quota_week_start.sql`: casos de virada de semana (domingo 23:59 / segunda 00:00, fusos diferentes, horário de verão), cada um retornando `test, ok`.
 - [ ] Testes de integração em `tests/db/` + `jest.db.config.js` + script `npm run test:db` (lê o `.env`):
-  - usuário anônimo A não lê nem escreve dados do B;
-  - a 4ª sugestão da semana é bloqueada;
-  - só lugares `active` são visíveis;
+  - no máximo **2 usuários anônimos por execução** (A e B, criados num `globalSetup` e apagados no fim), por causa do limite de 30 por hora por IP (ADR de testes, seção 11.5);
+  - usuário anônimo A não lê nem escreve dados do B; o cliente não altera `profiles.plan` nem insere direto em `suggestion_events`; `anon` sem login não lê nada;
+  - a 4ª sugestão da semana é bloqueada, e repetir o mesmo `request_id` não cobra a cota de novo;
+  - só lugares `active` são visíveis (exceto os inativos que o usuário já carimbou);
   - insert idempotente de `stamps` (mesmo `id` não duplica);
   - `delete-my-data` apaga tudo do usuário (usada também na limpeza dos testes).
+- [ ] `src/lib/env.ts` (leitura estática e validação das 3 variáveis) e `src/types/env.d.ts`; o `test:db` aborta se `EXPO_PUBLIC_APP_ENV` não for `development` (seção 12.4).
 - [ ] `src/lib/supabase.ts`: client único com sessão persistida e auto-refresh ligado ao `AppState`, conforme o guia oficial atual. Auth anônima (`signInAnonymously`) silenciosa na primeira abertura, com retry e sem bloquear o onboarding.
 - [ ] `src/types/database.ts` provisório, escrito à mão a partir dos scripts (será trocado pelo gerado no dashboard, se houver).
 
@@ -441,13 +470,15 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 ## Fase 5 — Domínio e camada de dados 🧭 ARCH ⚡ VRN
 
+- [ ] `src/utils/zonedTime.ts`: contas de data por fuso (início da semana, "hoje", hora local da cidade), decidindo entre `Intl.DateTimeFormat` com *parse* (sem `formatToParts`) e uma biblioteca pequena (seção 13.5 do ADR). Com testes de virada de dia, semana e horário de verão. Nenhuma função de `domain/` faz conta de fuso por conta própria.
+- [ ] Instalar `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`, `expo-network` e `expo-crypto` (`npx expo install`; commit `build(data)`).
 - [ ] Configurar a cobertura do jest para `domain/`.
 - [ ] Tipos de domínio em `src/types` derivados de `database.ts`: `Place` (com tradução e horários resolvidos), `Stamp`, `WeekStatus`, `QuotaStatus`, `Plan`. Humores, tempos, orçamentos e categorias do bingo são **IDs em inglês** conforme o Glossário (`curious`, `2h`, `up_to_30`, `viewpoint`...); o rótulo vem sempre do i18n.
-- [ ] `domain/opening-hours.ts`: diz se o lugar fica aberto durante toda a janela escolhida (agora + duração), no fuso da cidade, incluindo horário que vira a meia-noite. Com testes.
+- [ ] `domain/openingHours.ts`: diz se o lugar fica aberto durante toda a janela escolhida (agora + duração), no fuso da cidade, incluindo horário que vira a meia-noite. Com testes.
 - [ ] `domain/safety.ts`: lugares `daylight_only` não aparecem depois do `daylight_cutoff` da cidade (ver D19). Com testes.
 - [ ] `domain/recommend.ts`: filtrar por humor, tempo, orçamento, horário e segurança; ordenar por distância compatível com o tempo; priorizar nunca carimbados; sortear sem repetir na sessão; fallback quando nada combina ("afrouxar" o orçamento e depois o humor, avisando o usuário).
 - [ ] `domain/streak.ts`: ofensiva semanal e histórico das últimas 8 semanas.
-- [ ] `domain/bingo.ts` e `domain/monthly-goal.ts`.
+- [ ] `domain/bingo.ts` e `domain/monthlyGoal.ts`.
 - [ ] `services/places`: `PlacesRepository` com `SupabasePlacesRepository` (catálogo da cidade + traduções + horários) e `InMemoryPlacesRepository` para testes. Exposto por um hook React Query com cache persistido.
 - [ ] `services/quota`: `consume()` e `status()` chamando as RPCs; erro de rede vira o estado "offline".
 - [ ] `services/stamps`: criar o carimbo localmente (uuid + número) → fila offline → `upsert` idempotente; listar os carimbos do usuário.
@@ -455,6 +486,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 **Critérios de saída**
 - [ ] Cobertura ≥ 90% em `domain/`.
+- [ ] 👀 `zonedTime` dá o mesmo resultado no iPhone e no Android (virada de dia e de semana).
 - [ ] 👀 Carimbo criado em modo avião aparece no Supabase depois que a conexão volta, sem duplicar.
 - [ ] 👀 Estado persiste depois de fechar e reabrir o app (a lógica de persistência também coberta por teste).
 
@@ -467,11 +499,11 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] ⛔ Usuário define a **cidade inicial** (D7) e o processo de curadoria (D5b).
 - [ ] Planilha-modelo (`scripts/catalog/template.csv`) com todos os campos de `places`, `place_hours` e `place_translations`, mais um guia de preenchimento em `docs/CURATION.md` (o que é um bom "motivo", tom de voz, como tirar ou escolher a foto).
 - [ ] Script `scripts/catalog/validate.ts`: todo lugar tem horários, coordenadas, categoria (ID do Glossário), as 3 razões em **todos** os idiomas, foto e `verified_at` recente. Aponta as combinações de filtro sem nenhum lugar.
-- [ ] Script `scripts/catalog/build-csv.ts`: transforma a planilha em **3 CSVs** com exatamente as colunas das tabelas (`places.csv`, `place_hours.csv`, `place_translations.csv`), prontos para o **Import CSV do Table Editor** do dashboard. Não usa service role nem acessa o Supabase.
+- [ ] Script `scripts/catalog/buildCsv.ts`: transforma a planilha em **3 CSVs** com exatamente as colunas das tabelas (`places.csv`, `place_hours.csv`, `place_translations.csv`), prontos para o **Import CSV do Table Editor** do dashboard. Não usa service role nem acessa o Supabase.
 - [ ] Relatório de cobertura: quantos lugares por categoria do bingo, por humor, por faixa de preço e por duração. Meta do MVP: **≥ 60 lugares**, com todas as 16 categorias cobertas.
 - [ ] `supabase/sql/006_reports_view.sql`: view `reports_pending` para a revisão semanal.
 - [ ] Rotina de manutenção em `docs/CURATION.md`: revisar `reports_pending` toda semana pelo dashboard, desativar lugares fechados (`active = false` no Table Editor) e reverificar lugares com `verified_at` antigo.
-- [ ] ⛔ Usuário preenche o catálogo real; o loop roda `validate` e `build-csv`.
+- [ ] ⛔ Usuário preenche o catálogo real; o loop roda `validate` e `buildCsv`.
 - [ ] 🖐 Handoff em **Bloqueios**:
   1. rodar `006_reports_view.sql` no `role-dev`;
   2. importar os 3 CSVs pelo Table Editor, **nessa ordem**: `places` → `place_hours` → `place_translations`;
@@ -517,7 +549,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 - [ ] Header com voltar, resumo do filtro (montado a partir dos rótulos traduzidos) e pílula "N restantes" (plural `_one`/`_other`).
 - [ ] Card-ingresso: foto (`expo-image` vinda do Storage, com placeholder listrado), tags, nome, endereço com distância, picote e os 3 motivos traduzidos.
-- [ ] Mostrar "Aberto até HH:MM" no card (vindo de `domain/opening-hours.ts`).
+- [ ] Mostrar "Aberto até HH:MM" no card (vindo de `domain/openingHours.ts`).
 - [ ] "Outra": consome cota, troca de lugar com uma animação de troca de card (Reanimated) e vai para o Plus quando a cota acabar. Opcionalmente pergunta o motivo em um toque (chips: "longe", "caro", "não curti o tipo"), que vai para `suggestion_events.reason`. Nunca bloqueia a troca.
 - [ ] "Reservar" (abre `reservation_url` no WebBrowser) ou "Como chegar" (abre o app de mapas com `Linking`), conforme `reservable`.
 - [ ] Botão discreto **"Informar problema"** → modal `/report-problem` (fechou, informação errada, inseguro, outro + nota) → `place_reports`.
@@ -594,10 +626,10 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   2. rodar **todos** os scripts de `supabase/sql/` em ordem (**sem** o `seed_dev.sql`);
   3. aplicar as mesmas configurações e a Edge Function;
   4. importar o catálogo real (3 CSVs + fotos);
-  5. passar a URL e a chave pública do `role-mvp` para as variáveis do perfil `preview` do EAS.
+  5. passar a URL e a chave pública do `role-mvp` para o **ambiente `preview` do EAS** (`eas env:set ... --environment preview --visibility plaintext`, conferir com `--help`; ver seção 12.4 do ADR).
 
-  Depois da confirmação, o loop atualiza o `APPLIED.md` e roda `npm run test:db` apontando para o `role-mvp`.
-- [ ] `eas.json` com os perfis development (`role-dev`) e preview (`role-mvp`).
+  Depois da confirmação, o loop atualiza o `APPLIED.md` e o usuário roda `npm run test:db` apontando para o `role-mvp` **uma única vez, antes de os testadores entrarem**, com `ALLOW_DB_TEST_ON=preview` (seção 12.4).
+- [ ] `eas.json` com os perfis development (`role-dev`) e preview (`role-mvp`), cada um com o campo `environment` e o `channel` (confirmar que o `.env` local não é enviado ao EAS).
 - [ ] `expo-updates`/EAS Update configurado no canal `preview`, para corrigir rápido durante o teste.
 - [ ] Build de preview e distribuição para o grupo de teste (Android interno / TestFlight), conforme D17.
 
@@ -693,14 +725,16 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 
 ## Decisões em aberto (o loop **não** decide sozinho)
 
+> Espelho resumido da seção 15 de `docs/ARCHITECTURE.md`, que traz o status (✅ decidido, 🟡 default adotado, ⛔ aberto), o raciocínio e quando o usuário precisa decidir. Em caso de divergência, vale a seção 15.
+
 | # | Decisão | Status / default | Fase |
 |---|---|---|---|
-| D1 | Lib de estado local | Zustand + persist (AsyncStorage) | 1 |
+| D1 | Lib de estado local | Zustand v5 + persist (AsyncStorage) | 1 |
 | D2 | Tema escuro? | Não: app só no tema claro, como no protótipo | 2 |
 | D3 | Provedor de pagamento e preços do Plus | — (sugestão: RevenueCat, que tem webhook fácil para o Supabase) | 14 |
 | D4 | Escopo da aba Turma | Placeholder "Em breve" | 17 |
 | D5 | Backend / banco de dados | ✅ **Decidido: Supabase** | 1 |
-| D5b | Como o catálogo é curado | Curadoria própria em planilha → `build-csv` → **Import CSV no Table Editor** do dashboard; manutenção pelo dashboard | 6 |
+| D5b | Como o catálogo é curado | Curadoria própria em planilha → `buildCsv` → **Import CSV no Table Editor** do dashboard; manutenção pelo dashboard | 6 |
 | D6 | Check-in exige estar no local? | MVP: não (carimbo direto); avaliar no pós-MVP | 16 |
 | D7 | Cidade inicial do catálogo | — **(bloqueia a Fase 6)** | 6 |
 | D8 | Idiomas suportados no lançamento | pt-BR (base), en, es | 1 |
@@ -716,10 +750,20 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | D18 | Projetos Supabase | ✅ **Decidido: só pelo dashboard web, sem CLI/Docker/local.** `role-dev` (desenvolvimento + testes) e `role-mvp` (testadores); produção separada no pós-MVP | 4 |
 | D19 | Regra de segurança "só de dia" | Campo `daylight_only` no lugar + `daylight_cutoff` fixo por cidade (ex.: 18h) | 5 |
 | D20 | Bundle id / package name | — (ex.: `com.<seu-nome>.rolealeatorio`) | 13 |
+| D21 | Contas de data por fuso (`utils/zonedTime.ts`) | `Intl.DateTimeFormat` + parse, sem `formatToParts`; biblioteca pequena se o 👀 divergir | 5 |
+| D22 | Login com Google na conta definitiva | — (decidir na Fase 15, com a Apple) | 15 |
+| D23 | Limite de 30 anônimos/hora por IP e captcha | Manter o padrão; subir se o grupo de teste dividir a rede; captcha no pós-MVP | 4 / 13 |
+| D24 | Limites do plano gratuito do Supabase | Conferir ao criar cada projeto e registrar em `docs/SUPABASE_SETUP.md` | 4 / 13 |
+| D25 | E2E com Maestro | Opcional, só depois da Fase 13; executado pelo usuário | 13 / 18 |
+| D26 | Nomes curtos de dia e mês | `Intl` normalizado; mover para o JSON se o 👀 divergir | 2 |
+| D27 | Tamanho e formato das fotos | Já redimensionadas na curadoria, sem depender do Storage | 6 |
+| D28 | Sessão anônima em AsyncStorage | AsyncStorage no MVP; `expo-secure-store` na Fase 15 | 15 |
+| D29 | Conectividade | `expo-network` (e não NetInfo) | 5 |
+| D30 | Chave pública do Supabase | ✅ **Decidido: publishable key** | 4 |
 
 ## Bloqueios
 
-_(vazio — o bloqueio "Supabase local indisponível" foi resolvido em 02/10/2026: o Supabase passa a ser operado só pelo dashboard web, sem CLI e sem Docker.)_
+_(vazio — o bloqueio "Aguardando aprovação da arquitetura (Fase 1)" foi resolvido em 02/10/2026 com a aprovação do usuário.)_
 
 ## Registro de iterações
 
@@ -730,5 +774,24 @@ _(vazio — o bloqueio "Supabase local indisponível" foi resolvido em 02/10/202
 | 2026-10-02 | 0 | `npx expo-doctor` | — | 21/21 checks passaram, nenhum problema detectado | `9280d1f` |
 | 2026-10-02 | 0 | Remover o demo do template | — | Removidos explore, animated-icon, app-tabs (+`.web`), hint-row, web-badge, themed-*, collapsible, external-link, constants/theme, global.css, hooks do template, imagens de demo e `scripts/reset-project.js` (+ script do `package.json`); `_layout` e `index` mínimos. `reset-project` não foi usado (apagaria `scripts/`). `expo lint` instalou `eslint` e `eslint-config-expo` e criou `eslint.config.js` (commit `build` separado). `tsc` e lint verdes; `expo export --platform android` gera o bundle. O item da Fase 3 "remover app-tabs" já está feito | `fa27e69` |
 | 2026-10-02 | 0 | Conferir Supabase CLI e Docker | — | Supabase CLI **não instalado**; Docker 29.8.1 instalado, mas o daemon (Docker Desktop) não está rodando. Registrado em Bloqueios; loop parado | `9a614c6` |
-| 2026-10-02 | 0 | Fim da fase: critérios de saída | — | Usuário confirmou "Fase 0 ok" (👀). Bloqueio removido. Fase 00 integrada na main, pronta para push manual | `9a614c6`; este commit |
-| 2026-10-02 | — | Revisão do plano (feita pelo usuário com o Claude, fora do loop) | — | Supabase só pelo dashboard web (sem CLI/Docker/local, handoffs 🖐, testes `test:db` + checagens SQL); bloqueio do CLI/Docker removido; o loop não roda o app (critérios 👀 verificados pelo usuário); nomenclatura em inglês | entra no próximo commit do loop |
+| 2026-10-02 | 0 | Fim da fase: critérios de saída | — | Usuário confirmou "Fase 0 ok" (👀). Bloqueio removido. Fase 00 integrada na main, pronta para push manual | `9a614c6`, `1161601`, merge `a7e2fb8` |
+| 2026-10-02 | 1 | 🧭 ARCH: resumir padrões em `docs/ARCHITECTURE.md` | `react-native-architecture` (lido `references/details.md`) | Criado `docs/ARCHITECTURE.md` com os 6 padrões da skill, divergências do projeto (kebab-case, SVG próprio, `expo-image`, sessão do Supabase, tema só claro, tab bar custom) e regras de camadas. Só documentação; `tsc` e lint verdes | `9df20e9` |
+| 2026-10-02 | — | Revisão do plano (feita pelo usuário com o Claude, fora do loop) | — | Supabase só pelo dashboard web (sem CLI/Docker/local, handoffs 🖐, testes `test:db` + checagens SQL); bloqueio do CLI/Docker removido; o loop não roda o app (critérios 👀 verificados pelo usuário); nomenclatura em inglês | `afcfc4c` |
+| 2026-10-02 | — | Revisão do plano (fora do loop) | `react-native-architecture` | Nomes de arquivo passam a seguir a skill: `PascalCase.tsx` para componentes e providers, `useX.ts` para hooks, `camelCase.ts` para o resto; rotas de `src/app/` seguem em kebab-case. Pasta `providers/` adicionada. A linha de divergência do `docs/ARCHITECTURE.md` foi corrigida | `afcfc4c` |
+| 2026-10-02 | 1 | ⚡ VRN: seção "Convenções de implementação" em `docs/ARCHITECTURE.md` | `vercel-react-native-skills` (lido `AGENTS.md` compilado com as 38 regras) | Nova seção 3 com as regras por prefixo (`rendering-`, `list-performance-`, `animation-`, `navigation-`, `ui-`, `react-state-`, `react-compiler-`, `design-system-`, `js-`, `fonts-`) e a tabela de 7 exceções (tabs custom, largura animada só no dock, `useFonts` até a Fase 13, padding em vez de `contentInset`, escala tipográfica própria, grades fixas sem virtualizador, sem `memo`/`useCallback` por padrão). Pendência anotada: conferir `runOnJS` × `scheduleOnRN` na doc do Reanimated 4 antes de usar. Só documentação | `afcfc4c` |
+| 2026-10-02 | — | Revisão do plano (fora do loop) | `vercel-react-native-skills` | Duas exceções revistas: (1) o dock passa a seguir `animation-gpu-properties` sem exceção (largura ativa constante; animação por `translateX`/`opacity`); (2) a escala tipográfica segue `ui-styling` no corpo (4 tamanhos: 12/14/16/20), e só os tamanhos de display do protótipo continuam como exceção. Plano e `docs/ARCHITECTURE.md` atualizados | entra no próximo commit do loop |
+| 2026-10-02 | 1 | Definir a estrutura de pastas | `react-native-architecture` | Nova seção 4 em `docs/ARCHITECTURE.md`: árvore validada contra a skill (sem `(auth)`; acrescenta `place/[id].tsx` e `+not-found.tsx`), tabela de quem pode importar quem, regra de barris só em `services/<assunto>/index.ts` e guia "onde colocar o quê". Arquivos de classe seguem a nomenclatura (`supabasePlacesRepository.ts`). Também entram as revisões feitas pelo usuário fora do loop (dock sem exceção, escala tipográfica). Só documentação | `5b23726` |
+| 2026-10-02 | 1 | Definir o mapa de navegação | `react-native-architecture`; doc do Expo Router (modals, protected, router-settings, custom-tabs, error-handling) | Nova seção 5 em `docs/ARCHITECTURE.md`: grafo, tabela de rotas (apresentação, deep link público, parâmetros, voltar), gate de onboarding com `Stack.Protected` + âncora `(tabs)` + splash até reidratar o store, `+not-found` e `ErrorBoundary`. Achados da doc: `redirectTo` do `Stack.Protected` é SDK 58+ (não usar); existe a alternativa headless `expo-router/ui` (Tabs/TabList/TabTrigger/TabSlot) para o dock, a decidir no ADR da tab bar; a doc de JS tabs não confirmou a prop `tabBar`, conferir lá. Só documentação | `d0bc703` |
+| 2026-10-02 | 1 | ADR da tab bar e `useDockInset()` | `react-native-architecture`; tipos instalados do `expo-router` 57.0.24 (a doc online não detalha `tabBar`) | Nova seção 6 em `docs/ARCHITECTURE.md`. Escolhido `Tabs` de `expo-router/js-tabs` com `tabBar` (`BottomTabBarProps = { state, descriptors, navigation, insets }`); o `Tabs` de `expo-router` está **deprecated** no SDK 57. `FloatingTabBar` (ui) fica puro e o adaptador `features/navigation/AppTabBar.tsx` faz a ponte, para isolar a API. Dock absoluto fica por cima das telas; `useDockInset()` = 106 + `insets.bottom` (não usa `useBottomTabBarHeight`). Reserva: `expo-router/ui`. Só documentação | `251397c` |
+| 2026-10-02 | 1 | ADR da estratégia de estado | `react-native-architecture`; `vercel-react-native-skills` (`react-state-minimize`, `react-state-fallback`, `state-ground-truth`); doc do Zustand v5 e do `expo-sqlite/kv-store` | Nova seção 7 em `docs/ARCHITECTURE.md`: React Query para servidor, Zustand v5 + `persist` + AsyncStorage para local, derivados nunca guardados. Stores: `preferencesStore`, `syncQueueStore` (persistidos) e `suggestionSessionStore` (memória). **Removido o `passportCacheStore`** da árvore (duplicaria o cache do React Query). Hidratação assíncrona tratada com a splash segurada; reserva `expo-sqlite/kv-store`. Só documentação | `9949a94` |
+| 2026-10-02 | 1 | ADR da arquitetura Supabase | `react-native-architecture`; doc atual do Supabase (quickstart RN, tutorial Expo, Auth anônima, RLS, API keys, Storage, Edge Functions, `startAutoRefresh`) | Nova seção 8 em `docs/ARCHITECTURE.md`: operação só pelo dashboard, Auth anônima silenciosa no `AuthProvider`, client com AsyncStorage + AppState, 10 regras de schema/RLS (grants mínimos, `plan` não gravável pelo cliente, RPCs `security definer` com `search_path` vazio, cascata de `user_id`), cota no servidor, catálogo e fotos, Edge Function `delete-my-data`, camada de serviços e riscos. **Divergência do plano:** a doc atual recomenda a publishable key (a `anon` será descontinuada até o fim de 2026), então a variável passa a ser `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (plano ajustado). Pendências para a Fase 4: polyfill de URL no RN 0.86, nome da variável da chave de serviço na função e JWT da função. Só documentação | `ccd5e3c` |
+| 2026-10-02 | 1 | Estratégia offline-first (ADR) | `react-native-architecture` (Pattern 3); doc atual do TanStack Query (`persistQueryClient`, React Native) e do `expo-network` SDK 57 | Nova seção 9 em `docs/ARCHITECTURE.md`: tabela do que funciona offline, conectividade com `expo-network` (no lugar do NetInfo da skill, por preferir módulos do Expo), cache persistido só de `places` e `stamps` (`maxAge` 7 dias, `gcTime` ≥ `maxAge`, `buster`), sugestão exige internet com `consume_suggestion` sem pausa nem retry, fila de carimbos com `upsert` idempotente, backoff, falha permanente visível e lógica pura em `domain/syncQueue.ts`. **Entradas para a Fase 4** (já anotadas nas tarefas): `request_id` idempotente na cota, sem único em `(user_id, number)` e leitura de lugares inativos já carimbados. A seção 9 antiga virou a 10 (índice). Só documentação | `6a7bad0` |
+| 2026-10-02 | 1 | Estratégia de i18n (ADR) | `react-native-architecture`; docs atuais do Expo (localização, `expo-localization` SDK 57), i18next (tipagem e plurais), Hermes (`Intl`) e `@formatjs/intl-pluralrules` | Nova seção 10 em `docs/ARCHITECTURE.md`: i18next 26 + react-i18next 17 (e não `i18n-js`, por tipar as chaves), resolução do idioma com mapa por `languageCode`, troca em tempo real sem flash (splash até aplicar o idioma salvo), chaves tipadas a partir do pt-BR, formatação em `format.ts`, conteúdo do catálogo com fallback por campo e textos nativos via `locales`. **Achado da verificação pedida:** o Hermes não tem `Intl.PluralRules` (o i18next v24+ depende dele), então entra o polyfill `@formatjs/intl-pluralrules` (`polyfill-force`, dados pt/en/es, condicionado à ausência da API); também não usar `formatToParts`, `RelativeTimeFormat`, `ListFormat`. Divergências do plano: teste de paridade ignora o sufixo de plural; ordinais pelo i18next. Tarefas e critérios da Fase 2 ajustados (inclui 👀 de plural no aparelho). Só documentação | `7458101` |
+| 2026-10-02 | 1 | Estratégia de testes (ADR) | `react-native-architecture`; docs atuais do Expo (Jest/`jest-expo` SDK 57), Testing Library, Expo Router (`renderRouter`), Reanimated/Worklets (Jest) e Maestro | Nova seção 11 em `docs/ARCHITECTURE.md`: pirâmide de 9 camadas (domínio com cobertura mínima de 90%, i18n, services, hooks, componentes, rotas, banco, E2E opcional, 👀), configuração do Jest (`jest-expo`, `test-renderer` no lugar do `react-test-renderer`, setup com Reanimated/Worklets/AsyncStorage/TZ=UTC), regras de escrita (domínio sem `Date.now()`, sem snapshot, services em memória), `test:db` com no máximo 2 usuários por execução por causa do limite de 30 anônimos/hora, Maestro só após a Fase 13 e executado pelo usuário (no Windows, só Android), portões de qualidade. **Divergência:** testes de rota em `tests/app/` (a doc do Expo Router proíbe testes em `src/app/`); nomenclatura do plano ajustada. Tarefa de `test:db` da Fase 4 detalhada. Só documentação | `59f6b5b` |
+| 2026-10-02 | 1 | Ambientes e segredos (ADR) | `react-native-architecture`; docs atuais do Expo (variáveis de ambiente) e do EAS (ambientes, visibilidade, `eas env`, `eas.json`) | Nova seção 12 em `docs/ARCHITECTURE.md`: tabela dos 3 ambientes (`role-dev`/`role-mvp`/`role-prod` na Fase 19), lista fechada de 3 variáveis públicas (`APP_ENV`, URL, publishable key) lida só por `src/lib/env.ts` com validação, inventário de segredos e onde moram, o loop nunca vê senha nem secret key, rotação se vazar, `environment` por perfil do EAS, `eas update --environment` obrigatório desde o SDK 55, `test:db` que aborta fora de `development`, e regra de mudança aditiva no banco depois dos testadores. Plano ajustado (`.env.example`, Fase 4 e Fase 13). O comando de criar variável no EAS aparece como `env:set` na doc; confirmar com `--help`. Só documentação | `3b53d51` |
+| 2026-10-02 | 1 | Listar as dependências planejadas | `react-native-architecture`; docs atuais do Expo SDK 57 (notificações, localização), `bundledNativeModules.json` do SDK instalado e `npm view` | Nova seção 13 em `docs/ARCHITECTURE.md`: tabela por fase (Fases 2 a 18) com versão, motivo e se precisa de build ou roda no Expo Go; lista do que já está instalado; **candidatas à remoção** sem uso no `src/` (`@expo/ui`, `expo-glass-effect`, `expo-symbols`, `expo-device`); escolhas que evitam dependência. **Ajustes nos ADRs anteriores:** `zustand` e `async-storage` entram na Fase 2 (persistência do idioma) e o `QueryClient` simples na Fase 3, com o cache persistido só na Fase 5. **Achados:** `@supabase/supabase-js` exige Node ≥ 22 (a máquina tem 22.21; fixar `node` no `eas.json`); plugins de config só valem em build; notificações locais e localização em primeiro plano rodam no Expo Go. **Risco aberto:** contas de fuso sem biblioteca; nova tarefa no início da Fase 5 (`utils/zonedTime.ts`) e 👀 de verificação. Só documentação | `da7f7bf` |
+| 2026-10-02 | 1 | Convenções de nomenclatura (+ lint) | `react-native-architecture` (nomes de arquivo da skill); doc do Expo Router (arquivos especiais) | Nova seção 14 em `docs/ARCHITECTURE.md` (fonte canônica): regra geral, tabela de padrões (acrescenta chaves de storage `role.<store>`, variáveis de ambiente e descrições de teste em inglês), glossário, IDs de domínio (acrescenta `report_reason`, ações da sugestão e `plan`), o que o lint garante e o que não, e cuidados práticos (Windows não diferencia maiúsculas). **Lint reforçado** em `eslint.config.js`: regra local `local/file-naming` (arquivo e pasta por diretório: rotas em kebab-case e sem testes em `src/app/`, componentes/providers em PascalCase, hooks `useX`, resto camelCase; **sem plugin novo**) e `@typescript-eslint/naming-convention` (já vem com o `eslint-config-expo`), com `src/types/database.ts` isento e `supabase/functions/**` ignorado. Testado com arquivos temporários certos e errados (removidos depois): 9 erros esperados detectados, nomes válidos passam. `expo lint` e `tsc` verdes | `056a8bd` |
+| 2026-10-02 | 1 | Criar as pastas vazias e conferir o alias `@/` | `react-native-architecture` | Criadas todas as pastas da árvore da seção 4 de `docs/ARCHITECTURE.md` (mais `tests/app/` e `src/test/`, dos ADRs de testes) com `.gitkeep`, **sem barris** (a skill e a seção 4.2 só permitem `index.ts` em `services/<assunto>/`). Alias `@/*` → `src/*` já existia; **verificado de verdade**: import temporário `@/utils/...` passou no `tsc` e apareceu no bundle de `expo export --platform android` (revertido). `expo lint` e `tsc` verdes. Nenhum código de feature | `20c505c` |
+| 2026-10-02 | 1 | Registrar as decisões em aberto | `react-native-architecture` | Nova seção 15 em `docs/ARCHITECTURE.md` (a antiga seção de índice some, pois todos os ADRs estão feitos): legenda ✅/🟡/⛔, D1 a D20 com status e default, **D21 a D30 novas** que surgiram nos ADRs (fuso, Google, limite de anônimos, plano do Supabase, Maestro, nomes de data, fotos, sessão, conectividade, publishable key), quadro de **quando o usuário precisa decidir** e como mudar uma decisão. Tabela do plano atualizada e apontando para a seção 15. Só documentação | `cc7e345` |
+| 2026-10-02 | 1 | Fim da fase: critérios de saída | — | Conferidos os critérios 1 (ARCHITECTURE completo: seções 1 a 15) e 2 (skills citadas como base nas seções 1 e 3). **Critério 3 pendente:** aprovação do usuário. Bloqueio "Aguardando aprovação da arquitetura" registrado com roteiro de revisão; agendamento do loop cancelado. Merge na `main` só depois da aprovação | `f3883b6` |
+| 2026-10-02 | 1 | Aprovação da arquitetura e fim da fase | — | Usuário respondeu "arquitetura aprovada" (critério 3). Bloqueio removido; defaults 🟡 da seção 15 valem. **Fase 01 integrada na `main` — pronta para push manual** (merge `--no-ff`, branch local apagada). Próxima tarefa: Fase 2, na branch `fase/02-design-system` | este commit |
