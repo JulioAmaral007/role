@@ -1,9 +1,14 @@
 import { useTranslation } from 'react-i18next';
 
 import { TabScreen } from '@/components/features/navigation/TabScreen';
+import { SettingsSection } from '@/components/features/settings/SettingsSection';
 
-// Placeholder da Fase 3. O Perfil (preferências e Ajustes, com o idioma) vem nas próximas tarefas.
+// Fase 3: só a seção Ajustes. As preferências e o resto do Perfil vêm na Fase 11.
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  return <TabScreen title={t('tabs.profile')} />;
+  return (
+    <TabScreen title={t('tabs.profile')}>
+      <SettingsSection />
+    </TabScreen>
+  );
 }

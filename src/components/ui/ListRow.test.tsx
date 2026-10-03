@@ -33,6 +33,13 @@ describe('ListRow', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
+  it('exposes the radio role and the checked state for single-choice lists', async () => {
+    await render(
+      <ListRow title="English" onPress={() => {}} accessibilityRole="radio" accessibilityState={{ checked: true }} />,
+    );
+    expect(screen.getByRole('radio', { name: 'English', checked: true })).toBeOnTheScreen();
+  });
+
   it('keeps the prototype separator, a 1.5 lineSoft line, unless turned off', async () => {
     const view = await render(<ListRow title="Com linha" />);
     expect(JSON.stringify(await view.toJSON())).toContain(`"borderBottomColor":"${colors.lineSoft}"`);

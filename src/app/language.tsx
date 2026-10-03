@@ -1,9 +1,13 @@
 import { useTranslation } from 'react-i18next';
 
 import { PlaceholderScreen } from '@/components/features/navigation/PlaceholderScreen';
+import { LanguageOptions } from '@/components/features/settings/LanguageOptions';
 
-// Placeholder da Fase 3: a tela real troca só o corpo e mantém a rota.
 export default function LanguageScreen() {
   const { t } = useTranslation();
-  return <PlaceholderScreen title={t('settings.language')} dismiss="close" />;
+  return (
+    <PlaceholderScreen title={t('settings.language')} dismiss="close">
+      <LanguageOptions />
+    </PlaceholderScreen>
+  );
 }

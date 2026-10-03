@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -13,13 +14,15 @@ export interface PlaceholderScreenProps {
   message?: string;
   /** `back` nas telas empilhadas (push); `close` nos modais. */
   dismiss?: 'back' | 'close';
+  /** Conteúdo real da tela, quando já existe (ex.: a lista de idiomas). */
+  children?: ReactNode;
 }
 
 /**
  * Corpo provisório das rotas da Fase 3: topo com voltar/fechar e o título da tela. Cada tela real
  * (Fases 8 a 12) troca este componente pelo seu próprio conteúdo e mantém a rota.
  */
-export function PlaceholderScreen({ title, message, dismiss = 'back' }: PlaceholderScreenProps) {
+export function PlaceholderScreen({ title, message, dismiss = 'back', children }: PlaceholderScreenProps) {
   const { t } = useTranslation();
   const { back, canGoBack, replace } = useRouter();
   // um deep link pode abrir a rota sem nada embaixo (sem âncora, em teste): nesse caso vai para o Rolê
@@ -38,6 +41,7 @@ export function PlaceholderScreen({ title, message, dismiss = 'back' }: Placehol
         {title}
       </Text>
       {message != null && <Text variant="bodyLarge">{message}</Text>}
+      {children}
     </View>
   );
 }

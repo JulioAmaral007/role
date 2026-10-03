@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { type AccessibilityState, Pressable, StyleSheet, View } from 'react-native';
 
 import { borderWidth, colors, space } from '@/theme/tokens';
 
@@ -21,6 +21,10 @@ export interface ListRowProps {
   separator?: boolean;
   /** Só é preciso quando o nome falado difere do `title`. */
   accessibilityLabel?: string;
+  /** `radio` nas listas de escolha única (ex.: idioma); só vale com `onPress`. */
+  accessibilityRole?: 'button' | 'radio';
+  /** `checked` na opção ativa de uma lista de escolha única. */
+  accessibilityState?: AccessibilityState;
 }
 
 /** Linha de lista do Perfil e da Turma, com separador. */
@@ -32,6 +36,8 @@ export function ListRow({
   onPress,
   separator = true,
   accessibilityLabel,
+  accessibilityRole = 'button',
+  accessibilityState,
 }: ListRowProps) {
   const content = (
     <>
@@ -52,8 +58,9 @@ export function ListRow({
   if (onPress != null) {
     return (
       <Pressable
-        accessibilityRole="button"
+        accessibilityRole={accessibilityRole}
         accessibilityLabel={accessibilityLabel}
+        accessibilityState={accessibilityState}
         onPress={onPress}
         style={({ pressed }) => [rowStyle, pressed && styles.pressed]}
       >
