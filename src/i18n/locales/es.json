@@ -20,7 +20,8 @@
     "comingSoon": "Próximamente"
   },
   "settings": {
-    "languageSystem": "Idioma del dispositivo"
+    "languageSystem": "Idioma del dispositivo",
+    "language": "Idioma"
   },
   "error": {
     "title": "Algo salió mal",
@@ -114,7 +115,8 @@
     "go": "Vamos, ya voy",
     "other": "Otra",
     "reserve": "Reservar",
-    "directions": "Cómo llegar"
+    "directions": "Cómo llegar",
+    "title": "Sugerencia"
   },
   "stamp": {
     "title": "¡Nuevo sello!",
@@ -123,7 +125,9 @@
     "sealNumber": "N.º {{number}}",
     "goalReached": "Meta cumplida. Bingo de la ciudad: {{done}} de {{total}}.",
     "share": "Mandar al grupo",
-    "viewPassport": "Ver mi pasaporte"
+    "viewPassport": "Ver mi pasaporte",
+    "detailTitle": "Detalle del sello",
+    "detailPlaceholder": "Sello {{id}}"
   },
   "passport": {
     "title": "Pasaporte",
@@ -155,5 +159,27 @@
     "pricePerYear": "{{price}}/año",
     "subscribe": "Suscribirme a Plus",
     "wait": "Prefiero esperar: las gratis vuelven el lunes"
+  },
+  "place": {
+    "title": "Detalle del lugar",
+    "placeholder": "Lugar {{id}}"
+  },
+  "onTheWay": {
+    "title": "En camino"
+  },
+  "feedback": {
+    "title": "¿Cómo estuvo?"
+  },
+  "story": {
+    "title": "Story"
+  },
+  "noMatch": {
+    "title": "Nada coincidió"
+  },
+  "offline": {
+    "title": "Sin internet"
+  },
+  "report": {
+    "title": "Informar un problema"
   }
 }

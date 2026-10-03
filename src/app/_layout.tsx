@@ -47,8 +47,21 @@ export default function RootLayout() {
             <Stack.Protected guard={!onboardingDone}>
               <Stack.Screen name="onboarding" />
             </Stack.Protected>
+            {/* Rotas empilhadas acima das abas (ADR 5.2): por isso cobrem o dock sem código extra. */}
             <Stack.Protected guard={onboardingDone}>
               <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="suggestion" />
+              <Stack.Screen name="place/[id]" />
+              <Stack.Screen name="on-the-way" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="feedback" options={{ presentation: 'modal', gestureEnabled: false }} />
+              <Stack.Screen name="stamp" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
+              <Stack.Screen name="stamp/[id]" />
+              <Stack.Screen name="story" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="no-match" />
+              <Stack.Screen name="offline" />
+              <Stack.Screen name="report-problem" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="plus" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="language" options={{ presentation: 'modal' }} />
             </Stack.Protected>
           </Stack>
         </QueryProvider>

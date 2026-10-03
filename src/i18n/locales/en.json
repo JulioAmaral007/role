@@ -20,7 +20,8 @@
     "comingSoon": "Coming soon"
   },
   "settings": {
-    "languageSystem": "Device language"
+    "languageSystem": "Device language",
+    "language": "Language"
   },
   "error": {
     "title": "Something went wrong",
@@ -114,7 +115,8 @@
     "go": "Let's go, I'm on my way",
     "other": "Another",
     "reserve": "Book",
-    "directions": "Get directions"
+    "directions": "Get directions",
+    "title": "Suggestion"
   },
   "stamp": {
     "title": "New stamp!",
@@ -126,7 +128,9 @@
     "sealNumber": "No. {{number}}",
     "goalReached": "Goal reached. City bingo: {{done}} of {{total}}.",
     "share": "Send to the group",
-    "viewPassport": "See my passport"
+    "viewPassport": "See my passport",
+    "detailTitle": "Stamp details",
+    "detailPlaceholder": "Stamp {{id}}"
   },
   "passport": {
     "title": "Passport",
@@ -158,5 +162,27 @@
     "pricePerYear": "{{price}}/year",
     "subscribe": "Get Plus",
     "wait": "I'd rather wait: free ones are back on Monday"
+  },
+  "place": {
+    "title": "Place details",
+    "placeholder": "Place {{id}}"
+  },
+  "onTheWay": {
+    "title": "On the way"
+  },
+  "feedback": {
+    "title": "How was it?"
+  },
+  "story": {
+    "title": "Story"
+  },
+  "noMatch": {
+    "title": "No match"
+  },
+  "offline": {
+    "title": "No internet"
+  },
+  "report": {
+    "title": "Report a problem"
   }
 }

@@ -20,7 +20,8 @@
     "comingSoon": "Em breve"
   },
   "settings": {
-    "languageSystem": "Idioma do aparelho"
+    "languageSystem": "Idioma do aparelho",
+    "language": "Idioma"
   },
   "error": {
     "title": "Algo deu errado",
@@ -114,7 +115,8 @@
     "go": "Bora, tô indo",
     "other": "Outra",
     "reserve": "Reservar",
-    "directions": "Como chegar"
+    "directions": "Como chegar",
+    "title": "Sugestão"
   },
   "stamp": {
     "title": "Carimbo novo!",
@@ -123,7 +125,9 @@
     "sealNumber": "Nº {{number}}",
     "goalReached": "Meta batida. Bingo da cidade: {{done}} de {{total}}.",
     "share": "Mandar pro grupo",
-    "viewPassport": "Ver meu passaporte"
+    "viewPassport": "Ver meu passaporte",
+    "detailTitle": "Detalhe do carimbo",
+    "detailPlaceholder": "Carimbo {{id}}"
   },
   "passport": {
     "title": "Passaporte",
@@ -155,5 +159,27 @@
     "pricePerYear": "{{price}}/ano",
     "subscribe": "Assinar o Plus",
     "wait": "Prefiro esperar: as grátis voltam segunda"
+  },
+  "place": {
+    "title": "Detalhe do lugar",
+    "placeholder": "Lugar {{id}}"
+  },
+  "onTheWay": {
+    "title": "A caminho"
+  },
+  "feedback": {
+    "title": "Como foi?"
+  },
+  "story": {
+    "title": "Story"
+  },
+  "noMatch": {
+    "title": "Nada bateu"
+  },
+  "offline": {
+    "title": "Sem internet"
+  },
+  "report": {
+    "title": "Informar problema"
   }
 }
