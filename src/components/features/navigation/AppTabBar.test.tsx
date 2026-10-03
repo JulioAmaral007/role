@@ -1,5 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
+
+import i18n from '@/i18n';
 
 import { AppTabBar } from './AppTabBar';
 
@@ -35,6 +37,19 @@ function makeProps(overrides: { index?: number; defaultPrevented?: boolean; bott
 }
 
 describe('AppTabBar', () => {
+  beforeEach(async () => {
+    await act(() => i18n.changeLanguage('pt-BR'));
+  });
+
+  it('names the tab list in the active language', async () => {
+    const { props } = makeProps();
+    const view = await render(<AppTabBar {...props} />);
+    expect(screen.getByLabelText('Principal')).toBeOnTheScreen();
+    await act(() => i18n.changeLanguage('en'));
+    await view.rerender(<AppTabBar {...props} />);
+    expect(screen.getByLabelText('Main')).toBeOnTheScreen();
+  });
+
   it('draws one dock item per route, labeled by the screen title', async () => {
     const { props } = makeProps();
     await render(<AppTabBar {...props} />);

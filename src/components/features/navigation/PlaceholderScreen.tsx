@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -29,6 +29,7 @@ export function PlaceholderScreen({ title, message, dismiss = 'back', children }
   const onDismiss = () => (canGoBack() ? back() : replace('/'));
   return (
     <View style={styles.screen}>
+      <Stack.Screen options={{ title }} />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={dismiss === 'close' ? t('a11y.close') : t('a11y.back')}

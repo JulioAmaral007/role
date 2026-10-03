@@ -46,6 +46,8 @@ export interface FloatingTabBarProps {
   activeIndex: number;
   /** Safe area inferior do aparelho, somada à margem do dock. */
   bottomInset: number;
+  /** Nome do grupo de abas para leitor de tela (ex.: "Principal"). */
+  accessibilityLabel?: string;
   onPress: (index: number) => void;
   onLongPress?: (index: number) => void;
 }
@@ -63,6 +65,7 @@ export function FloatingTabBar({
   items,
   activeIndex,
   bottomInset,
+  accessibilityLabel,
   onPress,
   onLongPress,
 }: FloatingTabBarProps) {
@@ -113,6 +116,7 @@ export function FloatingTabBar({
     <View
       testID="floating-tab-bar"
       accessibilityRole="tablist"
+      accessibilityLabel={accessibilityLabel}
       onLayout={handleContainerLayout}
       style={[styles.container, { bottom: dock.bottomMargin + bottomInset, opacity: ready ? 1 : 0 }]}
     >

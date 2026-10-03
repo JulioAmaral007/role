@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -16,6 +16,7 @@ export default function LocationScreen() {
   const { completeOnboarding } = useOnboarding();
   return (
     <View style={styles.screen}>
+      <Stack.Screen options={{ title: t('onboarding.location.title') }} />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('a11y.back')}

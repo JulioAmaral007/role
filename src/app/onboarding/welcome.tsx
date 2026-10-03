@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -14,6 +14,7 @@ export default function WelcomeScreen() {
   const { push } = useRouter();
   return (
     <View style={styles.screen}>
+      <Stack.Screen options={{ title: t('onboarding.welcome.title') }} />
       <Text variant="display38" accessibilityRole="header">
         {t('onboarding.welcome.title')}
       </Text>

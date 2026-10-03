@@ -1,5 +1,6 @@
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import type { ComponentType } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { FloatingTabBar, type FloatingTabBarItem } from '@/components/ui/FloatingTabBar';
 import { Compass } from '@/components/ui/icons/Compass';
@@ -28,6 +29,7 @@ function isTabRouteName(name: string): name is TabRouteName {
  * arquivo muda.
  */
 export function AppTabBar({ state, descriptors, navigation, insets }: BottomTabBarProps) {
+  const { t } = useTranslation();
   const entries = state.routes.flatMap((route, routeIndex) => {
     if (!isTabRouteName(route.name)) return [];
     const { options } = descriptors[route.key];
@@ -59,6 +61,7 @@ export function AppTabBar({ state, descriptors, navigation, insets }: BottomTabB
       items={entries.map((entry) => entry.item)}
       activeIndex={entries.findIndex((entry) => entry.routeIndex === state.index)}
       bottomInset={insets.bottom}
+      accessibilityLabel={t('a11y.mainNav')}
       onPress={handlePress}
       onLongPress={handleLongPress}
     />
