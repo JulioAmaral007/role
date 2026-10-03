@@ -13,10 +13,36 @@
   "tabs": {
     "home": "Rolê",
     "passport": "Passport",
-    "crew": "Crew"
+    "crew": "Crew",
+    "profile": "Profile"
+  },
+  "crew": {
+    "comingSoon": "Coming soon"
   },
   "settings": {
-    "languageSystem": "Device language"
+    "title": "Settings",
+    "languageSystem": "Device language",
+    "language": "Language"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "message": "We couldn't open this screen. Try again?",
+    "retry": "Try again"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Tell us your mood. We pick the place.",
+      "start": "Get started"
+    },
+    "location": {
+      "title": "Where are you?",
+      "useLocation": "Use my location",
+      "notNow": "Not now"
+    },
+    "noLocation": {
+      "title": "Without a location, we're guessing in the dark.",
+      "usePoint": "Use this spot"
+    }
   },
   "mood": {
     "curious": "Curious",
@@ -90,7 +116,9 @@
     "go": "Let's go, I'm on my way",
     "other": "Another",
     "reserve": "Book",
-    "directions": "Get directions"
+    "directions": "Get directions",
+    "title": "Suggestion",
+    "details": "Details"
   },
   "stamp": {
     "title": "New stamp!",
@@ -102,7 +130,9 @@
     "sealNumber": "No. {{number}}",
     "goalReached": "Goal reached. City bingo: {{done}} of {{total}}.",
     "share": "Send to the group",
-    "viewPassport": "See my passport"
+    "viewPassport": "See my passport",
+    "detailTitle": "Stamp details",
+    "detailPlaceholder": "Stamp {{id}}"
   },
   "passport": {
     "title": "Passport",
@@ -113,7 +143,8 @@
     "streakTitle": "Weekly streak",
     "streakHint": "1 outing a week is enough",
     "bingoTitle": "City bingo",
-    "bingoCount": "{{done}} of {{total}}"
+    "bingoCount": "{{done}} of {{total}}",
+    "sampleStamp": "Sample stamp"
   },
   "plus": {
     "badge": "Rolê Plus",
@@ -134,5 +165,35 @@
     "pricePerYear": "{{price}}/year",
     "subscribe": "Get Plus",
     "wait": "I'd rather wait: free ones are back on Monday"
+  },
+  "place": {
+    "title": "Place details",
+    "placeholder": "Place {{id}}",
+    "go": "Let's go"
+  },
+  "onTheWay": {
+    "title": "On the way",
+    "arrived": "I'm here!",
+    "changeMind": "Changed my mind"
+  },
+  "feedback": {
+    "title": "How was it?",
+    "getStamp": "Get my stamp",
+    "later": "Later"
+  },
+  "story": {
+    "title": "Story"
+  },
+  "noMatch": {
+    "title": "No match",
+    "relax": "Change just one thing",
+    "changeAll": "Change everything"
+  },
+  "offline": {
+    "title": "No internet",
+    "retry": "Try again"
+  },
+  "report": {
+    "title": "Report a problem"
   }
 }

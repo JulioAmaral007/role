@@ -27,6 +27,23 @@ export const colors = {
   stripe: '#F0E8CF',
   /** Ícones inativos do dock e texto secundário do Plus. */
   sand: '#D6D2C6',
+  /** Campos de texto (Localização, Sem localização, lembrança do Como foi, Criar conta). */
+  white: '#FFFFFF',
+  /** Texto do aceite dos Termos em Criar conta (só na Fase 15). */
+  inkSoft: '#3A3830',
+  /** Divisória "ou", bordas de 1,5 dos formulários e trilho do controle deslizante do Perfil. */
+  line: '#CFC9B6',
+  /** Separador de 1,5 entre linhas de lista (Perfil, Turma). */
+  lineSoft: '#E4DECB',
+  /** Fundo do mapa ilustrado do Detalhe do lugar. */
+  map: '#EDE6CF',
+  /** Destaque da lembrança no Detalhe do carimbo. */
+  highlight: '#FFF1A8',
+  /** Listras do espaço da foto no story (as duas faixas do `repeating-linear-gradient`). */
+  stripeStory: {
+    dark: '#E9E1C6',
+    light: '#F6F0DD',
+  },
   /** Paywall escuro. */
   plus: {
     /** Cabeçalho da tabela Grátis × Plus. */
@@ -76,7 +93,9 @@ export const radius = {
   16: 16,
   18: 18,
   20: 20,
+  22: 22,
   24: 24,
+  28: 28,
   pill: 999,
 } as const;
 
@@ -120,12 +139,18 @@ export const dock = {
   padding: 6,
   /** Espaço entre os itens. */
   gap: 4,
-  /** Largura do item inativo (só ícone). */
-  inactiveItemWidth: 64,
+  /** Largura do item inativo (só ícone). 60 desde a revisão de 02/10/2026 (4 abas; eram 64 com 3). */
+  inactiveItemWidth: 60,
   /** Tamanho do ícone. */
   iconSize: 22,
   /** Recuo inferior das telas com tabs, sem o safe area (o dock fica por cima do conteúdo). */
   baseInset: 106,
+} as const;
+
+/** Cores com transparência: divisórias e sombras que não são um tom do tema. */
+export const overlay = {
+  /** Linha de rodapé do story (creme a 35%). */
+  storyDivider: 'rgba(255, 251, 239, 0.35)',
 } as const;
 
 const SHADOW_COLOR = '20, 20, 20';
@@ -136,4 +161,6 @@ export const shadow = {
     { offsetX: 0, offsetY: 12, blurRadius: 32, color: `rgba(${SHADOW_COLOR}, 0.28)` },
     { offsetX: 0, offsetY: 2, blurRadius: 6, color: `rgba(${SHADOW_COLOR}, 0.18)` },
   ],
+  /** Foto "polaroid" do story. */
+  polaroid: [{ offsetX: 0, offsetY: 16, blurRadius: 34, color: 'rgba(10, 16, 70, 0.4)' }],
 } as const satisfies Record<string, BoxShadowValue[]>;

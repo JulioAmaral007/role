@@ -1,6 +1,6 @@
 # Rolê Aleatório — Plano de Desenvolvimento (execução em loop)
 
-> Fonte de verdade visual: `assets/Rolê Aleatório.html` (protótipo com 5 telas em 390×844).
+> Fonte de verdade visual: `assets/Rolê Aleatório.html` (protótipo com 18 telas em 390×844, o story para compartilhar em 405×720 e a página "Ícone do app" com 3 direções; a escolhida é a **A · Dado com pin**, ver "Ícone do app e splash"). A revisão de 02/10/2026 trouxe 13 telas novas e mudou o dock e o fluxo do carimbo (ver "Telas e fluxo"). Criar conta e Entrar estão desenhadas, mas só entram na Fase 15 (D34).
 > Stack já instalada: Expo SDK 57 · Expo Router (rotas em `src/app/`) · React 19.2 · RN 0.86 · Reanimated 4 · React Compiler · Typed Routes.
 > Backend: **Supabase** (Postgres, Auth, Storage, Edge Functions e RLS).
 > Regras do projeto: ver `AGENTS.md` (docs versionadas do Expo, `npx expo install`, sem editar `ios/`/`android/`).
@@ -98,11 +98,25 @@ Comando sugerido:
 | Fila offline | `syncQueue` | | Quanto quer gastar | `budget` |
 | Dock (tab bar) | `FloatingTabBar` / `dock` | | Primeira abertura | `onboarding` |
 | "Outra" | `other` | | "Bora, tô indo" | `go` |
+| Perfil | `profile` | | Boas-vindas | `welcome` |
+| Detalhe do lugar | `place` (`place/[id]`) | | Detalhe do carimbo | `stamp/[id]` |
+| A caminho / rolê em andamento | `onTheWay` / `trip` | | "Cheguei!" (conferência) | `checkIn` / `check_in` |
+| "Mudei de ideia" | `cancel` | | "Como foi" (avaliação) | `feedback` |
+| Lembrança | `memory` | | Story para compartilhar | `story` |
+| Nada bateu | `noMatch` / `no-match` | | "Muda uma coisa só" | `relaxation` |
+| Sem internet | `offline` | | Ponto de partida | `startPoint` |
+| Distância máxima | `maxDistanceKm` | | "Não quero sugestões de" | `avoidTags` / `avoid_tags` |
+| Modo de transporte | `travelMode` | | Álbum da turma | `crewAlbum` |
+| Criar conta | `sign-up` / `signUp` | | Entrar | `sign-in` / `signIn` |
 
 **IDs de domínio** (iguais no app, no banco e nas chaves de i18n):
 - **mood:** `curious` (Curioso), `lazy` (Preguiçoso), `romantic` (Romântico), `restless` (Inquieto), `chill` (Na paz), `social` (Social)
 - **time_slot:** `1h`, `2h`, `half_day` (Meio dia), `full_day` (Dia todo)
 - **budget:** `free` (De graça), `up_to_30` (Até R$30), `up_to_80` (Até R$80), `any` (Tanto faz)
+- **feedback rating:** `spot_on` (Na mosca), `ok` (De boa), `miss` (Não rolou)
+- **feedback tag:** `calm` (Tranquilo), `good_for_talking` (Bom pra conversar), `good_price` (Bom preço), `good_food` (Comida boa), `too_crowded` (Cheio demais), `too_far` (Longe demais)
+- **avoid tag:** `bar` (Bar), `nightclub` (Balada), `long_trail` (Trilha longa), `crowded` (Lugar lotado), `mall` (Shopping)
+- **travel mode:** `walk` (A pé), `bus` (Ônibus), `car` (Carro)
 - **category (bingo):** `viewpoint` (Mirante), `used_bookstore` (Sebo), `short_trail` (Trilha curta), `hidden_cafe` (Café escondido), `street_market` (Feira de bairro), `small_museum` (Museu pequeno), `street_cinema` (Cinema de rua), `garden` (Jardim), `open_studio` (Ateliê aberto), `free_show` (Show grátis), `new_square` (Praça nova), `bookstore` (Livraria), `neighborhood_bar` (Bar de bairro), `rooftop` (Rooftop), `library` (Biblioteca), `lake` (Lago)
 
 **Commits (git)**
@@ -166,6 +180,18 @@ Os nomes dos tokens são em inglês (`colors.<token>` em `src/theme/tokens.ts`).
 | `plus.*` | `#222220`, `#4A4842`, `#2A2614` | paywall escuro |
 | `shadow.dock` | `0 12 32 rgba(20,20,20,.28)` + `0 2 6 rgba(20,20,20,.18)` | sombra da tab bar flutuante |
 
+**Cores novas da revisão de 02/10/2026** (ainda fora do `tokens.ts`; os nomes são sugestão e a tarefa de tokens da Fase 3 confirma o uso de cada uma na tela):
+
+| Token sugerido | Valor | Onde aparece |
+|---|---|---|
+| `white` | `#FFFFFF` | campos de texto (Localização, Sem localização, lembrança do Como foi) |
+| `line` | `#CFC9B6` | divisória "ou" e bordas de 1,5 nos formulários; trilho do controle deslizante do Perfil |
+| `lineSoft` | `#E4DECB` | separador de 1,5 entre linhas de lista (Perfil, Turma) |
+| `map` | `#EDE6CF` | fundo do mapa ilustrado do Detalhe do lugar |
+| `highlight` | `#FFF1A8` | destaque da lembrança no Detalhe do carimbo |
+| `stripeStory` | `#E9E1C6` / `#F6F0DD` | listras do lugar da foto no story |
+| `inkSoft` | `#3A3830` | texto do aceite dos Termos em Criar conta (só na Fase 15) |
+
 - **Fontes:** Bricolage Grotesque 700/800 (títulos, CTAs, números), Instrument Sans 400–700 (corpo), DM Mono 400/500 (rótulos em CAIXA ALTA, letter-spacing 0.08em).
 - **Escala tipográfica (decisão de 02/10/2026):** o protótipo usa ~18 tamanhos; o app consolida o **corpo e os rótulos em 4 tamanhos**, conforme a regra `ui-styling` da `vercel-react-native-skills`, e mantém os **tamanhos de display** do protótipo:
 
@@ -186,35 +212,95 @@ Os nomes dos tokens são em inglês (`colors.<token>` em `src/theme/tokens.ts`).
 A tab bar **não é mais** a barra fixa com borda superior e três itens iguais com ícone e texto. Agora é uma **pílula flutuante**:
 
 - **Container:** `position: absolute`, a 20 das laterais e 22 da base (somar o safe area inferior no aparelho); fundo `ink`; raio 999; padding 6; gap 4 entre os itens; sombra `shadow.dock`.
-- **Item ativo:** ocupa o espaço que sobra (`flex-grow`); altura 52; raio 999; fundo `yellow`; **ícone (22) + label** lado a lado, com gap 8; texto `ink`, 15/700.
-- **Itens inativos:** largura fixa de 64 e altura 52; **só o ícone** (22), na cor `sand`. O nome vai apenas no `accessibilityLabel`.
+- **Quatro itens (revisão de 02/10/2026):** Rolê, Passaporte, Turma e **Perfil**, nessa ordem. O Perfil é uma aba nova e ficou com os Ajustes (ver D9).
+- **Item ativo:** ocupa o espaço que sobra (`flex-grow`); altura 52; raio 999; fundo `yellow`; **ícone (22) + label** lado a lado, com gap 8; texto `ink`, 15/700. Com 4 itens, a largura dele é `338 − 3 × 60 − 3 × 4` = **146** num aparelho de 390 (eram 202 com 3 itens de 64).
+- **Itens inativos:** largura fixa de **60** (eram 64) e altura 52; **só o ícone** (22), na cor `sand`. O nome vai apenas no `accessibilityLabel`.
 - **Conteúdo das telas com tabs:** padding inferior de **106** (52 do item + 12 de padding + 22 de margem + folga) somado ao safe area, para nada ficar escondido atrás do dock. Isso é necessário porque o dock fica **por cima** do conteúdo.
-- O mesmo dock escuro aparece em todas as tabs (fundo amarelo no Rolê, creme no Passaporte).
+- O mesmo dock escuro aparece em todas as tabs (fundo amarelo no Rolê, creme no Passaporte, na Turma e no Perfil).
+
+### Ícone do app e splash (decisão de 02/10/2026, D31)
+
+O ícone oficial é a **opção A · Dado com pin** ("Sorte que vira lugar.") da página "Ícone do app" do protótipo. O mesmo desenho é usado na **splash screen**. As opções B (Carimbo) e C (Saindo do círculo) foram descartadas.
+
+Geometria exata, extraída do protótipo (grade 100×100):
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#FFD43B"/> <!-- fundo: só no ícone completo -->
+  <g transform="rotate(-10 50 50)">
+    <rect x="22" y="22" width="56" height="56" rx="14" fill="#141414"/>
+    <circle cx="34" cy="34" r="5" fill="#FFD43B"/>
+    <circle cx="66" cy="66" r="5" fill="#FFD43B"/>
+    <path d="M50 37.5c-6.2 0-10.8 4.6-10.8 10.5 0 7.5 10.8 17.2 10.8 17.2s10.8-9.7 10.8-17.2c0-5.9-4.6-10.5-10.8-10.5z" fill="#FFD43B"/>
+    <circle cx="50" cy="48.2" r="3.8" fill="#141414"/>
+  </g>
+</svg>
+```
+
+- **Cores:** fundo `yellow` (`#FFD43B`); dado `ink` (`#141414`); pips e pin `yellow`; furo do pin `ink`.
+- **Cantos:** o raio 50/220 do protótipo é só a prévia. O PNG do ícone é **quadrado e sem transparência**; quem arredonda é o sistema (máscara do iOS e do Android).
+- **Variantes a gerar a partir do SVG-mestre:** ícone completo 1024×1024 (iOS, `icon` e base da loja); `foreground` do ícone adaptativo do Android (só o dado, fundo transparente, **reduzido para caber na zona segura**: círculo de 66 dp dentro do canvas de 108 dp) com `backgroundColor` `#FFD43B`; `monochrome` do Android (silhueta de uma cor só: dado opaco, pips e pin vazados, furo do pin opaco); imagem da splash (só o dado, fundo transparente); favicon da web.
+- **Splash:** fundo `#FFD43B` e o dado centralizado, coerente com a tela Rolê (também amarela), para a passagem da splash para o app não "piscar".
 
 ### Telas e fluxo
 
 ```
-(tabs) ─ Rolê ──"Me tira da inércia"──▶ Sugestão ──"Bora, tô indo"──▶ Carimbo (modal) ──▶ Passaporte
-       ├ Passaporte                       │  └"Outra" (sem cota) ──▶ Plus (modal)
-       └ Turma (não desenhada)            └ "Reservar" | "Como chegar"
+1ª abertura (MVP): Boas-vindas ─"Começar"─▶ Localização ─"Usar minha localização" ou bairro digitado─▶ (tabs)
+                                                └"Agora não"─▶ Sem localização ─"Usar esse ponto"─▶ (tabs)
+1ª abertura (Fase 15, como no protótipo): Boas-vindas ─"Começar"─▶ Criar conta ─▶ Localização ─▶ …
+                                          └"Já tenho conta"─▶ Entrar ─▶ (tabs)   (Criar conta ⇄ Entrar pelos links do rodapé)
+
+(tabs) ─ Rolê ─"Me tira da inércia"─▶ Sugestão ─"Bora, tô indo"─▶ A caminho ─"Cheguei!"─▶ Como foi ─▶ Carimbo novo ─▶ Passaporte
+       │   ├ nada combina ─▶ Nada bateu   ├"Detalhes" / "Como chegar"─▶ Detalhe do lugar ─"Bora"─▶ A caminho
+       │   └ sem internet ─▶ Sem internet ├"Outra" (sem cota) ─▶ Plus (modal)
+       │                                  └ (A caminho) "Mudei de ideia" ─▶ Sugestão
+       ├ Passaporte ─ toque num carimbo ─▶ Detalhe do carimbo ─"Mandar pro grupo"─▶ Story
+       ├ Turma (desenhada; entra no pós-MVP, D4)
+       └ Perfil ─ card do plano ─▶ Plus
+Carimbo novo ─"Mandar pro grupo"─▶ Story · Como foi ─"Depois"─▶ Carimbo novo (sem avaliação)
 ```
 
-Telas que **não estão no protótipo** e serão criadas no mesmo visual: Onboarding, Ajustes (idioma, notificações, privacidade, apagar dados), "Como foi?" (feedback pós-rolê) e "Informar problema" do lugar.
+**Mudanças de fluxo da revisão de 02/10/2026:** (1) "Bora, tô indo" **não carimba mais na hora**: abre "A caminho", e o carimbo só sai depois de "Cheguei!", que confere a localização (D6); (2) a avaliação ("Como foi") vem **antes** do carimbo, na chegada, e pode ser pulada com "Depois"; (3) "Mandar pro grupo" gera um **story** em imagem; (4) Ajustes saiu do header do Passaporte e virou parte da aba **Perfil** (D9).
+
+Telas que **ainda não estão no protótipo** e serão criadas no mesmo visual: as linhas extras de Ajustes no Perfil (idioma, cota renovada, termos e privacidade, apagar dados, versão), "Informar problema" do lugar, o aviso de "Cheguei!" fora do raio e o aceite dos Termos no onboarding.
 
 1. **Rolê (home):** logo + pílula de ofensiva ("3 semanas"); título "Bora pra um lugar que não é o de sempre?"; seleção única em três grupos:
    - **01 · Como você tá?** Curioso, Preguiçoso, Romântico, Inquieto, Na paz, Social
    - **02 · Quanto tempo você tem?** 1h, 2h, Meio dia, Dia todo
    - **03 · Quanto quer gastar?** De graça, Até R$30, Até R$80, Tanto faz
    - CTA "Me tira da inércia" e contador "2 de 3 sugestões grátis nesta semana"; dock flutuante com Rolê (ativo), Passaporte e Turma.
-2. **Sugestão:** voltar; resumo do filtro ("CURIOSO · 2H · ATÉ R$30"); pílula "N restantes". Card em formato de ingresso: foto, tag do tipo, "Nunca carimbado", nome, endereço e distância, picote, "Por que pra você, agora" (3 motivos ligados ao humor, ao tempo e à grana). CTA "Bora, tô indo"; "Outra" (gasta 1 da cota e, sem cota, abre o Plus); "Reservar" se o lugar for reservável, senão "Como chegar".
-3. **Carimbo novo:** fundo azul; data ("SEX · 02 OUT"); "Carimbo novo!" com texto de ofensiva; selo circular girado −9° com "Nº 14", nome e data; card "Meta de outubro · 3 lugares onde você nunca foi" com progresso 3/3 e "Bingo da cidade: 7 de 16". Botões "Mandar pro grupo" (share) e "Ver meu passaporte".
-4. **Passaporte:** header amarelo com estatísticas (carimbos, semanas de ofensiva, bingo X/16) e botão de compartilhar; **Ofensiva semanal** com as últimas 8 semanas ("1 saída por semana basta"); **Meta do mês**; **Bingo da cidade** em grade 4×4 com 16 categorias: Mirante, Sebo, Trilha curta, Café escondido, Feira de bairro, Museu pequeno, Cinema de rua, Jardim, Ateliê aberto, Show grátis, Praça nova, Livraria, Bar de bairro, Rooftop, Biblioteca, Lago.
+2. **Sugestão:** voltar; resumo do filtro ("CURIOSO · 2H · ATÉ R$30"); pílula "N restantes". Card em formato de ingresso: foto, tag do tipo, "Nunca carimbado", nome, endereço e distância, link **"Detalhes"**, picote, "Por que pra você, agora" (3 motivos ligados ao humor, ao tempo e à grana). CTA "Bora, tô indo" (→ A caminho); "Outra" (gasta 1 da cota e, sem cota, abre o Plus); "Reservar" se o lugar for reservável, senão "Como chegar" (→ Detalhe do lugar).
+3. **Carimbo novo:** fundo azul; data ("SEX · 02 OUT"); "Carimbo novo!" com texto de ofensiva; selo circular girado −9° com "Nº 14", nome e data; card "Meta de outubro · 3 lugares onde você nunca foi" com progresso 3/3 e "Bingo da cidade: 7 de 16". Botões "Mandar pro grupo" (→ Story) e "Ver meu passaporte".
+4. **Passaporte:** header amarelo com estatísticas (carimbos, semanas de ofensiva, bingo X/16) e botão "Compartilhar álbum com a turma" (**sem** botão de Ajustes); **Ofensiva semanal** com as últimas 8 semanas ("1 saída por semana basta"); **Meta do mês**; **Bingo da cidade** em grade 4×4 com 16 categorias: Mirante, Sebo, Trilha curta, Café escondido, Feira de bairro, Museu pequeno, Cinema de rua, Jardim, Ateliê aberto, Show grátis, Praça nova, Livraria, Bar de bairro, Rooftop, Biblioteca, Lago. Tocar num carimbo abre o Detalhe do carimbo.
 5. **Plus (paywall):** fundo escuro; "Rolê sem limite."; tabela Grátis × Plus (Sugestões: 3/semana × Ilimitadas; Passaporte e bingo: incluso nos dois; Reserva no app: incluso nos dois); planos Mensal e Anual (preço `[PREÇO]`, Anual pré-selecionado); "Assinar o Plus"; link "Prefiro esperar: as grátis voltam segunda".
+
+**Telas novas da revisão de 02/10/2026**
+
+6. **Boas-vindas** (amarelo, 1ª abertura): logo "rolê aleatório"; três cartões de exemplo empilhados (humor · tempo · grana → lugar: "Na paz · 1h · de graça → Mirante", "Curioso · 2h · até R$30 → Sebo escondido", "Inquieto · meio dia · até R$80 → Trilha curta"); título "Diga seu humor. A gente escolhe o lugar."; texto "Tempo livre sem fadiga de decisão: um lugar que não é o de sempre, escolhido pelo seu humor, seu tempo e seu bolso."; CTA "Começar" (no protótipo → Criar conta; no MVP → Localização, D34); link "Já tenho conta" (→ Entrar; escondido no MVP, D34).
+7. **Localização** (creme): voltar; ilustração de radar; "Onde você tá?"; "Usamos sua localização só pra sugerir lugares que cabem no seu tempo livre. Nada de ficar te seguindo depois."; CTA "Usar minha localização"; divisória "ou"; campo com busca "Escolher cidade ou bairro" (placeholder "Ex.: o nome do seu bairro", D35); link "Agora não" (→ Sem localização).
+8. **Sem localização** (creme): voltar; ícone de pin cortado; "Sem localização, a gente chuta no escuro."; "Pra sugerir algo que cabe no seu tempo livre, precisamos saber mais ou menos onde você tá. Pode ser só o bairro."; botão "Ativar nos ajustes"; "ou"; campo "Ponto de partida" (placeholder "Seu bairro ou uma estação perto"); CTA "Usar esse ponto".
+9. **Detalhe do lugar** (creme): voltar e "Compartilhar lugar"; galeria "Fotos do lugar"; tag do tipo e "Nunca carimbado"; nome; três números: "Aberto · Até 22h", "Gasto · ~R$24", "Distância · 1,8 km"; seção **Como chegar** com mapa ilustrado (D36), link "Abrir no mapa" e três modos com tempo ("A pé 12 min", "Ônibus 9 min", "Carro 6 min", seleção única, D33); linha "Rua das Laranjeiras, 214 · a pé, 12 min"; CTA "Bora, tô indo" e botão quadrado "Reservar mesa" (se reservável).
+10. **A caminho** (amarelo): voltar; rótulo "A caminho"; nome e endereço; **anel de progresso** com "Faltam 40 m · quase lá"; "A pé · saiu há 11 min"; aviso "**O carimbo só vale lá.** Quando você tocar em Cheguei, a gente confere pela sua localização."; CTA "Cheguei!" (→ Como foi); link "Mudei de ideia" (→ Sugestão).
+11. **Como foi** (creme): "Café do Porão · hoje" e link "Depois" (→ Carimbo sem avaliação); "E aí, a sugestão acertou?" com 3 opções de seleção única: "Na mosca · acertou", "De boa · foi ok", "Não rolou · não era pra mim"; **O que marcou?** com chips de seleção múltipla: Tranquilo, Bom pra conversar, Bom preço, Comida boa, Cheio demais, Longe demais; **Uma lembrança pro passaporte** (texto livre, placeholder "Ex.: o bolo de laranja com café coado") e botão "Adicionar foto"; CTA "Pegar meu carimbo".
+12. **Story para compartilhar** (azul, 405×720, vira imagem): logo, data "02 · 10 · 2026", "Saí da inércia.", foto do usuário (ou listrado), nome do lugar, selo "Carimbo Nº 14 · 3ª semana", texto "Um café escondido onde eu nunca tinha ido. Escolhido pelo meu humor de hoje: **curioso**.", "Qual vai ser o seu rolê?" e `[LINK DO APP]` (D15).
+13. **Detalhe do carimbo** (creme): voltar, "Carimbo Nº 14" e "Compartilhar carimbo" (→ Story); selo grande (Rolê aleatório · Nº 14 · nome · data); nome; "Café escondido · Rua das Laranjeiras, 214"; três dados: Humor (Curioso), Tempo (2h), Sugestão (Na mosca); **Sua lembrança** (citação); duas fotos "Sua foto"; CTA "Mandar pro grupo" (→ Story).
+14. **Perfil** (creme, aba): avatar com iniciais ("VC"), `[SEU NOME]` e "`[SUA CIDADE]` · 14 carimbos" (D37); card do plano "Plano grátis · 2 de 3 sugestões nesta semana · Ver Plus" (→ Plus); **Preferências**: "Distância máxima" com controle deslizante de 1 a 20 km (padrão 5 km) e "Não quero sugestões de" com chips de seleção múltipla: Bar, Balada, Trilha longa, Lugar lotado, Shopping; **Ajustes** com interruptores: "Só lugares acessíveis", "Lembrete semanal da ofensiva" (ligado por padrão) e "Avisos de descobertas da turma" (pós-MVP).
+15. **Turma** (creme, aba, **pós-MVP**, D4): título "Turma" e "Convidar amigos"; card **Álbum compartilhado** ("Turma do sofá", avatares dos membros, miniaturas Mirante/Sebo/Feira, "+20", "Abrir álbum da turma"); **Descobertas da turma**: lista "Marina carimbou Sebo Dois Andares · Sebo · ontem" com botão "Quero ir" / "Salvo".
+16. **Nada bateu** (amarelo): voltar; ícone de chuva; "Nada bateu com tudo isso agora."; texto que explica o motivo ("Chovendo, 1h livre e de graça: os lugares que a gente conhece perto de você estão fechados ou ao ar livre."); **Muda uma coisa só**, com até 3 saídas que mudam **um** filtro e dizem o que abre ("Gastar até R$30 · Abre cafés e livrarias cobertos", "Ir até 25 min de distância · Museus pequenos e bibliotecas grátis", "Deixar pra amanhã · A gente te lembra de manhã, sem gastar sugestão"); link "Mudar tudo" (→ Rolê).
+17. **Sem internet** (escuro): pílula "Offline"; ícone de Wi‑Fi cortado; "Sem internet por aqui."; "Seu passaporte continua salvo no celular. Quando a conexão voltar, a gente busca o próximo rolê."; card **Última sugestão, salva** (nome, endereço, "aberto até 22h", "Ver como chegar"); botão "Tentar de novo"; link "Ver meu passaporte".
+
+18. **Criar conta** (creme, **Fase 15**, D34): voltar; "Cria sua conta"; "Continuar com Google" e "Continuar com Apple"; divisória "ou com e-mail"; campos "Como a turma te chama?" (placeholder "Seu nome ou apelido"), "E-mail" ("voce@email.com") e "Senha" ("Mínimo de 8 caracteres", com "Mostrar"/"Ocultar"); caixa "Aceito os Termos e a Política de privacidade" (com os dois links); CTA "Criar conta" (→ Localização); rodapé "Já tem conta? Entrar".
+19. **Entrar** (amarelo, **Fase 15**, D34): voltar; "Bora pro próximo rolê?"; "Seu passaporte tá te esperando."; "Entrar com Google" e "Entrar com Apple"; "ou com e-mail"; campos "E-mail" e "Senha" ("Sua senha", com "Mostrar"/"Ocultar"); link "Esqueci minha senha"; CTA "Entrar" (→ Rolê); rodapé "Primeira vez aqui? Criar conta".
+
+**Ícones e ilustrações novos** (ainda não existem em `components/ui/icons/`): `Profile` (pessoa, ícone do Perfil no dock), `Camera`, `Search`, `CloudRain`, `PinOff`, `UserPlus` (convidar) e um `WifiOff` **diferente** do que entrou na Fase 2 (o do protótipo substitui o do Feather). Ilustrações: anel de progresso (A caminho), mapa (Detalhe do lugar) e radar (Localização).
 
 ### Regras de negócio
 
 - **Cota grátis:** 3 sugestões por semana, renovadas toda **segunda-feira** no fuso do usuário. Ver a primeira sugestão já gasta 1; cada "Outra" gasta mais 1. Usuário Plus não tem limite. A contagem fica no **servidor** (ver D12).
-- **Carimbo:** tocar em "Bora, tô indo" gera um carimbo com número sequencial (Nº 14), lugar e data (no MVP o carimbo é imediato, ver D6).
+- **Carimbo (revisão de 02/10/2026):** "Bora, tô indo" abre um **rolê em andamento** (lugar, modo de transporte e hora de saída, persistido no aparelho para sobreviver ao app fechado). "Cheguei!" confere a posição atual contra a do lugar (raio da D6); dentro do raio, abre o "Como foi"; ao confirmar ("Pegar meu carimbo") ou pular ("Depois"), gera o carimbo com número sequencial (Nº 14), lugar, data, humor, tempo e, se houver, a avaliação, as tags, a lembrança e a foto. "Mudei de ideia" cancela o rolê sem carimbo. A posição **não vai para o servidor**: só o resultado da conferência.
+- **Preferências do Perfil:** a recomendação também respeita a **distância máxima** (1–20 km, padrão 5), os tipos em **"Não quero sugestões de"** e o filtro **"Só lugares acessíveis"**. Ficam no aparelho (a recomendação roda no cliente, D16).
+- **Nada bateu:** quando nenhum lugar passa nos filtros, **não gasta cota**. O app testa no catálogo local cada mudança de **um** filtro só (orçamento um nível acima, distância maior, outro horário) e mostra no máximo as que dão resultado, com o que elas abrem; "Deixar pra amanhã" agenda um lembrete de manhã.
+- **Sem internet:** a última sugestão vista fica salva no aparelho e aparece na tela offline; o passaporte continua funcionando com o cache.
 - **Ofensiva semanal:** quantidade de semanas seguidas com pelo menos 1 carimbo.
 - **Meta mensal:** 3 lugares nunca visitados no mês.
 - **Bingo:** 16 categorias; uma célula é marcada quando existe pelo menos 1 carimbo daquela categoria.
@@ -225,18 +311,20 @@ Telas que **não estão no protótipo** e serão criadas no mesmo visual: Onboar
 | Tabela | Campos principais | RLS |
 |---|---|---|
 | `cities` | id, nome, fuso, `daylight_cutoff` | leitura para autenticados |
-| `places` | id, city_id, `category` (enum das 16 do bingo), name, address, lat/lng, `price_tier`, `duration_min`, `moods[]`, reservable, reservation_url, photo_path, `daylight_only`, `accessible`, `pet_friendly`, active, `verified_at` | leitura para autenticados (só `active`) |
+| `places` | id, city_id, `category` (enum das 16 do bingo), name, address, lat/lng, `price_tier`, `typical_spend` ("Gasto ~R$24"), `duration_min`, `moods[]`, `avoid_tags[]` (`bar`, `nightclub`, `long_trail`, `crowded`, `mall`, para o "Não quero sugestões de"), `outdoor`, reservable, reservation_url, `photo_paths[]` (galeria; a 1ª é a capa), `daylight_only`, `accessible`, `pet_friendly`, active, `verified_at` | leitura para autenticados (só `active`) |
 | `place_translations` | place_id, locale, kind_label, reason_mood, reason_time, reason_money | leitura para autenticados |
 | `place_hours` | place_id, weekday, opens, closes | leitura para autenticados |
 | `profiles` | id (= auth.uid), locale, timezone, plan, created_at, accepted_terms_at | só o dono |
-| `stamps` | id (uuid gerado no cliente), user_id, place_id, number, stamped_at | só o dono; insert idempotente |
-| `suggestion_events` | user_id, place_id, action (`shown`/`other`/`go`), reason, created_at | insert só via RPC; leitura do dono |
-| `place_feedback` | user_id, stamp_id, liked, comment | só o dono |
+| `stamps` | id (uuid gerado no cliente), user_id, place_id, number, stamped_at, `mood`, `time_slot`, `budget`, `memory` (a lembrança, texto curto) | só o dono; insert idempotente |
+| `suggestion_events` | user_id, place_id, action (`shown`/`other`/`go`/`cancel`/`check_in`), reason, created_at | insert só via RPC; leitura do dono |
+| `place_feedback` | user_id, stamp_id, `rating` (`spot_on`/`ok`/`miss`), `tags[]` (`calm`, `good_for_talking`, `good_price`, `good_food`, `too_crowded`, `too_far`) | só o dono |
 | `place_reports` | user_id, place_id, reason (`closed`/`wrong_info`/`unsafe`/`other`), note | só insert pelo dono |
 | `events` | user_id, name, props jsonb, created_at | só insert (analytics) |
 | `plus_interest` | user_id, plan_viewed, created_at | só insert (fake door, ver D13) |
 
 RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `security definer`), `quota_status()` e Edge Function `delete-my-data`.
+
+As **fotos do usuário** (Como foi, Detalhe do carimbo, Story) ficam **só no aparelho** no MVP (D32); a coluna de foto no carimbo e o bucket privado entram com a conta, na Fase 15. As preferências do Perfil, o ponto de partida digitado e o rolê em andamento também ficam só no aparelho.
 
 ---
 
@@ -394,19 +482,31 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 ## Fase 3 — Navegação e esqueleto das telas 🧭 ARCH ⚡ VRN
 
-- [ ] `_layout.tsx` raiz com providers (i18n inicializado antes do primeiro render, `QueryClient` simples com `@tanstack/react-query`; o cache persistido só na Fase 5, fontes/splash, error boundary) e Stack.
-- [ ] Gate de onboarding: na primeira abertura vai para `/onboarding`; depois, direto para as tabs (flag persistida).
-- [ ] Grupo `(tabs)` com Rolê, Passaporte e Turma, usando o `FloatingTabBar` da Fase 2 via `tabBar` customizado (labels via `t()`). Todas as telas com tabs aplicam `useDockInset()` no conteúdo/scroll.
-- [ ] Remover o `app-tabs.tsx` do template (e a variante `.web`), substituído pelo dock.
-- [ ] Rotas `suggestion` (push), `stamp` (fullScreenModal), `feedback`, `report-problem`, `plus` e `settings` (modais) com placeholders.
-- [ ] `settings` (Ajustes) com a seção **Idioma** funcional: "Idioma do aparelho", Português (Brasil), English e Español; o idioma ativo fica marcado e a troca vale na hora. O acesso fica num botão no header do Passaporte (ver D9).
-- [ ] Títulos de tela e `accessibilityLabel` também traduzidos.
-- [ ] Navegação de ponta a ponta funcionando com dados fake (Rolê → Sugestão → Carimbo → Passaporte; Sugestão → Plus → voltar).
-- [ ] Testar os deep links `role://suggestion`, `role://passport` e `role://place/<id>` (este por enquanto abre um placeholder).
+**Revisão do protótipo de 02/10/2026 (fazer primeiro)**
+- [x] Atualizar o `docs/ARCHITECTURE.md` antes de qualquer código (regra "doc primeiro"): seção 5 (mapa de navegação) com as 11 telas novas, as 4 abas e o fluxo novo do carimbo (Sugestão → A caminho → Como foi → Carimbo); apresentação, deep link e parâmetros de cada rota nova (sugestão: grupo `onboarding/` com `welcome`, `location` e `no-location`, já prevendo `sign-up` e `sign-in` da Fase 15 no mapa, sem criar as rotas; `place/[id]` em push; `on-the-way` em push sem gesto de voltar acidental; `feedback` e `stamp` como hoje; `stamp/[id]` em push; `story` em modal; `no-match` em push; o "Sem internet" como estado da home e não rota, a decidir no ADR); seção 7 (estado) com o `tripStore` persistido (rolê em andamento), a última sugestão salva e as preferências novas do Perfil; seção 14 com os nomes novos do Glossário (a seção 15 já recebeu D4, D6, D9 e D32–D37 junto com esta revisão do plano). Commit `docs(arquitetura)`.
+- [x] Design system da revisão **(1/3): tokens e dock com 4 itens** — tokens novos da tabela "Cores novas" (conferir o uso de cada cor no protótipo); `dock.inactiveItemWidth` de 64 → **60** e os testes do `dockLayout`/`FloatingTabBar` refeitos para **4 itens** (ativo = 146 em 390; o maior label precisa caber, ou virar reticências, em 146 − 2 × 10 − 22 − 8 = 96). _(Tarefa dividida em três por ser grande demais para uma iteração: 1/3 tokens e dock, 2/3 ícones, 3/3 componentes.)_
+- [x] Design system da revisão **(2/3): ícones** — ícones novos `Profile`, `Camera`, `Search`, `CloudRain`, `PinOff`, `UserPlus` e troca do `WifiOff` pelo do protótipo, com a mesma conferência de geometria da Fase 2 (comparar `d`/`cx`/`cy`/`r` com o SVG decodificado).
+- [x] Design system da revisão **(3/3): componentes** — Componentes `ui/` que faltam: `TextField` (campo branco com borda), `Switch` e `Slider` (preferir `@expo/ui` ou o componente nativo, conforme a skill `expo-ui` e a doc do SDK 57; ver se a remoção do `@expo/ui` na Fase 2 precisa ser revertida), `ListRow` com separador, `Avatar` de iniciais e `MultiChip` (seleção múltipla com `accessibilityState.checked`).
+
+- [x] `_layout.tsx` raiz com providers (envolvido por `GestureHandlerRootView`, que o `Slider` exige: o Expo Router só o põe no stack JS; i18n inicializado antes do primeiro render, `QueryClient` simples com `@tanstack/react-query`; o cache persistido só na Fase 5, fontes/splash, error boundary) e Stack.
+- [x] Ícone oficial e splash com o **Dado com pin** (D31, ver "Ícone do app e splash"). Antes, ler na doc do SDK 57 as páginas de ícone do app (`icon`, `ios.icon` e o formato `.icon` do Icon Composer, `android.adaptiveIcon`) e do `expo-splash-screen` (tamanho da imagem e comportamento no Android 12+):
+  - salvar o SVG-mestre (fundo amarelo) e o glifo sem fundo em `assets/brand/`;
+  - gerar os PNGs com um script Node versionado (`scripts/brand/buildIcons.ts`, rasterizando o SVG com uma lib dev como `@resvg/resvg-js`), para dar para refazer os ícones a qualquer momento: `icon.png` 1024, `android-icon-foreground.png` (na zona segura), `android-icon-monochrome.png`, `splash-icon.png` e `favicon.png`. Apagar o `android-icon-background.png` do template (vira só `backgroundColor`);
+  - `app.json`: `icon`, `android.adaptiveIcon` (`backgroundColor: "#FFD43B"`) e plugin `expo-splash-screen` com `backgroundColor: "#FFD43B"` (sai o `#208AEF` do template) e o `imageWidth` que a doc indicar. No iOS, trocar o `assets/expo.icon` do template pelo dado (um `.icon` novo ou o `icon` PNG, o que a doc do SDK 57 recomendar) e remover o do template;
+  - validar sem rodar o app: `npx expo config --type public` mostra os caminhos novos, os PNGs têm as dimensões certas, `npx expo-doctor` e `npx expo export --platform android` passam. Nunca criar `ios/`/`android/` (nada de `prebuild` no repositório). Commit `build(brand)`.
+- [x] Gate de onboarding: na primeira abertura vai para o onboarding (Boas-vindas → Localização → Sem localização, como placeholders); depois, direto para as tabs (flag persistida).
+- [x] Grupo `(tabs)` com **Rolê, Passaporte, Turma e Perfil**, usando o `FloatingTabBar` via `tabBar` customizado (labels via `t()`; ícone `Profile` no Perfil). Todas as telas com tabs aplicam `useDockInset()` no conteúdo/scroll.
+- [x] Remover o `app-tabs.tsx` do template (e a variante `.web`), substituído pelo dock. _(feito na Fase 0, ver Registro)_
+- [x] Rotas com placeholders, conforme o ADR atualizado: `suggestion`, `place/[id]`, `on-the-way`, `feedback`, `stamp`, `stamp/[id]`, `story`, `no-match`, `report-problem`, `plus` e a escolha de idioma.
+- [x] Aba **Perfil** com a seção Ajustes e a linha **Idioma** funcional ("Idioma do aparelho", Português (Brasil), English e Español; o ativo fica marcado e a troca vale na hora), no visual de lista do Perfil (ver D9). O resto do Perfil fica para a Fase 11.
+- [x] Títulos de tela e `accessibilityLabel` também traduzidos.
+- [x] Navegação de ponta a ponta funcionando com dados fake: Rolê → Sugestão → Detalhe do lugar → A caminho → Como foi → Carimbo → Story / Passaporte → Detalhe do carimbo; A caminho → "Mudei de ideia" → Sugestão; Sugestão → Plus → voltar; Perfil → Plus; Rolê → Nada bateu → Rolê.
+- [x] Testar os deep links `role://suggestion`, `role://passport` e `role://place/<id>` (este abre o Detalhe do lugar, por enquanto placeholder).
 
 **Critérios de saída**
-- [ ] 👀 O fluxo inteiro dá para clicar no Android e no iOS (ou na web) sem crash.
-- [ ] 👀 Trocar o idioma em Ajustes atualiza tabs e telas na hora, e a escolha continua valendo depois de reabrir o app.
+- [x] 👀 O fluxo inteiro dá para clicar no Android e no iOS (ou na web) sem crash.
+- [x] 👀 Trocar o idioma no Perfil atualiza tabs e telas na hora, e a escolha continua valendo depois de reabrir o app.
+- [x] 👀 Dock com 4 abas: o label mais longo ("Passaporte" / "Passport" / "Pasaporte") cabe no item ativo, e a troca entre as 4 abas anima sem salto.
 
 ---
 
@@ -424,7 +524,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
   - como criar e publicar uma Edge Function pelo editor do dashboard;
   - como baixar os tipos TypeScript, se o dashboard oferecer.
 - [ ] `.env.example` com `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (sem valores, um comentário por linha; o app lê as três só por `src/lib/env.ts`, que valida, ver seção 12.2 do ADR; a doc atual do Supabase recomenda a publishable key no lugar da `anon`, ver ADR em `docs/ARCHITECTURE.md` seção 8).
-- [ ] `supabase/sql/001_initial_schema.sql`: tabelas do "Modelo de dados inicial" (`stamps.id` é a chave primária; **sem** índice único em `(user_id, number)`, ver seção 9.5 do ADR offline), enums (`category`, `mood`, `time_slot`, `budget`, `report_reason`) com os IDs do Glossário, índices e trigger de `updated_at`.
+- [ ] `supabase/sql/001_initial_schema.sql`: tabelas do "Modelo de dados inicial" (`stamps.id` é a chave primária; **sem** índice único em `(user_id, number)`, ver seção 9.5 do ADR offline), enums (`category`, `mood`, `time_slot`, `budget`, `report_reason`, `feedback_rating`, `feedback_tag`, `avoid_tag`) com os IDs do Glossário, índices e trigger de `updated_at`.
 - [ ] `supabase/sql/002_rls_policies.sql`: **RLS em todas as tabelas**, com policies conforme a tabela do modelo e as regras da seção 8.5 do ADR Supabase. A leitura de `places` também libera lugares **inativos que o usuário já carimbou** (seção 9.5).
 - [ ] `supabase/sql/003_quota.sql`:
   - função pura `quota_week_start(ts, tz)` (segunda 00:00 no fuso do usuário);
@@ -476,19 +576,23 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Tipos de domínio em `src/types` derivados de `database.ts`: `Place` (com tradução e horários resolvidos), `Stamp`, `WeekStatus`, `QuotaStatus`, `Plan`. Humores, tempos, orçamentos e categorias do bingo são **IDs em inglês** conforme o Glossário (`curious`, `2h`, `up_to_30`, `viewpoint`...); o rótulo vem sempre do i18n.
 - [ ] `domain/openingHours.ts`: diz se o lugar fica aberto durante toda a janela escolhida (agora + duração), no fuso da cidade, incluindo horário que vira a meia-noite. Com testes.
 - [ ] `domain/safety.ts`: lugares `daylight_only` não aparecem depois do `daylight_cutoff` da cidade (ver D19). Com testes.
-- [ ] `domain/recommend.ts`: filtrar por humor, tempo, orçamento, horário e segurança; ordenar por distância compatível com o tempo; priorizar nunca carimbados; sortear sem repetir na sessão; fallback quando nada combina ("afrouxar" o orçamento e depois o humor, avisando o usuário).
+- [ ] `domain/recommend.ts`: filtrar por humor, tempo, orçamento, horário, segurança e pelas preferências do Perfil (distância máxima, `avoid_tags`, só acessíveis); ordenar por distância compatível com o tempo; priorizar nunca carimbados; sortear sem repetir na sessão. Sem resultado, devolve "nada bateu" com o motivo (fechados, ao ar livre, longe, caro), **sem consumir cota**.
+- [ ] `domain/relaxations.ts` ("Muda uma coisa só"): para um pedido sem resultado, testa cada mudança de **um** filtro (orçamento um nível acima, distância maior, ver amanhã) e devolve só as que abrem lugares, com o resumo do que abrem (ex.: "cafés e livrarias cobertos"). Com testes.
+- [ ] `domain/geo.ts` e `domain/checkIn.ts`: distância em linha reta (haversine), progresso do trajeto (distância restante / inicial, para o anel do "A caminho") e a regra do "Cheguei!" (dentro do raio da D6, tolerando a precisão informada pelo GPS). Com testes.
+- [ ] `domain/travelTime.ts`: tempo estimado por modo (`walk`, `bus`, `car`) a partir da distância, conforme D33. Com testes.
 - [ ] `domain/streak.ts`: ofensiva semanal e histórico das últimas 8 semanas.
 - [ ] `domain/bingo.ts` e `domain/monthlyGoal.ts`.
 - [ ] `services/places`: `PlacesRepository` com `SupabasePlacesRepository` (catálogo da cidade + traduções + horários) e `InMemoryPlacesRepository` para testes. Exposto por um hook React Query com cache persistido.
 - [ ] `services/quota`: `consume()` e `status()` chamando as RPCs; erro de rede vira o estado "offline".
-- [ ] `services/stamps`: criar o carimbo localmente (uuid + número) → fila offline → `upsert` idempotente; listar os carimbos do usuário.
-- [ ] `stores/`: preferências (idioma, filtros, onboarding, notificações) e fila offline, persistidas em AsyncStorage.
+- [ ] `services/stamps`: criar o carimbo localmente (uuid + número, com humor, tempo, orçamento e lembrança) junto com a avaliação (`place_feedback`) → fila offline → `upsert` idempotente; listar os carimbos do usuário.
+- [ ] `services/media`: guardar a foto do "Como foi" no armazenamento do app (`expo-file-system`, ligada ao id do carimbo) e apagá-la junto com os dados; nada sobe para o servidor no MVP (D32).
+- [ ] `stores/`: preferências (idioma, filtros, onboarding, notificações, distância máxima, `avoidTags`, só acessíveis, ponto de partida), `tripStore` (rolê em andamento: lugar, modo, saída) e a última sugestão vista (para a tela offline), persistidos em AsyncStorage, além da fila offline.
 
 **Critérios de saída**
 - [ ] Cobertura ≥ 90% em `domain/`.
 - [ ] 👀 `zonedTime` dá o mesmo resultado no iPhone e no Android (virada de dia e de semana).
 - [ ] 👀 Carimbo criado em modo avião aparece no Supabase depois que a conexão volta, sem duplicar.
-- [ ] 👀 Estado persiste depois de fechar e reabrir o app (a lógica de persistência também coberta por teste).
+- [ ] 👀 Estado persiste depois de fechar e reabrir o app, inclusive com um rolê em andamento (a lógica de persistência também coberta por teste).
 
 ---
 
@@ -498,7 +602,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 - [ ] ⛔ Usuário define a **cidade inicial** (D7) e o processo de curadoria (D5b).
 - [ ] Planilha-modelo (`scripts/catalog/template.csv`) com todos os campos de `places`, `place_hours` e `place_translations`, mais um guia de preenchimento em `docs/CURATION.md` (o que é um bom "motivo", tom de voz, como tirar ou escolher a foto).
-- [ ] Script `scripts/catalog/validate.ts`: todo lugar tem horários, coordenadas, categoria (ID do Glossário), as 3 razões em **todos** os idiomas, foto e `verified_at` recente. Aponta as combinações de filtro sem nenhum lugar.
+- [ ] Script `scripts/catalog/validate.ts`: todo lugar tem horários, coordenadas, categoria (ID do Glossário), as 3 razões em **todos** os idiomas, pelo menos 1 foto (a galeria do Detalhe do lugar aceita várias), `typical_spend`, `outdoor`, `avoid_tags` (pode ser vazio, mas precisa ser revisado) e `verified_at` recente. Aponta as combinações de filtro sem nenhum lugar.
 - [ ] Script `scripts/catalog/buildCsv.ts`: transforma a planilha em **3 CSVs** com exatamente as colunas das tabelas (`places.csv`, `place_hours.csv`, `place_translations.csv`), prontos para o **Import CSV do Table Editor** do dashboard. Não usa service role nem acessa o Supabase.
 - [ ] Relatório de cobertura: quantos lugares por categoria do bingo, por humor, por faixa de preço e por duração. Meta do MVP: **≥ 60 lugares**, com todas as 16 categorias cobertas.
 - [ ] `supabase/sql/006_reports_view.sql`: view `reports_pending` para a revisão semanal.
@@ -518,15 +622,15 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 ## Fase 7 — Onboarding, permissões e localização ⚡ VRN
 
-- [ ] Onboarding com 2–3 telas curtas no visual do app: o conceito ("um lugar que não é o de sempre"), o passaporte e o bingo, e a cota de 3 sugestões por semana.
-- [ ] Aceite dos **Termos e da Política de Privacidade** (links), registrado em `profiles.accepted_terms_at`.
-- [ ] **Explicar antes de pedir** a localização: tela própria dizendo por que o app usa localização ("pra calcular a distância, sem salvar onde você está"), e só depois o prompt do sistema.
-- [ ] Permissão negada: o app continua funcionando, sem mostrar distância e ordenando pela cidade, com um aviso discreto e um atalho para os ajustes do sistema.
-- [ ] `services/location`: localização em primeiro plano (`expo-location`), com cache da última posição e textos de permissão traduzidos via `locales` no `app.json`.
+- [ ] **Boas-vindas** fiel ao protótipo (tela 6): cartões de exemplo empilhados, título, texto e "Começar", que no MVP vai **direto para Localização** (no protótipo ele passa por Criar conta, que fica para a Fase 15). O link "Já tenho conta" fica escondido até a Fase 15 (D34).
+- [ ] Aceite dos **Termos e da Política de Privacidade** (links), registrado em `profiles.accepted_terms_at`. No protótipo ele fica em Criar conta, que só entra na Fase 15 (D34); no MVP entra como uma linha discreta na Boas-vindas ("Ao começar, você aceita…"), no mesmo visual.
+- [ ] **Localização** fiel ao protótipo (tela 7), que é o "explicar antes de pedir": "Usar minha localização" dispara o prompt do sistema; o campo "Escolher cidade ou bairro" busca um ponto de partida (D35) sem pedir permissão; "Agora não" vai para Sem localização.
+- [ ] **Sem localização** fiel ao protótipo (tela 8): "Ativar nos ajustes" (`Linking.openSettings()`) e campo "Ponto de partida" com "Usar esse ponto". Com ponto de partida, o app calcula distância a partir dele; sem nada, ordena pela cidade e não mostra distância.
+- [ ] `services/location`: localização em primeiro plano (`expo-location`), com cache da última posição, ponto de partida manual como alternativa, acompanhamento em primeiro plano só durante o "A caminho" (parado ao sair da tela) e textos de permissão traduzidos via `locales` no `app.json`. Sem localização em segundo plano.
 - [ ] Estados de primeira vez nas telas: ofensiva "0 semanas" com texto motivador e passaporte vazio com um CTA para o primeiro rolê.
 
 **Critérios de saída**
-- [ ] 👀 Instalação limpa → onboarding → home funciona com a permissão aceita **e** com a permissão negada.
+- [ ] 👀 Instalação limpa → onboarding → home funciona nos três caminhos: permissão aceita, bairro digitado e permissão negada com ponto de partida.
 
 ---
 
@@ -534,9 +638,9 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 - [ ] Header com logo e pílula de ofensiva ligada ao `streak`.
 - [ ] Título e os três grupos de seleção, com estado inicial vindo dos últimos filtros (default: Curioso, 2h, Até R$30).
-- [ ] CTA "Me tira da inércia": chama `quota.consume()` e navega para a Sugestão; sem cota, abre o Plus; sem internet, mostra o estado offline.
+- [ ] CTA "Me tira da inércia": roda a recomendação **antes** de gastar cota; com resultado, chama `quota.consume()` e navega para a Sugestão; sem resultado, abre "Nada bateu" (sem gastar); sem cota, abre o Plus; sem internet, mostra a tela "Sem internet".
 - [ ] Contador "X de 3 sugestões grátis nesta semana" vindo de `quota_status()` (plural do i18n; oculto para Plus). Valores de orçamento com `formatCurrency`.
-- [ ] Card "Como foi o rolê no {{lugar}}?" quando houver carimbo sem feedback (abre `/feedback`).
+- [ ] Com um rolê em andamento (`tripStore`), a home mostra um atalho para voltar ao "A caminho".
 - [ ] Acessibilidade: labels, `accessibilityRole`, estado selecionado e tamanho de fonte dinâmico sem quebrar o layout.
 
 **Critérios de saída**
@@ -545,41 +649,56 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 ---
 
-## Fase 9 — Tela Sugestão ⚡ VRN
+## Fase 9 — Sugestão, Detalhe do lugar e estados sem resultado ⚡ VRN
 
 - [ ] Header com voltar, resumo do filtro (montado a partir dos rótulos traduzidos) e pílula "N restantes" (plural `_one`/`_other`).
-- [ ] Card-ingresso: foto (`expo-image` vinda do Storage, com placeholder listrado), tags, nome, endereço com distância, picote e os 3 motivos traduzidos.
+- [ ] Card-ingresso: foto (`expo-image` vinda do Storage, com placeholder listrado), tags, nome, endereço com distância, link "Detalhes" (→ Detalhe do lugar), picote e os 3 motivos traduzidos.
 - [ ] Mostrar "Aberto até HH:MM" no card (vindo de `domain/openingHours.ts`).
 - [ ] "Outra": consome cota, troca de lugar com uma animação de troca de card (Reanimated) e vai para o Plus quando a cota acabar. Opcionalmente pergunta o motivo em um toque (chips: "longe", "caro", "não curti o tipo"), que vai para `suggestion_events.reason`. Nunca bloqueia a troca.
-- [ ] "Reservar" (abre `reservation_url` no WebBrowser) ou "Como chegar" (abre o app de mapas com `Linking`), conforme `reservable`.
-- [ ] Botão discreto **"Informar problema"** → modal `/report-problem` (fechou, informação errada, inseguro, outro + nota) → `place_reports`.
-- [ ] "Bora, tô indo" registra o evento `go` e leva ao Carimbo.
-- [ ] Estados de loading, vazio ("nenhum rolê aberto com esse filtro agora", com sugestão de afrouxar o filtro), offline e erro.
+- [ ] "Reservar" (abre `reservation_url` no WebBrowser) se `reservable`; senão "Como chegar", que abre o **Detalhe do lugar**.
+- [ ] "Bora, tô indo" registra o evento `go`, cria o rolê em andamento e leva ao **A caminho** (Fase 10). Salva o lugar como "última sugestão" para a tela offline.
+- [ ] **Detalhe do lugar** (`place/[id]`, tela 9): galeria de fotos com rolagem horizontal (`expo-image`), tag, "Nunca carimbado", nome, "Aberto · Até 22h" / "Gasto · ~R$24" / "Distância · 1,8 km"; **Como chegar** com o mapa ilustrado (D36), "Abrir no mapa" (app de mapas via `Linking`, com o modo escolhido) e os modos A pé / Ônibus / Carro com tempo de `travelTime` (D33); "Bora, tô indo", "Reservar mesa" (só se reservável) e "Compartilhar lugar" (texto + link, D15).
+- [ ] Botão discreto **"Informar problema"** no Detalhe do lugar (não está desenhado) → modal `/report-problem` (fechou, informação errada, inseguro, outro + nota) → `place_reports`.
+- [ ] **Nada bateu** (`no-match`, tela 16): motivo vindo do `recommend`, até 3 saídas de `domain/relaxations.ts` (cada uma aplica a mudança e volta a pedir a sugestão), "Deixar pra amanhã" (agenda o lembrete da Fase 12, sem gastar sugestão) e "Mudar tudo" (volta para a home). Sem clima no MVP: o texto "Chovendo" só entra na Fase 16.
+- [ ] **Sem internet** (tela 17): pílula "Offline", a última sugestão salva com "Ver como chegar" (abre o Detalhe do lugar do cache), "Tentar de novo" e "Ver meu passaporte". Aparece quando o CTA da home ou o "Outra" falham por falta de rede.
+- [ ] Estados de loading e erro.
 
 ---
 
-## Fase 10 — Carimbo e compartilhamento ⚡ VRN
+## Fase 10 — A caminho, Como foi, Carimbo e Story ⚡ VRN
 
-- [ ] Registrar o `Stamp` (número sequencial, lugar, data e categoria) pela fila offline e atualizar ofensiva, meta e bingo.
+**A caminho e "Cheguei!"**
+- [ ] **A caminho** (`on-the-way`, tela 10): nome e endereço, anel de progresso animado (`react-native-svg` + Reanimated, só `strokeDashoffset` derivado do progresso de `domain/geo.ts`), "Faltam X m/km" com `formatDistance`, "quase lá" perto do fim, modo e "saiu há N min" (atualiza sozinho). Posição acompanhada em primeiro plano só enquanto a tela está aberta. Reabrir o app com rolê em andamento volta para cá.
+- [ ] **"Cheguei!"**: pega uma posição nova e aplica `domain/checkIn.ts` (raio da D6). Dentro do raio → Como foi e evento `check_in`. Fora do raio → aviso no mesmo visual (não desenhado: "Ainda faltam X m. Chegando, toca de novo."), sem carimbo. Sem permissão de localização → explica e oferece "Ativar nos ajustes" (D6).
+- [ ] "Mudei de ideia": cancela o rolê (evento `cancel`) e volta para a Sugestão, **sem** gastar cota de novo.
+
+**Como foi**
+- [ ] **Como foi** (`feedback`, tela 11): avaliação de seleção única (Na mosca / De boa / Não rolou), "O que marcou?" com seleção múltipla, campo de lembrança (limite de caracteres, teclado sem cobrir o campo) e "Adicionar foto" (`expo-image-picker`, câmera ou galeria, com explicação antes da permissão; foto salva por `services/media`, D32). "Pegar meu carimbo" salva tudo e gera o carimbo; "Depois" gera o carimbo sem avaliação.
+
+**Carimbo**
+- [ ] Registrar o `Stamp` (número sequencial, lugar, data, categoria, humor, tempo e lembrança) e a avaliação pela fila offline, e atualizar ofensiva, meta e bingo.
 - [ ] Tela azul com a data formatada no idioma ativo (`formatWeekdayShort`), texto dinâmico com ordinal localizado ("É a 3ª semana seguida…" / "3rd week in a row…") e o selo girado −9°.
 - [ ] Animação de entrada do selo (escala + rotação com spring) e `expo-haptics` no impacto.
 - [ ] Card da meta do mês com `ProgressSegments` e o texto do bingo.
-- [ ] "Mandar pro grupo": compartilhar texto traduzido **com link** (no MVP, link da landing/loja ou `role://place/<id>`; universal links ficam para a Fase 16, ver D15). Como evolução, imagem do selo (`react-native-view-shot` + `expo-sharing`).
 - [ ] "Ver meu passaporte" fecha o modal e abre a tab Passaporte.
-- [ ] Modal `/feedback`: "Curtiu?" (👍/👎 + comentário opcional) → `place_feedback`. Aparece pelo card da home ou pela notificação da Fase 12, **nunca** logo após o carimbo, porque nesse momento o usuário ainda está saindo.
+
+**Story**
+- [ ] **Story** (`story`, tela 12): composição 9:16 fiel ao protótipo (logo, data, "Saí da inércia.", foto do usuário ou listrado, lugar, selo "Nº · Xª semana", texto com o humor, "Qual vai ser o seu rolê?" e o link, D15), renderizada fora da tela e capturada como imagem (`react-native-view-shot`) e compartilhada com `expo-sharing`. Abre por "Mandar pro grupo" no Carimbo novo e no Detalhe do carimbo. Textos pelo i18n, inclusive o ordinal.
 
 ---
 
-## Fase 11 — Passaporte e Ajustes ⚡ VRN
+## Fase 11 — Passaporte e Perfil ⚡ VRN
 
-- [ ] Header com as 3 estatísticas, o botão de compartilhar o álbum e o botão de Ajustes.
+- [ ] Header com as 3 estatísticas e o botão "Compartilhar álbum com a turma" (no MVP, compartilha o resumo do passaporte com link; o álbum da turma é da Fase 17). Sem botão de Ajustes: eles ficam no Perfil.
 - [ ] Ofensiva semanal com 8 semanas (feita/perdida).
 - [ ] Meta do mês com o nome do mês no idioma ativo ("Meta de outubro" / "October goal").
 - [ ] Bingo 4×4 com células carimbadas e pendentes; ao tocar, mostrar os carimbos daquela categoria (detalhe opcional).
 - [ ] Estado vazio para usuário novo (0 carimbos).
 - [ ] Conteúdo rolável com `useDockInset()`: a última linha do bingo fica visível acima do dock quando o scroll chega ao fim.
 - [ ] O passaporte funciona offline (dados em cache) e mostra um indicador discreto quando há carimbos esperando sincronizar.
-- [ ] **Ajustes** completo: Idioma; Notificações (liga/desliga por tipo); Termos e Privacidade (links); **"Apagar meus dados"** com confirmação dupla → Edge Function `delete-my-data` → limpa o armazenamento local e volta ao onboarding; versão do app.
+- [ ] **Detalhe do carimbo** (`stamp/[id]`, tela 13): selo grande, nome, categoria e endereço, Humor / Tempo / Sugestão (a avaliação, ou "—" se pulou), "Sua lembrança" (some se vazia), fotos do usuário (somem se não houver) e "Mandar pro grupo" / "Compartilhar carimbo" (→ Story). Abre ao tocar num carimbo do passaporte.
+- [ ] **Perfil** (aba, tela 14): avatar de iniciais, nome e cidade (D37) e "N carimbos"; card do plano com a cota da semana (→ Plus); **Preferências**: "Distância máxima" (1–20 km, passo 1, padrão 5) e "Não quero sugestões de" (seleção múltipla), gravadas no `preferencesStore` e usadas na hora pela recomendação.
+- [ ] **Ajustes** dentro do Perfil: os interruptores do protótipo ("Só lugares acessíveis", "Lembrete semanal da ofensiva"; "Avisos de descobertas da turma" escondido até a Fase 17) e, no mesmo visual de lista, as linhas que não estão desenhadas: Idioma (Fase 3), "Avisar quando a cota renovar", Termos e Privacidade (links), **"Apagar meus dados"** com confirmação dupla → Edge Function `delete-my-data` → limpa o armazenamento local (inclusive as fotos) e volta ao onboarding; versão do app.
 
 ---
 
@@ -589,12 +708,13 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 - [ ] `services/notifications` com `expo-notifications`: permissão, canais (Android) e agendamento/cancelamento.
 - [ ] **Explicar antes de pedir** a permissão de notificação depois do **primeiro carimbo** ("quer que a gente te lembre da ofensiva?"), e não na primeira abertura.
-- [ ] Lembretes (todos traduzidos, respeitando os toggles de Ajustes):
-  - **Ofensiva em risco:** sexta à tarde, se não houver carimbo na semana ("Falta 1 rolê pra manter sua ofensiva de 3 semanas").
+- [ ] Lembretes (todos traduzidos, respeitando os interruptores do Perfil):
+  - **Ofensiva em risco** ("Lembrete semanal da ofensiva"): sexta à tarde, se não houver carimbo na semana ("Falta 1 rolê pra manter sua ofensiva de 3 semanas").
   - **Cota renovou:** segunda de manhã ("Suas 3 sugestões grátis voltaram").
-  - **Como foi?:** ~3h depois do "Bora, tô indo", com deep link para `/feedback`.
-- [ ] Reagendar tudo ao trocar de idioma, ao carimbar e ao desligar um tipo nos Ajustes.
-- [ ] Limite de frequência: no máximo 2 notificações por semana, além do "Como foi?".
+  - **Rolê em andamento:** ~2h depois do "Bora, tô indo" sem "Cheguei!" ("Chegou no Café do Porão? Toca pra pegar seu carimbo"), com deep link para o A caminho. Cancelado ao chegar ou ao desistir.
+  - **Deixar pra amanhã** (do "Nada bateu"): no dia seguinte de manhã, com deep link para a home.
+- [ ] Reagendar tudo ao trocar de idioma, ao carimbar e ao desligar um tipo no Perfil.
+- [ ] Limite de frequência: no máximo 2 notificações por semana, sem contar as que o próprio usuário pediu (rolê em andamento e "Deixar pra amanhã").
 
 **Critérios de saída**
 - [ ] 👀 Cada notificação dispara no horário certo (testar adiantando o agendamento) e abre a tela certa.
@@ -606,7 +726,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 **Observabilidade**
 - [ ] Error boundary global com tela de erro amigável e botão "tentar de novo".
 - [ ] Crash reporting conforme D14 (EAS Observe ou Sentry).
-- [ ] `services/analytics` → tabela `events` (ou a ferramenta definida em D14). Só estes eventos: `onboarding_done`, `location_permission` (aceita/negada), `suggestion_requested`, `suggestion_other` (+ motivo), `go_tapped`, `stamp_created`, `feedback_sent`, `report_sent`, `paywall_viewed`, `plus_interest`, `share_tapped`, `notification_opened`, `language_changed`.
+- [ ] `services/analytics` → tabela `events` (ou a ferramenta definida em D14). Só estes eventos: `onboarding_done`, `location_permission` (aceita/negada/ponto manual), `suggestion_requested`, `suggestion_other` (+ motivo), `no_match` (+ saída escolhida), `place_details_viewed`, `go_tapped`, `trip_cancelled`, `check_in` (dentro/fora do raio), `stamp_created`, `feedback_sent` (+ avaliação, sem o texto da lembrança), `report_sent`, `paywall_viewed`, `plus_interest`, `share_tapped` (+ origem: carimbo, detalhe, lugar), `notification_opened`, `language_changed`, `preferences_changed`.
 - [ ] `supabase/sql/0NN_metrics_views.sql`: views de métricas (ver "Métricas do MVP" abaixo), consultáveis no SQL Editor.
 
 **Produto**
@@ -620,7 +740,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 
 **Legal e distribuição**
 - [ ] ⛔ Usuário fornece (ou aprova o rascunho de) **Política de Privacidade** e **Termos de Uso**, publicados numa URL pública e linkados no onboarding e em Ajustes.
-- [ ] `app.json`: nome "Rolê Aleatório", bundle id / package (D20), ícone, splash `#FFD43B` e `locales`.
+- [ ] `app.json`: nome "Rolê Aleatório", bundle id / package (D20) e `locales` (ícone e splash do Dado com pin já entram na Fase 3).
 - [ ] 🖐 Handoff **`role-mvp`** em Bloqueios:
   1. criar o projeto `role-mvp` seguindo `docs/SUPABASE_SETUP.md`;
   2. rodar **todos** os scripts de `supabase/sql/` em ordem (**sem** o `seed_dev.sql`);
@@ -634,6 +754,7 @@ RPCs / Edge Functions do MVP: `consume_suggestion()` (cota no servidor, `securit
 - [ ] Build de preview e distribuição para o grupo de teste (Android interno / TestFlight), conforme D17.
 
 **Critérios de saída**
+- [ ] 👀 No build de preview (Android e iPhone): o ícone do Dado com pin aparece na tela inicial, sem corte nas máscaras do Android (círculo e squircle) nem no ícone temático (monocromático), e a splash amarela com o dado passa para o app sem piscar. No Expo Go isso não aparece (o ícone é o do Expo Go), por isso a conferência fica para o build.
 - [ ] 👀 Testadores instalaram o app e os eventos estão chegando no Supabase.
 - [ ] **→ Marco MVP: parar o loop.**
 
@@ -651,7 +772,8 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | Conversão sugestão → "Bora" | A sugestão convence? | ≥ 30% |
 | Taxa de "Outra" por sugestão | A primeira sugestão acerta? | ≤ 50% |
 | Retenção na semana 2 e na semana 4 | A pessoa volta? | ≥ 35% / ≥ 20% |
-| Feedback 👍 | O lugar valeu a pena? | ≥ 75% |
+| "Bora" que viram carimbo ("Cheguei!" dentro do raio) | A pessoa chega mesmo? | ≥ 60% |
+| Avaliação "Na mosca" ou "De boa" | O lugar valeu a pena? | ≥ 75% |
 | Reports por 100 sugestões | O catálogo é confiável? | ≤ 3 |
 | Cliques no Plus (fake door) por usuário que esgotou a cota | Alguém pagaria? | sinal qualitativo |
 
@@ -676,7 +798,11 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 
 ## Fase 15 — Conta, backup e múltiplos aparelhos 🧭 ARCH ⚡ VRN
 
-- [ ] Vincular o usuário anônimo a uma conta definitiva (e-mail com link mágico, Apple e Google) **sem perder carimbos**, seguindo o fluxo de vincular identidade do Supabase.
+- [ ] Vincular o usuário anônimo a uma conta definitiva **sem perder carimbos**, seguindo o fluxo de vincular identidade do Supabase. Métodos do protótipo: **e-mail e senha**, Google e Apple (D22).
+- [ ] **Criar conta** fiel ao protótipo (tela 18): Google, Apple, e-mail; "Como a turma te chama?" vira o nome do Perfil (D37); senha com mínimo de 8 e "Mostrar/Ocultar"; aceite dos Termos e da Privacidade grava `profiles.accepted_terms_at` (substitui a linha de aceite da Boas-vindas do MVP); erros de validação e de e-mail já usado no mesmo visual. Botões do Google e da Apple seguindo as regras de marca de cada um (o protótipo só reservou o lugar do logo).
+- [ ] **Entrar** fiel ao protótipo (tela 19), com "Esqueci minha senha" (fluxo de recuperação do Supabase, telas não desenhadas, no mesmo visual).
+- [ ] Onboarding passa a seguir o protótipo: Boas-vindas → Criar conta → Localização, e "Já tenho conta" → Entrar (D34). Quem já usa o app anônimo cria a conta por uma linha nova no Perfil (não desenhada), que abre a mesma tela de Criar conta e vincula a identidade.
+- [ ] Backup das fotos e lembranças do passaporte num bucket **privado** (só o dono lê), com a coluna de foto no carimbo (D32).
 - [ ] **Sign in with Apple** obrigatório no iOS se houver outro login social.
 - [ ] Entrar num aparelho novo e recuperar o passaporte.
 - [ ] **Exclusão de conta dentro do app** (exigência da Apple), reaproveitando `delete-my-data`.
@@ -686,19 +812,23 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 ## Fase 16 — Sugestão mais inteligente 🧭 ARCH ⚡ VRN
 
 - [ ] Mover a recomendação para uma RPC no Postgres com PostGIS (`suggest_place(...)`) quando o catálogo crescer (D16).
-- [ ] Usar o feedback (👍/👎) e os motivos de "Outra" para ranquear os lugares.
-- [ ] Clima: evitar trilha, mirante e lugares ao ar livre quando houver chuva prevista.
+- [ ] Usar a avaliação do "Como foi" (Na mosca / De boa / Não rolou) e os motivos de "Outra" para ranquear os lugares.
+- [ ] Clima: evitar trilha, mirante e lugares ao ar livre (`outdoor`) quando houver chuva prevista, e usar o clima no texto do "Nada bateu" ("Chovendo, 1h livre e de graça…").
 - [ ] Pôr do sol real por data e cidade, em vez do `daylight_cutoff` fixo.
-- [ ] Filtros extras: acessível, aceita pet, bom para ir sozinho.
-- [ ] (Opcional) Check-in por proximidade antes de carimbar (D6).
+- [ ] Filtros extras: aceita pet, bom para ir sozinho (o "só acessíveis" já entra no MVP, pelo Perfil).
+- [ ] Tempo de trajeto real por modo (API de rotas) no lugar da estimativa da D33, se o 👀 do MVP mostrar que a estimativa engana.
+- [ ] Usar as tags do "Como foi" ("Cheio demais", "Longe demais"...) para ajustar a recomendação de cada usuário.
 - [ ] **Universal links / App Links** com domínio próprio (D15): link compartilhado abre o lugar no app, ou a loja para quem não tem o app.
 - [ ] Integração de reserva com parceiros.
 
 ## Fase 17 — Turma (social) 🧭 ARCH ⚡ VRN
 
-> A aba existe no protótipo, mas a tela **não foi desenhada**. Depende da Fase 15 (conta).
+> A tela foi desenhada na revisão de 02/10/2026 (tela 15). Depende da Fase 15 (conta).
 
-- [ ] ⛔ Usuário define o escopo (D4): grupos, feed de carimbos dos amigos, convite por link, rolê em grupo? Desenhar antes de implementar.
+- [ ] ⛔ Usuário confirma o escopo desenhado (D4): turma com **álbum compartilhado** (nome, membros, fotos dos carimbos), **convite por link** ("Convidar amigos") e **Descobertas da turma** (quem carimbou o quê, com "Quero ir" / "Salvo"). Definir se uma pessoa pode estar em várias turmas e o que acontece ao sair.
+- [ ] Schema (script SQL novo): `crews`, `crew_members`, `crew_invites`, `saved_places` ("Quero ir"), com RLS por membro da turma; o álbum reaproveita o bucket privado de fotos da Fase 15.
+- [ ] Tela Turma fiel ao protótipo, "Abrir álbum da turma" (grade de fotos) e "Compartilhar álbum com a turma" do Passaporte ligado de verdade.
+- [ ] Interruptor "Avisos de descobertas da turma" do Perfil ligado a push do servidor (o MVP só tem notificações locais).
 - [ ] Privacidade: o que os amigos veem (carimbos sim, horário e localização exata não), com controle nos Ajustes.
 - [ ] Moderação e denúncia de conteúdo, se houver texto ou foto de usuário.
 - [ ] Até lá: placeholder "Em breve" na aba (desde o MVP), já com o dock e `useDockInset()`.
@@ -732,13 +862,13 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | D1 | Lib de estado local | Zustand v5 + persist (AsyncStorage) | 1 |
 | D2 | Tema escuro? | Não: app só no tema claro, como no protótipo | 2 |
 | D3 | Provedor de pagamento e preços do Plus | — (sugestão: RevenueCat, que tem webhook fácil para o Supabase) | 14 |
-| D4 | Escopo da aba Turma | Placeholder "Em breve" | 17 |
+| D4 | Escopo da aba Turma | Desenhada (álbum, convite, descobertas); no MVP, placeholder "Em breve"; o usuário confirma o escopo na Fase 17 | 17 |
 | D5 | Backend / banco de dados | ✅ **Decidido: Supabase** | 1 |
 | D5b | Como o catálogo é curado | Curadoria própria em planilha → `buildCsv` → **Import CSV no Table Editor** do dashboard; manutenção pelo dashboard | 6 |
-| D6 | Check-in exige estar no local? | MVP: não (carimbo direto); avaliar no pós-MVP | 16 |
+| D6 | Check-in exige estar no local? | **Sim, já no MVP** (o protótipo revisado diz "O carimbo só vale lá"): "Cheguei!" confere a posição no aparelho, raio de **150 m** + precisão do GPS; sem permissão, não carimba e oferece ativar. A posição não vai para o servidor | 5 / 10 |
 | D7 | Cidade inicial do catálogo | — **(bloqueia a Fase 6)** | 6 |
 | D8 | Idiomas suportados no lançamento | pt-BR (base), en, es | 1 |
-| D9 | Onde fica o seletor de idioma | Em Ajustes, acessado pelo header do Passaporte | 3 |
+| D9 | Onde fica o seletor de idioma | Na seção Ajustes da aba **Perfil** (o header do Passaporte não tem mais botão de Ajustes) | 3 |
 | D10 | Moeda muda junto com o idioma? | Não: valores sempre em BRL; só a formatação segue o idioma | 1 |
 | D11 | Quem revisa as traduções en/es | — | 18 |
 | D12 | Cota no MVP | Ligada (3/semana), contada no Supabase por usuário anônimo. Pedir sugestão exige internet. A burla por reinstalação é aceita no MVP | 4 |
@@ -751,7 +881,7 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | D19 | Regra de segurança "só de dia" | Campo `daylight_only` no lugar + `daylight_cutoff` fixo por cidade (ex.: 18h) | 5 |
 | D20 | Bundle id / package name | — (ex.: `com.<seu-nome>.rolealeatorio`) | 13 |
 | D21 | Contas de data por fuso (`utils/zonedTime.ts`) | `Intl.DateTimeFormat` + parse, sem `formatToParts`; biblioteca pequena se o 👀 divergir | 5 |
-| D22 | Login com Google na conta definitiva | — (decidir na Fase 15, com a Apple) | 15 |
+| D22 | Login com Google na conta definitiva | O protótipo já mostra Google, Apple e e-mail com senha; falta só decidir **como** implementar o Google (na Fase 15, com a Apple) | 15 |
 | D23 | Limite de 30 anônimos/hora por IP e captcha | Manter o padrão; subir se o grupo de teste dividir a rede; captcha no pós-MVP | 4 / 13 |
 | D24 | Limites do plano gratuito do Supabase | Conferir ao criar cada projeto e registrar em `docs/SUPABASE_SETUP.md` | 4 / 13 |
 | D25 | E2E com Maestro | Opcional, só depois da Fase 13; executado pelo usuário | 13 / 18 |
@@ -760,10 +890,17 @@ Registrar em **Bloqueios**: "Aguardando validação do MVP". Só retomar com aut
 | D28 | Sessão anônima em AsyncStorage | AsyncStorage no MVP; `expo-secure-store` na Fase 15 | 15 |
 | D29 | Conectividade | `expo-network` (e não NetInfo) | 5 |
 | D30 | Chave pública do Supabase | ✅ **Decidido: publishable key** | 4 |
+| D31 | Ícone oficial do app e splash | ✅ **Decidido: opção A "Dado com pin"** do protótipo, usada também na splash (fundo `#FFD43B`) | 3 / 13 |
+| D32 | Onde ficam as fotos e a lembrança do usuário | Foto **só no aparelho** no MVP (sem upload, sem moderação); a lembrança (texto) vai no carimbo, visível só para o dono. Backup das fotos com a conta | 5 / 10 / 15 |
+| D33 | Tempo por modo no Detalhe do lugar | Estimativa local pela distância em linha reta × fator de rota, com velocidades médias por modo (a pé, ônibus com espera, carro urbano); "Abrir no mapa" dá a rota real. API de rotas só no pós-MVP | 5 / 9 / 16 |
+| D34 | Conta: telas Criar conta e Entrar | ✅ **Decidido (02/10/2026): só na Fase 15.** O MVP continua anônimo: "Começar" vai direto para Localização e "Já tenho conta" fica escondido. Na Fase 15 o onboarding passa a ser o do protótipo | 7 / 15 |
+| D35 | Busca de cidade/bairro e ponto de partida | `Location.geocodeAsync` do `expo-location` (geocodificador do sistema, sem chave de API), limitado à cidade do catálogo; conferir o suporte na doc do SDK 57. Se falhar, lista de bairros da cidade no catálogo | 7 |
+| D36 | Mapa do Detalhe do lugar | Ilustração do protótipo (sem SDK de mapas no MVP); o mapa real fica com o app de mapas do celular | 9 |
+| D37 | Nome e cidade no Perfil | Nome opcional, digitado no próprio Perfil e salvo só no aparelho (padrão: iniciais "VC" e "Você"); cidade = a do catálogo. Vai para a conta na Fase 15 | 11 / 15 |
 
 ## Bloqueios
 
-_(vazio — o bloqueio "Aguardando verificação 👀 da Fase 2" foi resolvido em 02/10/2026 com a confirmação do usuário: "Fase 2 ok".)_
+_(vazio — o bloqueio "Aguardando verificação 👀 da Fase 3" foi resolvido em 03/10/2026 com a confirmação do usuário: "fase 3 ok".)_
 
 ## Registro de iterações
 
@@ -815,4 +952,19 @@ _(vazio — o bloqueio "Aguardando verificação 👀 da Fase 2" foi resolvido e
 | 2026-10-02 | 2 | Critério de saída: nenhuma cor nem texto solto | `git-commit`; docs do ESLint (`no-restricted-syntax`, seletores esquery) | Em vez de conferir à mão, o critério virou **regra de lint** em `eslint.config.js`, que roda a cada `expo lint`: em `src/` (fora de `theme/`, `test/`, testes e do catálogo temporário) é erro **cor solta** (`#hex`, `rgb()`/`rgba()`, `hsl()`/`hsla()`) e **texto solto** (texto direto em JSX, literal de texto em `{}` e literal nas props `label`, `title`, `message`, `placeholder`, `actionLabel`, `retryLabel`, `accessibilityLabel`, `accessibilityHint`); o `fontSize` solto continua proibido fora do `typography.ts`. Literais só de espaço (`{' '}`) passam, `theme/` pode ter cor, e o catálogo temporário só pode ter texto de desenvolvimento (cor e `fontSize` soltos continuam erro lá). **Provado:** um arquivo temporário com 7 violações (hex, `rgba`, `hsl`, texto em JSX, literal em `{}`, `label=`, `accessibilityLabel=`) deu os 7 erros nas linhas certas; um arquivo de `theme/` com cor passou; removidos. O código atual passa sem nenhuma violação, ou seja, **nenhuma cor ou texto solto existe hoje** fora do catálogo. **O que a regra não pega** (revisão humana): texto em string comum fora de JSX (ex.: `Alert.alert('...')`, mensagens de notificação), template literal, e cor por nome (`'white'`). Esses casos entram quando aparecerem (Fases 8 a 12). `tsc`, lint e jest (244 testes) verdes | `d514e10` |
 | 2026-10-02 | 2 | Fim da fase: critérios de saída | — | Critérios automáticos concluídos (catálogo temporário e "nenhuma cor ou texto solto", por lint). **Pendentes, todos dependem do aparelho:** texto ~40% maior sem estourar, plural e nome de dia/mês no Hermes, dock em iPhone e Android. Roteiro de 7 passos registrado em **Bloqueios**; o loop para até a confirmação ("Fase 2 ok"). A branch `fase/02-design-system` **ainda não** foi integrada na `main` | `b51376c` |
 | 2026-10-02 | 2 | Correção no `FloatingTabBar` feita fora do loop (registro) | — | Ao fechar a fase, o `git status` mostrou o `FloatingTabBar.tsx` alterado sem eu ter editado: `pillStep(geometry)` deixou de ser chamado dentro do `useAnimatedStyle` e passou a ser calculado fora (`const step = pillStep(geometry)`). **A correção está certa**: o worklet roda na thread de UI e só captura valores, e `pillStep` é uma função JS comum importada de `utils/` (não é worklet), então chamá-la ali falha no aparelho. **O jest não pega esse tipo de erro**, porque nele os worklets rodam na mesma thread de JS; foi por isso que meus 20 testes do dock passaram. Ela entrou sem querer no commit `b51376c` (`git add -A`), cuja mensagem só fala do plano. Os demais worklets do dock capturam apenas números, arrays e constantes. **Regra daqui em diante:** nada de função própria chamada dentro de worklet (calcular antes e capturar o valor), e a verificação 👀 de animação é obrigatória; `useAnimatedStyle` com `interpolate` sobre arrays calculados fora continua válido | `56cbcc9` |
-| 2026-10-02 | 2 | Confirmação 👀 e fim da fase | — | Usuário respondeu "Fase 2 ok" depois de rodar o app: critérios 👀 marcados (plural e datas nos três idiomas, dock em iPhone e Android, texto ~40% maior sem estourar, visual). Bloqueio removido. **Fase 02 integrada na `main` — pronta para push manual** (merge `--no-ff`, branch local apagada). O catálogo temporário e o redirect do `index` **ainda estão na `main`** e saem na primeira tarefa da Fase 3. Próxima tarefa: Fase 3, na branch `fase/03-navegacao` | este commit |
+| 2026-10-02 | 2 | Confirmação 👀 e fim da fase | — | Usuário respondeu "Fase 2 ok" depois de rodar o app: critérios 👀 marcados (plural e datas nos três idiomas, dock em iPhone e Android, texto ~40% maior sem estourar, visual). Bloqueio removido. **Fase 02 integrada na `main` — pronta para push manual** (merge `--no-ff`, branch local apagada). O catálogo temporário e o redirect do `index` **ainda estão na `main`** e saem na primeira tarefa da Fase 3. Próxima tarefa: Fase 3, na branch `fase/03-navegacao` | `4baca6d`, merge `9151469` |
+| 2026-10-02 | — | Revisão do plano e do protótipo (feita pelo usuário, fora do loop) | — | Protótipo com 16 telas, o story em 405×720 e a página do ícone (opção A, Dado com pin, D31); 11 telas novas; **4 abas** (Rolê, Passaporte, Turma, Perfil); novo fluxo do carimbo (Sugestão → A caminho → "Cheguei!" → Como foi → Carimbo → Story) e **D6 passa a exigir estar no local**; decisões D4, D6, D9 e D32 a D37; novas tarefas no início da Fase 3 (ADR primeiro, design system da revisão, ícone e splash). Commits `955a64e` (protótipo) e `007dd91` (plano e decisões do ADR) | `955a64e`, `007dd91` |
+| 2026-10-02 | 3 | Atualizar o `docs/ARCHITECTURE.md` para a revisão do protótipo ("doc primeiro") | `react-native-architecture` (camadas, rotas, estado); docs do Expo Router já conferidas na Fase 1; `git-commit` | **Seção 5 reescrita:** grafo e fluxo do carimbo; ramos entre telas; tabela de 19 rotas (grupo `onboarding/` com `welcome`, `location` e `no-location`; `place/[id]`, `on-the-way` sem gesto de voltar, `feedback`, `stamp` e `stamp/[id]` convivendo, `story`, `no-match`, `offline`, `report-problem`, `plus` e `language`); deep links públicos só `role://`, `passport`, `suggestion`, `place/<id>` e `on-the-way` (para a notificação); gate com `Stack.Protected` sobre todas as rotas; tabs com 4 abas e Turma como placeholder. **Seção 7:** `preferencesStore` ganha `maxDistanceKm`, `avoidTags`, `accessibleOnly`, `startPoint`, `profileName` e preferências de notificação; **`tripStore`** (rolê em andamento, com um resumo do lugar para abrir sem rede) e **`lastSuggestionStore`** (cópia proposital para a tela offline) persistidos; fotos do usuário sem store, num caminho previsível por carimbo (D32); `useStoresHydrated()` espera os quatro stores. **Seção 6:** dock com 4 itens, inativo de **60** e ativo de **146** em 390 (label útil de 96); **seção 4.1** (árvore), **13.2** (dependências novas: lib de rasterização, `expo-image-picker`, `expo-file-system`, `react-native-view-shot`, `expo-sharing` e reavaliar o `@expo/ui` para `Switch`/`Slider`), **14.3 e 14.4** (glossário e IDs: avaliação, tags, modo de transporte) e **15** (D9 ajustado e **D38 nova**). **Decisões minhas que merecem seu olhar:** (1) **"Sem internet" é uma rota (`offline`)**, não estado da home, porque a Sugestão também a chama; (2) a escolha de idioma é a rota `language` (modal) aberta pela linha "Idioma" do Perfil, porque o plano lista "a escolha de idioma" entre as rotas; (3) **D38**: o plano diz "reabrir o app com rolê em andamento volta para o A caminho" (Fase 10) e a Fase 8 diz que a home mostra um atalho; adotei **sem redirecionamento forçado** (atalho na home e notificação), e trocar é uma linha no gate; (4) `feedback` e `on-the-way` leem o `tripStore` e redirecionam para `/` se estiver vazio. **Em aberto para a implementação:** o `Stack.Protected` aceitar o grupo `onboarding/` como tela única (senão declarar as três telas no Stack raiz) e o mecanismo de fechar o fluxo do carimbo (Fase 10). Só documentação; `tsc` e lint verdes | `7672056` |
+| 2026-10-02 | 3 | Design system da revisão (1/3): tokens e dock com 4 itens | `vercel-react-native-skills` (`ui-styling`, `animation-gpu-properties` mantida no dock); `git-commit`; protótipo novo decodificado (20 páginas) e conferido por script | **Conferência no protótipo (18 telas):** todas as cores novas batem com a tabela do plano (`white`, `line`, `lineSoft`, `map`, `highlight`, `stripeStory`, `inkSoft`) e não há nenhuma outra; entraram no `tokens.ts` (`stripeStory` com as duas faixas), mais **raios 22 e 28**, `overlay.storyDivider` (`rgba(255, 251, 239, 0.35)`) e `shadow.polaroid` (`0 16 34 rgba(10, 16, 70, 0.4)`), que o story usa e não estavam na tabela. **Dock:** `dock.inactiveItemWidth` 64 → **60**; teste novo trava a conta (390 → ativo de **146**, label útil de 96). `dockLayout.test.ts` e `FloatingTabBar.test.tsx` refeitos para **4 itens** (passo de 64; ícone ativo em 18 e inativo em 19; último ícone de 297 para 210 ao ativar a 4ª aba; label limitado a 96). Chave `tabs.profile` ("Perfil"/"Profile"/"Perfil") nos 3 idiomas; o catálogo temporário ganhou a 4ª aba, com o ícone `Settings` até o `Profile` existir. **ADR:** `sign-up`/`sign-in` no glossário e uma nota na seção 5.4 (Fase 15, rotas não criadas), como a revisão pediu. **Correções minhas durante a tarefa:** (1) tirei um teste que afirmava larguras de texto que eu não tinha medido ("~78/58/66"): isso só dá para conferir no 👀; (2) uma expectativa de geometria estava errada (o ícone ativo, centralizado em 82, fica 1 ponto à esquerda do inativo, em 83); o código estava certo e o teste foi corrigido. **Divisão da tarefa:** o item era grande demais (tokens, dock, 7 ícones e 6 componentes); virou 1/3, 2/3 e 3/3. `tsc`, lint e jest (247 testes, 2 corridas) verdes | `24e09cf` |
+| 2026-10-02 | 3 | Design system da revisão (2/3): ícones | `react-native-architecture` (`components/ui/icons/`); `vercel-react-native-skills` (`ui-styling`, cor sempre por prop vinda de token); `git-commit` | Levantamento dos SVGs do protótipo novo (29 formas distintas em 20 telas): seis ícones novos, mais o novo `WifiOff`; o resto são ilustrações grandes (radar da Localização, mapa do Detalhe do lugar, anel do A caminho, opções do ícone do app), que **entram com as telas delas**. Criados `Profile` (22), `Search` (18), `Camera` (24), `UserPlus` (20), `CloudRain` (48), `PinOff` (46) e o novo `WifiOff` (46), que **substitui o do Feather** da Fase 2. Os três grandes usam o traço de **1,8** do protótipo (os outros, 2). **Fidelidade conferida de verdade:** renderizei os 23 ícones que existem no protótipo, extraí a geometria e comparei com a dos SVGs decodificados: **23/23 idênticos** em formas, tamanho padrão e espessura. A conferência foi **testada contra erro**: estraguei o raio do `Search` de propósito e ela acusou `MISMATCH`; o ícone voltou ao original (conferência descartável, fora do repositório). `Settings` e `Flag` seguem fora do protótipo. Teste permanente dos ícones com 25 componentes (tamanho padrão, acessibilidade, props, espessuras, traço fino dos grandes). Catálogo temporário e teste do dock passam a usar o `Profile` na 4ª aba. `tsc`, lint, jest (266 testes, 2 corridas) e bundle Android (1782 módulos) verdes. Sobra: os tamanhos grandes (46 a 48) só aparecem em ilustrações de estado, onde os componentes `StatePanel`/`EmptyState` hoje passam `size={28}`; ajustar quando as telas "Nada bateu", "Sem localização" e "Sem internet" forem feitas | `5720998` |
+| 2026-10-02 | 3 | Design system da revisão (3/3): componentes | `react-native-architecture` (`ui/` sem domínio, texto por prop); `vercel-react-native-skills` (`design-system-compound-components`, `ui-pressable`, `animation-gpu-properties`, `react-compiler-reanimated-shared-values`); skill `expo:expo-ui` e docs do SDK 57 (`@expo/ui` universal: `Slider` e `Switch`); `git-commit` | Levantamento no protótipo (Localização, Cadastro, Como foi, Turma, Perfil) antes de escrever. Criados **`TextField`** (campo branco de 52 com contorno ink, `leading`/`trailing`, `multiline` de 72; `accessibilityLabel` obrigatório porque o placeholder não é nome), **`Switch`** (52×32, bolinha de 26, `role="switch"` com `checked`, área de toque de 56×44; bolinha desliza com `translateX` e as cores trocam por fundido de `opacity`), **`Slider`** (trilho `line` com trecho vencido em ink, círculo de 28, gesto `Pan` com `runOnJS`, `role="adjustable"` com `increment`/`decrement` e `valueText` falado), **`ListRow`** (52 de altura mínima, separador `lineSoft` de 1,5, `leading`/`trailing`/`subtitle`), **`Avatar`** (34, 40 e 60, quatro tons, decorativo sem nome) e **`MultiChip`** (caixa de seleção com `checked`; `regular` de 44 e `compact` de 40 com área de toque de 44). Matemática do `Slider` em `utils/slider.ts` (11 testes). Variantes novas de tipografia: `bodyMedium`, `badge` e `avatar`. **Decisão sobre `@expo/ui` (o plano pedia para avaliar):** **não** foi reinstalado. A doc do SDK 57 mostra que o `Switch` e o `Slider` universais **não aceitam cor** (só `modifiers` por plataforma, que exigiriam duas árvores `.ios`/`.android`), e o protótipo desenha os dois com a marca (interruptor ink/amarelo, trilho `line`). Por isso são componentes próprios. A ADR da Fase 2 de tirar o `@expo/ui` continua valendo. **Bug que o teste pegou:** o `Switch` usava o **mesmo** resultado de `useAnimatedStyle` em duas views (trilho e bolinha amarela) e só uma delas animava; agora cada view tem o seu. **Tentativa descartada:** uma `ref` com o último valor emitido do `Slider` foi barrada pelo lint do React Compiler (`react-hooks/refs`); a repetição de valor é inofensiva (`setState` com o mesmo valor não faz nada), então o componente ficou simples e os testes ignoram repetições seguidas. **Nota da RN 0.86:** `StyleSheet.absoluteFillObject` não existe mais; usei `absoluteFill`. `GestureHandlerRootView` é necessário para o `Slider` (o Expo Router só o põe no stack JS): entrou na tarefa do `_layout.tsx` raiz. O catálogo temporário ganhou o bloco "Formulários e Perfil" (campos, avatares, slider de 1 a 20 km, chips de seleção múltipla, switches e linha da Turma). Testes: 6 componentes novos, setup do jest com `react-native-gesture-handler/jestSetup`, gesto simulado com `fireGestureHandler`. `tsc`, lint, jest (328 testes, 2 corridas) e bundle Android (1876 módulos) verdes | `9662bd2` |
+| 2026-10-02 | 3 | Ícone oficial e splash com o Dado com pin (D31) | `git-commit`; docs do SDK 57 (`app.json`: `icon`, `ios.icon`, `android.adaptiveIcon`; guia de ícone e splash; plugin `expo-splash-screen`) | **Do que a doc diz:** o `icon` é PNG quadrado de 1024 que preenche tudo, sem cantos arredondados nem transparência (quem arredonda é o sistema); o `ios.icon` aceita PNG ou uma pasta `.icon` do Icon Composer; o ícone adaptativo do Android tem `foregroundImage`, `backgroundColor` e `monochromeImage` (o `backgroundImage` é opcional); a splash aceita `image`, `imageWidth` (padrão 100) e `backgroundColor`, e no Android 12+ o ícone é recortado num círculo de 192 dp dentro de 288 dp. **Feito:** SVGs-mestre em `assets/brand/` (ícone completo com fundo amarelo, glifo sem fundo e silhueta monocromática, esta última com os pips e o pin vazados e o furo do pin opaco) e o gerador versionado **`scripts/brand/buildIcons.ts`** (`npm run brand:build`, que rasteriza com `@resvg/resvg-js` e refaz os cinco PNGs de `assets/images/`: `icon`, `android-icon-foreground`, `android-icon-monochrome`, `splash-icon` e `favicon`). `app.json`: `icon` novo; `android.adaptiveIcon.backgroundColor` `#FFD43B` e **sem** `backgroundImage` (apaguei o `android-icon-background.png` do template); splash `#FFD43B` com `imageWidth` **200**, no lugar do azul `#208AEF` do template. **Decisão (iOS):** usei o `icon` PNG do topo e **removi `ios.icon`** e a pasta `assets/expo.icon` do template. O `.icon` do Icon Composer exigiria o Xcode para eu conferir o resultado, e a doc aceita o PNG; se um dia quiserem o visual em camadas do iOS 26, é uma tarefa à parte. **Zona segura:** o foreground, o monocromático e a splash reduzem o dado para ele caber no círculo de 66 dp do canvas de 108 dp (61%), que também cabe no recorte de 192/288 da splash do Android 12 (67%). **Correção minha durante a tarefa:** eu medi o dado pelo canto vivo do quadrado (28·√2 ≈ 39,6); o teste mostrou que o ponto mais distante é o do arco do canto arredondado, (28 − 14)·√2 + 14 ≈ 33,8, e eu estava encolhendo o dado além do necessário; a conta foi corrigida e os PNGs refeitos. **Verificação sem rodar o app:** 20 testes do gerador (a geometria e as cores dos SVGs batem com o plano; PNGs RGBA com os tamanhos certos; **ícone completo sem nenhum pixel transparente** e com os quatro cantos amarelos; dado, pip e furo nas posições certas; foreground e splash com fundo transparente e o dado **inteiro dentro do círculo de segurança, encostando nele**; monocromático só preto e com os vazados certos; e os **PNGs versionados idênticos ao que os SVGs geram**, para ninguém editar o SVG e esquecer de refazer); inspeção visual dos PNGs; `npx expo config --type public` mostra os caminhos novos; `expo-doctor` 21/21; `expo export --platform android` gera o bundle. Nada de `prebuild`, `ios/` ou `android/`. **Dependências de desenvolvimento:** `@resvg/resvg-js` e `@types/node@22` (a versão do Node da máquina; o script de marca usa `node:fs`). **Pendente 👀 (Fase 13, build de preview):** no Expo Go o ícone é o do Expo Go, então o Dado com pin só aparece num build; a conferência das máscaras do Android (círculo, squircle e ícone temático) e da passagem da splash para o app sem piscar fica para lá. `tsc`, lint e jest (348 testes, 2 corridas) verdes | `0990d9a` |
+| 2026-10-02 | 3 | `_layout.tsx` raiz com providers, splash e error boundary | `react-native-architecture` (providers em `providers/`, hook em `hooks/`, boundary em `components/features/navigation/`); `vercel-react-native-skills` (`react-state-minimize`, `react-state-fallback`, `state-ground-truth`); docs do Expo Router (`ErrorBoundary`, ver Fase 1) e do `expo-splash-screen`; `git-commit` | **`app/_layout.tsx`:** `SplashScreen.preventAutoHideAsync()` no escopo do módulo; a splash só sai (`hide()`) com **fontes carregadas e todos os stores hidratados**; até lá devolve `null`. Depois: `GestureHandlerRootView` (exigido pelo `Slider`) → `I18nProvider` → `QueryProvider` → `Stack` sem header. Exporta `ErrorBoundary`. **`hooks/useStoresHydrated.ts`:** `useSyncExternalStore` sobre `persist.onFinishHydration` e `hasHydrated` de uma lista de stores (hoje só o `preferencesStore`; cada store persistido novo entra ali). **`providers/I18nProvider.tsx`:** aplica o idioma efetivo (`useLanguage().locale`: escolha salva, ou aparelho, ou pt-BR) com `changeLanguage` e **só mostra os filhos depois da primeira aplicação**, então nunca aparece um idioma e depois outro; trocas seguintes não desmontam nada; se a troca falhar, o app abre mesmo assim. **`providers/QueryProvider.tsx`:** `QueryClient` simples (`staleTime` 60 s, 1 retry, sem refetch por foco), um por montagem do provider (não é singleton de módulo); o cache persistido fica para a Fase 5. **`RootErrorBoundary`:** reaproveita o `ErrorState` com `error.title`, `error.message` e `error.retry` (chaves novas nos 3 idiomas), usa o i18next global porque o erro pode ter ocorrido acima do provider. **Testes:** hook de hidratação (inclui uma hidratação ainda em andamento quando o hook monta), provedores (idioma nunca errado em nenhum render, escolha salva sobre o aparelho, seguir o aparelho, troca sem desmontar, falha tolerada), `QueryProvider`, boundary nos 3 idiomas e **layout raiz de ponta a ponta com `renderRouter`**: splash retida com fontes carregando, solta quando tudo está pronto, abre já no idioma salvo, query client disponível, contêiner de gestos envolvendo as rotas e **erro de rota → tela traduzida → "Tentar de novo" recupera a tela**. **Ajustes:** `standard-navigation` (ESM do Expo Router 57) entrou no `transformIgnorePatterns` do Jest; o `useEffect` do catálogo que fazia o papel do `I18nProvider` saiu. **Decisão sobre o ADR 10.2:** não implementei um `AppState` separado para o idioma do aparelho: o `useLocales()` já assina `addLocaleListener` (conferido no código do pacote); se o 👀 do Android mostrar que não dispara ao voltar das configurações, acrescenta-se. **Catálogo temporário e redirect do `index`: continuam** (removi só o efeito). A remoção fica para a tarefa do grupo `(tabs)`, que move o `index` para `(tabs)/index` de qualquer jeito; antes disso o catálogo ainda serve para você conferir os componentes novos no aparelho. `tsc`, lint, jest (374 testes, 2 corridas), `expo-doctor` 21/21 e bundle Android (1926 módulos) verdes | `28a61bb` |
+| 2026-10-02 | 3 | Gate de onboarding | `react-native-architecture` (rotas finas, estado no store, `app/` sem importar `stores/`); `vercel-react-native-skills` (`react-state-fallback`, `ui-styling`); docs do Expo Router (`Stack.Protected`, ver Fase 1); `git-commit` | **Estado:** `preferencesStore` ganha `onboardingDone` (padrão `false`) e `completeOnboarding()`, ambos persistidos; a hidratação aceita **só o `true` literal** e trata save antigo sem o campo, ou valor corrompido, como "não feito" (o idioma válido do mesmo save não se perde). Hook `useOnboarding()` para as rotas. **Gate no `_layout.tsx` raiz:** `Stack.Protected guard={!onboardingDone}` com `onboarding` e `guard={onboardingDone}` com `index` e `catalog`; a flag só é lida **depois da hidratação** (a splash já espera por ela). **Rotas:** grupo `onboarding/` com `_layout` (Stack próprio, `initialRouteName: 'welcome'`), `welcome`, `location` e `no-location`, placeholders **com os textos reais do protótipo** (título e botões; os cartões, o aceite dos Termos, a permissão e o campo de bairro são da Fase 7): "Começar" → `location`; "Agora não" → `no-location`; "Usar minha localização" e "Usar esse ponto" concluem (ainda sem pedir permissão nem guardar ponto); voltar nas duas telas internas. Chaves `onboarding.*` nos 3 idiomas. **Testes (13, `renderRouter`):** primeira abertura cai na `welcome` (também com deep link para rota protegida); o grupo abre na `welcome` e não em `location`; fluxo completo pelos dois caminhos; voltar; concluir abre a home, **grava a flag** e **não deixa o onboarding no histórico** (`canGoBack()` falso); com a flag salva abre a home direto, abre deep link liberado e **não deixa entrar no onboarding**. Store: 5 testes novos da flag. **Achados:** (1) o `Stack.Protected` aceita o grupo `onboarding/` como tela única (era o ponto em aberto do ADR, agora fechado e anotado); (2) sem `initialRouteName` o Expo Router abre `location` por ordem alfabética; (3) o nome `unstable_settings` é obrigatório do Expo Router e violava a regra de nomes: exceção só para ele no `eslint.config.js`; (4) **os tipos de rota gerados (`.expo/types/router.d.ts`) estavam velhos e sujos** (listavam arquivos que não são rotas, como `/../hooks/useStoresHydrated`, e não tinham as rotas novas), o que quebrava o `tsc`; apaguei o arquivo (está no `.gitignore`) e o `tsc` passa sem ele, com `href` como string. **Não consegui descobrir quem o escreve** (nem o `expo export` nem o Jest o recriam); se ele reaparecer assim no seu `expo start`, apague e me avise, porque o `tsc` voltará a quebrar. O catálogo temporário e o redirect do `index` continuam (saem na tarefa das abas). `tsc`, lint, jest (395 testes, 2 corridas), `expo-doctor` 21/21 e bundle Android verdes | `6e6bd28` |
+| 2026-10-02 | 3 | Grupo `(tabs)` com Rolê, Passaporte, Turma e Perfil | `react-native-architecture` (adaptador em `features/navigation/`, rotas finas); `vercel-react-native-skills` (`navigation-native-navigators` com a exceção registrada, `ui-safe-area-scroll`); ADR da seção 6 (`expo-router/js-tabs` com `tabBar`); `git-commit` | **`app/(tabs)/_layout.tsx`:** `Tabs` de `expo-router/js-tabs` (o de `expo-router` está `@deprecated` no SDK 57) com `tabBar` customizado, 4 telas na ordem do protótipo e `title` traduzido por `t()` (vira o label do dock, então trocar o idioma atualiza a barra); `sceneStyle` por aba (amarelo no Rolê, creme nas outras) para não haver faixa de outra cor atrás do dock. **`AppTabBar`** (adaptador, ADR 6.2): mapa tipado rota → ícone (`Compass`, `Passport`, `Users`, `Profile`), `onPress` no padrão do React Navigation (emite `tabPress` com `canPreventDefault` e só navega se a tela não cancelou e a aba não é a ativa), `tabLongPress`, `insets.bottom` para o dock; rota sem ícone é ignorada. **`TabScreen`:** corpo comum das telas de aba (rolagem, título como `header`, mensagem opcional) que **já aplica `useDockInset()`** no `paddingBottom` e as margens do protótipo (52 e 20). As quatro telas são placeholders finos: Rolê (`home.title`), Passaporte, Turma ("Em breve", chave `crew.comingSoon` nova) e Perfil. **Layout raiz:** o gate libera `(tabs)` e ganhou a **âncora** `unstable_settings = { anchor: '(tabs)' }` (um deep link para rota empilhada abre com o Rolê por baixo). **Catálogo temporário removido** (`catalog.tsx`, o `index.tsx` antigo e o teste dele), como combinado; a última versão está no git (`git show 28a61bb:src/app/catalog.tsx`). **Testes:** 14 do `AppTabBar` e do `TabScreen` (rótulos, ativa, ordem do evento, cancelar, aba já ativa, long press, rota sem ícone, recuo do dock com e sem safe area) e 11 de integração com `renderRouter` (abre no Rolê com as 4 abas na ordem do protótipo, abre cada aba, deep link direto no Passaporte, fundo próprio por aba, **troca de idioma atualiza dock e títulos sem sair da aba** e recuo do dock). Os testes do gate e do layout raiz passaram a usar as abas reais. **Ruído conhecido:** um aviso de `act(...)` no fim do arquivo de testes do gate (`I18nProvider`, primeira aplicação, depois do corpo do teste); não falha nada, e já tirei a chamada redundante a cada troca de idioma. `tsc`, lint, jest (408 testes, 2 corridas), `expo-doctor` 21/21 e bundle Android (1901 módulos) verdes. **Pendente 👀 (critério de saída):** o dock com 4 abas no aparelho (label mais longo cabendo, troca sem salto, safe area) | `12dbf85` |
+| 2026-10-03 | 3 | Rotas com placeholders | `react-native-architecture` (rotas finas em `app/`, corpo provisório em `features/navigation/`); `vercel-react-native-skills` (`navigation-native-navigators`, `ui-styling`, `ui-safe-area-scroll`); ADR seções 5.2 e 5.4 (apresentação de cada rota) e docs do Expo Router (`Stack.Protected`, `presentation`, `gestureEnabled`); `git-commit` | **Rotas criadas** (`src/app/`): `suggestion`, `place/[id]`, `on-the-way`, `feedback`, `stamp`, `stamp/[id]`, `story`, `no-match`, `offline` (rota, não estado da home, conforme a regra 11 do ADR), `report-problem`, `plus` e `language`. **`PlaceholderScreen`** (`features/navigation/`): topo com voltar (`Back`) nas telas empilhadas e fechar (`Close`) nos modais, título como `header` e mensagem opcional (usada para mostrar o `id` recebido pelas rotas dinâmicas); se não há nada embaixo (deep link direto), o botão leva ao Rolê. **Layout raiz:** as 12 rotas entram no mesmo `Stack.Protected` do `onboardingDone`, então o gate vale para todas; apresentação conforme o ADR: `on-the-way` sem gesto de voltar, `feedback` em `modal` sem gesto, `stamp` em `fullScreenModal` sem gesto, `story`, `report-problem`, `plus` e `language` em `modal`, o resto em push (rotas empilhadas acima das abas, então cobrem o dock). **i18n:** chaves novas nos 3 idiomas (`suggestion.title`, `place.*`, `onTheWay.title`, `feedback.title`, `stamp.detailTitle`/`detailPlaceholder`, `story.title`, `noMatch.title`, `offline.title`, `report.title`, `settings.language`); o teste de paridade passa. **Testes:** `tests/app/placeholderRoutes.test.tsx` (13: título traduzido de cada rota, `id` do deep link em `place/abc-123` e `stamp/42`, e voltar de uma rota aberta sem âncora levando ao Rolê). `tsc`, lint, jest (42 suites, 408 testes + os 13 novos) e bundle Android verdes. Na primeira corrida do jest, 8 suites falharam no `afterEach` do testing-library com o cache frio; repeti duas vezes e passou tudo, então tratei como ruído de carga. **Pendente 👀 (critério de saída):** navegar por todas as rotas no aparelho | `bb3386f` |
+| 2026-10-03 | 3 | Aba Perfil com Ajustes e a linha Idioma | `react-native-architecture` (feature em `components/features/settings/`, rotas finas, estado no `preferencesStore` via `useLanguage`); `vercel-react-native-skills` (`ui-pressable`, `ui-styling`, `rendering-text-in-text-component`, `react-state-minimize`); ADR seções 5, 7.3 e 10.3 (D9); `git-commit` | **Perfil:** `TabScreen` com a seção **Ajustes** (`SettingsSection`: rótulo de seção + `ListRow` "Idioma" com o idioma atual à direita, ex.: "Português (Brasil)" ou "Idioma do aparelho"; o `accessibilityLabel` fala os dois, "Idioma, English"). A linha abre a rota `language` (modal, ADR D9). **`language`:** `LanguageOptions` com 4 linhas de escolha única (Idioma do aparelho, Português (Brasil), English, Español), a ativa marcada com `Check` e `accessibilityRole="radio"` + `checked`; tocar chama `useLanguage().setLanguage`, que grava no store persistido e troca o i18n na hora, então o próprio modal, o Perfil e o dock mudam sem reabrir. Os nomes dos idiomas são autônimos (`getLanguageLabel` em `i18n/languageNames.ts`, só o "do aparelho" passa por `t()`). **Componentes:** `ListRow` ganhou `accessibilityRole` e `accessibilityState` opcionais (padrão continua `button`); `PlaceholderScreen` aceita `children`, e `language` o usa só pelo topo com fechar. **i18n:** `settings.title` (Ajustes / Settings / Ajustes) nos 3 idiomas. **Testes:** `tests/app/language.test.tsx` (5: seção e valor atual no Perfil, "do aparelho" quando segue o aparelho, lista com a opção ativa marcada, troca na hora com a escolha persistida no AsyncStorage e Perfil atualizado ao fechar, volta a seguir o aparelho) e 1 novo no `ListRow`. `tsc`, lint, jest (44 suites, 427 testes) e bundle Android (1921 módulos) verdes. **Pendente 👀 (critério de saída):** a escolha continuar valendo depois de reabrir o app | `ebada7c` |
+| 2026-10-03 | 3 | Títulos de tela e `accessibilityLabel` traduzidos | `react-native-architecture` (título dentro da própria tela, adaptador `AppTabBar` com `t()`, `FloatingTabBar` continua puro); `vercel-react-native-skills` (`rendering-text-in-text-component`, `ui-styling`); docs do Expo Router (`Stack.Screen` com `options` dentro da tela); `git-commit` | **Auditoria:** busquei texto fixo em `src/` (JSX e props de acessibilidade). Os rótulos de voltar e fechar, o título das abas, os botões do onboarding, a seção Ajustes e a lista de idiomas já passavam por `t()`. Faltavam dois pontos. **(1) Título nativo das rotas empilhadas:** o `Stack` não recebia `title`, então a pilha de navegação e o título da página na web ficavam com o nome do arquivo (`on-the-way`, `report-problem`...). Como o layout raiz fica fora do `I18nProvider`, o título sai de dentro da tela com `<Stack.Screen options={{ title }} />`: no `PlaceholderScreen` (cobre as 12 rotas, incluindo as que já recebem conteúdo real depois) e nas três telas do onboarding. Trocar o idioma atualiza o título junto, porque a tela re-renderiza. **(2) Nome do grupo de abas:** o `FloatingTabBar` ganhou a prop opcional `accessibilityLabel` (continua sem conhecer i18n) e o `AppTabBar` passa `t('a11y.mainNav')` ("Principal" / "Main" / "Principal"), chave que já existia nos 3 idiomas mas não era usada. As chaves `a11y.shareAlbum` e `a11y.plansTable` seguem sem uso até as telas do Plus e da Turma. **Testes:** `PlaceholderScreen.test.tsx` (4: título como `header` e entregue ao navegador, voltar/fechar nos 3 idiomas, voltar com e sem âncora, children) e 1 novo no `AppTabBar` (nome do dock em pt-BR e en). `tsc`, lint (sem avisos), jest (45 suites, 432 testes) e bundle Android (1921 módulos) verdes. **Pendente 👀:** conferir o título no aparelho (leitor de tela e, na web, a aba do navegador) | `19c0b90` |
+| 2026-10-03 | 3 | Navegação de ponta a ponta com dados fake | `react-native-architecture` (rotas finas, ids fake isolados em `utils/`, fluxo conforme as seções 5.1 e 5.2 do ADR); `vercel-react-native-skills` (`ui-pressable`, `ui-styling`, `navigation-native-navigators`); docs do Expo Router (`push`, `replace`, `dismissTo`, `dismissAll`, `navigate`; confirmei que as quatro últimas existem no SDK 57); `git-commit` | **Botões de saída nos placeholders** (`FlowButton`, em `features/navigation/`, usa o `Button` do design system), com os rótulos do protótipo: **Rolê** → "Me tira da inércia" (Sugestão), "Nada bateu" e "Sem internet"; **Sugestão** → "Bora, tô indo" (A caminho), "Detalhes" (Detalhe do lugar com `fake-place`) e "Outra" (Plus com `source=quota`); **Detalhe do lugar** → "Bora" e "Informar problema" (com `placeId`); **A caminho** → "Cheguei!" (Como foi) e "Mudei de ideia"; **Como foi** → "Pegar meu carimbo" e "Depois" (os dois fazem `replace` para o Carimbo, então o Como foi não fica no histórico); **Carimbo novo** → "Mandar pro grupo" (Story) e "Ver meu passaporte"; **Passaporte** → "Carimbo de exemplo" (Detalhe do carimbo com `fake-stamp`); **Detalhe do carimbo** → "Mandar pro grupo"; **Perfil** → "Rolê Plus" (`source=profile`); **Nada bateu** → "Muda uma coisa só" e "Mudar tudo"; **Sem internet** → "Tentar de novo" e "Ver meu passaporte". **Decisões de navegação:** "Mudei de ideia" usa `dismissTo('/suggestion')`, que volta para a Sugestão que já está na pilha em vez de empilhar outra (vale também quando o caminho passou pelo Detalhe do lugar); "Ver meu passaporte" usa `dismissAll()` + `navigate('/passport')`, que fecha tudo acima das abas (regra 9 do ADR 5.2, que a Fase 10 ainda vai confirmar com o rolê de verdade); "Mudar tudo" usa `dismissTo('/')`; "Tentar de novo" volta para quem chamou. **Dados fake:** `utils/fakeIds.ts` (`FAKE_PLACE_ID`, `FAKE_STAMP_ID`), que sai quando as telas reais receberem o id do catálogo. **i18n:** 10 chaves novas nos 3 idiomas (`suggestion.details`, `place.go`, `onTheWay.arrived`/`changeMind`, `feedback.getStamp`/`later`, `noMatch.relax`/`changeAll`, `offline.retry`, `passport.sampleStamp`). **Testes:** `tests/app/flow.test.tsx` (12 de integração com `renderRouter`: o fluxo principal inteiro até o Story, Carimbo → Passaporte limpando a pilha, Passaporte → Detalhe do carimbo → Story, "Mudei de ideia" nos dois caminhos, Plus pela Sugestão e pelo Perfil voltando para quem abriu, Nada bateu → Rolê, Sem internet, e o `placeId` na URL do Informar problema). `tsc`, lint, jest (46 suites, 444 testes) e bundle Android (1923 módulos) verdes. **Ruído:** com todos os workers do jest, 3 e depois 8 suites falharam por tempo (cada uma levou 50 a 90 s, com a máquina carregada); com `--maxWorkers=3` passou tudo, e as mesmas suites passam sozinhas. **Pendente 👀 (critério de saída):** clicar o fluxo no aparelho | `b2b7657` |
+| 2026-10-03 | 3 | Testes dos deep links | `react-native-architecture` (testes de rota em `tests/app/`, âncora do ADR 5.3); `vercel-react-native-skills` (nada novo: só teste); `git-commit` | **`tests/app/deepLinks.test.tsx`** (6): o `app.json` tem o esquema `role`; o link de `suggestion` abre a Sugestão com o Rolê por baixo (o voltar leva ao Rolê, graças à âncora `(tabs)`); o de `passport` abre a aba Passaporte já selecionada no dock; o de `place/<uuid>` abre o Detalhe do lugar mostrando o id do link, o voltar leva ao Rolê e o "Bora" segue para o A caminho; e, com o onboarding por fazer, qualquer link cai nas Boas-vindas e o destino é descartado (regra aceita do ADR 5.3). **Limite do `renderRouter`:** ele não remove o prefixo `role://` como o app faz no aparelho (com a URL completa ele lê `suggestion` como se fosse o host e abre a rota não encontrada), então os testes entram pelo caminho que sobra depois do esquema (`/suggestion`, `/passport`, `/place/<id>`), que é o que o Expo Router resolve. O link com o esquema de verdade fica como verificação 👀, conforme o ADR 5.6 (`npx uri-scheme open role://... --android`/`--ios`). **Ajuste no `flow.test.tsx`:** nada de comportamento; só confirmei que o objeto do `renderRouter` precisa ser aguardado (`await app`) antes de consultar a tela. `tsc`, lint e jest (47 suites, 450 testes, com `--maxWorkers=3`) verdes; sem mudança de código do app, então não repeti o bundle. **Pendente 👀:** abrir os três links no aparelho | `58690c6` |
+| 2026-10-03 | 3 | Fim da fase: critérios de saída 👀 e integração | `git-commit` | O usuário rodou o app e confirmou ("fase 3 ok") o fluxo inteiro sem crash, a troca e a persistência do idioma e o dock com 4 abas. Critérios marcados; `fase/03-navegacao` integrada na `main` com `--no-ff` (`chore(fase-03): conclui navegação e esqueleto das telas`) e a branch local apagada. **Fase 03 integrada na main — pronta para push manual.** | _(ver merge)_ |

@@ -77,6 +77,11 @@ export const typography = {
     fontSize: size.sm,
     lineHeight: lineHeightOf(size.sm, 1.4),
   },
+  /** Rótulo de linha de lista e de campo (Instrument Sans 500). */
+  bodyMedium: {
+    fontFamily: fontFamily.body.medium,
+    fontSize: size.sm,
+  },
   /** Parágrafo de destaque (Instrument Sans 400). */
   bodyLarge: {
     fontFamily: fontFamily.body.regular,
@@ -103,6 +108,16 @@ export const typography = {
     fontFamily: fontFamily.body.medium,
     fontSize: size.xs,
     lineHeight: lineHeightOf(size.xs, 1.15),
+  },
+  /** Iniciais pequenas do avatar (Instrument Sans 700). */
+  badge: {
+    fontFamily: fontFamily.body.bold,
+    fontSize: size.xs,
+  },
+  /** Iniciais do avatar grande (Bricolage 800). */
+  avatar: {
+    fontFamily: fontFamily.display.extraBold,
+    fontSize: size.lg,
   },
   /** Texto das pílulas (Instrument Sans 600). */
   pill: {

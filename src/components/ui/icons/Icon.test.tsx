@@ -7,8 +7,10 @@ import { Arrow } from './Arrow';
 import { Back } from './Back';
 import { Bolt } from './Bolt';
 import { Calendar } from './Calendar';
+import { Camera } from './Camera';
 import { Check } from './Check';
 import { Clock } from './Clock';
+import { CloudRain } from './CloudRain';
 import { Close } from './Close';
 import { Compass } from './Compass';
 import { Flag } from './Flag';
@@ -16,10 +18,14 @@ import type { IconProps } from './Icon';
 import { Logo } from './Logo';
 import { Passport } from './Passport';
 import { Pin } from './Pin';
+import { PinOff } from './PinOff';
+import { Profile } from './Profile';
 import { Refresh } from './Refresh';
+import { Search } from './Search';
 import { Settings } from './Settings';
 import { Share } from './Share';
 import { Smile } from './Smile';
+import { UserPlus } from './UserPlus';
 import { Users } from './Users';
 import { Wallet } from './Wallet';
 import { WifiOff } from './WifiOff';
@@ -29,44 +35,56 @@ const ICONS: Record<string, ComponentType<IconProps>> = {
   Back,
   Bolt,
   Calendar,
+  Camera,
   Check,
   Clock,
+  CloudRain,
   Close,
   Compass,
   Flag,
   Logo,
   Passport,
   Pin,
+  PinOff,
+  Profile,
   Refresh,
+  Search,
   Settings,
   Share,
   Smile,
+  UserPlus,
   Users,
   Wallet,
   WifiOff,
 };
 
-/** Tamanho padrão de cada ícone do protótipo (os três últimos não existem lá). */
+/** Tamanho padrão de cada ícone, igual ao do protótipo (só `Settings` e `Flag` não existem lá). */
 const DEFAULT_SIZE: Record<string, number> = {
   Arrow: 24,
   Back: 20,
   Bolt: 14,
   Calendar: 18,
+  Camera: 24,
   Check: 16,
   Clock: 18,
+  CloudRain: 48,
   Close: 18,
   Compass: 22,
   Flag: 18,
   Logo: 26,
   Passport: 22,
   Pin: 16,
+  PinOff: 46,
+  Profile: 22,
   Refresh: 18,
+  Search: 18,
   Settings: 22,
   Share: 20,
   Smile: 18,
+  UserPlus: 20,
   Users: 22,
   Wallet: 18,
-  WifiOff: 22,
+  WifiOff: 46,
 };
 
 async function renderIcon(name: string, props: IconProps = {}) {
@@ -78,8 +96,8 @@ async function renderIcon(name: string, props: IconProps = {}) {
 }
 
 describe('icons', () => {
-  it('has the 16 icons of the prototype plus Settings, Flag and WifiOff', () => {
-    expect(Object.keys(ICONS)).toHaveLength(19);
+  it('has the icons of the revised prototype plus Settings and Flag', () => {
+    expect(Object.keys(ICONS)).toHaveLength(25);
     expect(Object.keys(DEFAULT_SIZE).sort()).toEqual(Object.keys(ICONS).sort());
   });
 
@@ -127,6 +145,12 @@ describe('icons', () => {
     expect((await renderIcon('Check')).props.strokeWidth).toBe(2.6);
     expect((await renderIcon('Back')).props.strokeWidth).toBe(2.2);
     expect((await renderIcon('Pin')).props.strokeWidth).toBe(2);
+  });
+
+  it('draws the large illustration-size icons with the thinner 1.8 stroke of the prototype', async () => {
+    for (const name of ['CloudRain', 'PinOff', 'WifiOff']) {
+      expect({ name, strokeWidth: (await renderIcon(name)).props.strokeWidth }).toEqual({ name, strokeWidth: 1.8 });
+    }
   });
 
   it('draws Bolt as a filled shape without stroke', async () => {

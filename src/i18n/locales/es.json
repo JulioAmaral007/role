@@ -13,10 +13,36 @@
   "tabs": {
     "home": "Rolê",
     "passport": "Pasaporte",
-    "crew": "Pandilla"
+    "crew": "Pandilla",
+    "profile": "Perfil"
+  },
+  "crew": {
+    "comingSoon": "Próximamente"
   },
   "settings": {
-    "languageSystem": "Idioma del dispositivo"
+    "title": "Ajustes",
+    "languageSystem": "Idioma del dispositivo",
+    "language": "Idioma"
+  },
+  "error": {
+    "title": "Algo salió mal",
+    "message": "No pudimos abrir esta pantalla. ¿Probamos de nuevo?",
+    "retry": "Intentar de nuevo"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Dime tu humor. Nosotros elegimos el lugar.",
+      "start": "Empezar"
+    },
+    "location": {
+      "title": "¿Dónde estás?",
+      "useLocation": "Usar mi ubicación",
+      "notNow": "Ahora no"
+    },
+    "noLocation": {
+      "title": "Sin ubicación, vamos a ciegas.",
+      "usePoint": "Usar este punto"
+    }
   },
   "mood": {
     "curious": "Curioso",
@@ -90,7 +116,9 @@
     "go": "Vamos, ya voy",
     "other": "Otra",
     "reserve": "Reservar",
-    "directions": "Cómo llegar"
+    "directions": "Cómo llegar",
+    "title": "Sugerencia",
+    "details": "Detalles"
   },
   "stamp": {
     "title": "¡Nuevo sello!",
@@ -99,7 +127,9 @@
     "sealNumber": "N.º {{number}}",
     "goalReached": "Meta cumplida. Bingo de la ciudad: {{done}} de {{total}}.",
     "share": "Mandar al grupo",
-    "viewPassport": "Ver mi pasaporte"
+    "viewPassport": "Ver mi pasaporte",
+    "detailTitle": "Detalle del sello",
+    "detailPlaceholder": "Sello {{id}}"
   },
   "passport": {
     "title": "Pasaporte",
@@ -110,7 +140,8 @@
     "streakTitle": "Racha semanal",
     "streakHint": "Con 1 salida por semana alcanza",
     "bingoTitle": "Bingo de la ciudad",
-    "bingoCount": "{{done}} de {{total}}"
+    "bingoCount": "{{done}} de {{total}}",
+    "sampleStamp": "Sello de ejemplo"
   },
   "plus": {
     "badge": "Rolê Plus",
@@ -131,5 +162,35 @@
     "pricePerYear": "{{price}}/año",
     "subscribe": "Suscribirme a Plus",
     "wait": "Prefiero esperar: las gratis vuelven el lunes"
+  },
+  "place": {
+    "title": "Detalle del lugar",
+    "placeholder": "Lugar {{id}}",
+    "go": "Vamos"
+  },
+  "onTheWay": {
+    "title": "En camino",
+    "arrived": "¡Llegué!",
+    "changeMind": "Cambié de idea"
+  },
+  "feedback": {
+    "title": "¿Cómo estuvo?",
+    "getStamp": "Conseguir mi sello",
+    "later": "Después"
+  },
+  "story": {
+    "title": "Story"
+  },
+  "noMatch": {
+    "title": "Nada coincidió",
+    "relax": "Cambia solo una cosa",
+    "changeAll": "Cambiar todo"
+  },
+  "offline": {
+    "title": "Sin internet",
+    "retry": "Intentar de nuevo"
+  },
+  "report": {
+    "title": "Informar un problema"
   }
 }

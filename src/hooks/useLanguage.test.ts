@@ -51,7 +51,7 @@ describe('useLanguage', () => {
     // o `persist` grava em segundo plano
     await waitFor(async () => {
       expect(JSON.parse((await AsyncStorage.getItem(PREFERENCES_STORAGE_KEY)) ?? 'null')).toEqual({
-        state: { language: 'es' },
+        state: { language: 'es', onboardingDone: false },
         version: 1,
       });
     });

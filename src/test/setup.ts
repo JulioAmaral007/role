@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler/jestSetup';
 import { setUpTests } from 'react-native-reanimated';
 
 // Worklets é nativo; no Jest usa-se o mock oficial (docs/ARCHITECTURE.md, seção 11.2).

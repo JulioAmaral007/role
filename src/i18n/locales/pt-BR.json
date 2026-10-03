@@ -13,10 +13,36 @@
   "tabs": {
     "home": "Rolê",
     "passport": "Passaporte",
-    "crew": "Turma"
+    "crew": "Turma",
+    "profile": "Perfil"
+  },
+  "crew": {
+    "comingSoon": "Em breve"
   },
   "settings": {
-    "languageSystem": "Idioma do aparelho"
+    "title": "Ajustes",
+    "languageSystem": "Idioma do aparelho",
+    "language": "Idioma"
+  },
+  "error": {
+    "title": "Algo deu errado",
+    "message": "Não deu pra abrir essa tela. Tenta de novo?",
+    "retry": "Tentar de novo"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Diga seu humor. A gente escolhe o lugar.",
+      "start": "Começar"
+    },
+    "location": {
+      "title": "Onde você tá?",
+      "useLocation": "Usar minha localização",
+      "notNow": "Agora não"
+    },
+    "noLocation": {
+      "title": "Sem localização, a gente chuta no escuro.",
+      "usePoint": "Usar esse ponto"
+    }
   },
   "mood": {
     "curious": "Curioso",
@@ -90,7 +116,9 @@
     "go": "Bora, tô indo",
     "other": "Outra",
     "reserve": "Reservar",
-    "directions": "Como chegar"
+    "directions": "Como chegar",
+    "title": "Sugestão",
+    "details": "Detalhes"
   },
   "stamp": {
     "title": "Carimbo novo!",
@@ -99,7 +127,9 @@
     "sealNumber": "Nº {{number}}",
     "goalReached": "Meta batida. Bingo da cidade: {{done}} de {{total}}.",
     "share": "Mandar pro grupo",
-    "viewPassport": "Ver meu passaporte"
+    "viewPassport": "Ver meu passaporte",
+    "detailTitle": "Detalhe do carimbo",
+    "detailPlaceholder": "Carimbo {{id}}"
   },
   "passport": {
     "title": "Passaporte",
@@ -110,7 +140,8 @@
     "streakTitle": "Ofensiva semanal",
     "streakHint": "1 saída por semana basta",
     "bingoTitle": "Bingo da cidade",
-    "bingoCount": "{{done}} de {{total}}"
+    "bingoCount": "{{done}} de {{total}}",
+    "sampleStamp": "Carimbo de exemplo"
   },
   "plus": {
     "badge": "Rolê Plus",
@@ -131,5 +162,35 @@
     "pricePerYear": "{{price}}/ano",
     "subscribe": "Assinar o Plus",
     "wait": "Prefiro esperar: as grátis voltam segunda"
+  },
+  "place": {
+    "title": "Detalhe do lugar",
+    "placeholder": "Lugar {{id}}",
+    "go": "Bora"
+  },
+  "onTheWay": {
+    "title": "A caminho",
+    "arrived": "Cheguei!",
+    "changeMind": "Mudei de ideia"
+  },
+  "feedback": {
+    "title": "Como foi?",
+    "getStamp": "Pegar meu carimbo",
+    "later": "Depois"
+  },
+  "story": {
+    "title": "Story"
+  },
+  "noMatch": {
+    "title": "Nada bateu",
+    "relax": "Muda uma coisa só",
+    "changeAll": "Mudar tudo"
+  },
+  "offline": {
+    "title": "Sem internet",
+    "retry": "Tentar de novo"
+  },
+  "report": {
+    "title": "Informar problema"
   }
 }
