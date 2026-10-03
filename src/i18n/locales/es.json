@@ -117,7 +117,8 @@
     "other": "Otra",
     "reserve": "Reservar",
     "directions": "Cómo llegar",
-    "title": "Sugerencia"
+    "title": "Sugerencia",
+    "details": "Detalles"
   },
   "stamp": {
     "title": "¡Nuevo sello!",
@@ -139,7 +140,8 @@
     "streakTitle": "Racha semanal",
     "streakHint": "Con 1 salida por semana alcanza",
     "bingoTitle": "Bingo de la ciudad",
-    "bingoCount": "{{done}} de {{total}}"
+    "bingoCount": "{{done}} de {{total}}",
+    "sampleStamp": "Sello de ejemplo"
   },
   "plus": {
     "badge": "Rolê Plus",
@@ -163,22 +165,30 @@
   },
   "place": {
     "title": "Detalle del lugar",
-    "placeholder": "Lugar {{id}}"
+    "placeholder": "Lugar {{id}}",
+    "go": "Vamos"
   },
   "onTheWay": {
-    "title": "En camino"
+    "title": "En camino",
+    "arrived": "¡Llegué!",
+    "changeMind": "Cambié de idea"
   },
   "feedback": {
-    "title": "¿Cómo estuvo?"
+    "title": "¿Cómo estuvo?",
+    "getStamp": "Conseguir mi sello",
+    "later": "Después"
   },
   "story": {
     "title": "Story"
   },
   "noMatch": {
-    "title": "Nada coincidió"
+    "title": "Nada coincidió",
+    "relax": "Cambia solo una cosa",
+    "changeAll": "Cambiar todo"
   },
   "offline": {
-    "title": "Sin internet"
+    "title": "Sin internet",
+    "retry": "Intentar de nuevo"
   },
   "report": {
     "title": "Informar un problema"

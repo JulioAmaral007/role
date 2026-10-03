@@ -117,7 +117,8 @@
     "other": "Outra",
     "reserve": "Reservar",
     "directions": "Como chegar",
-    "title": "Sugestão"
+    "title": "Sugestão",
+    "details": "Detalhes"
   },
   "stamp": {
     "title": "Carimbo novo!",
@@ -139,7 +140,8 @@
     "streakTitle": "Ofensiva semanal",
     "streakHint": "1 saída por semana basta",
     "bingoTitle": "Bingo da cidade",
-    "bingoCount": "{{done}} de {{total}}"
+    "bingoCount": "{{done}} de {{total}}",
+    "sampleStamp": "Carimbo de exemplo"
   },
   "plus": {
     "badge": "Rolê Plus",
@@ -163,22 +165,30 @@
   },
   "place": {
     "title": "Detalhe do lugar",
-    "placeholder": "Lugar {{id}}"
+    "placeholder": "Lugar {{id}}",
+    "go": "Bora"
   },
   "onTheWay": {
-    "title": "A caminho"
+    "title": "A caminho",
+    "arrived": "Cheguei!",
+    "changeMind": "Mudei de ideia"
   },
   "feedback": {
-    "title": "Como foi?"
+    "title": "Como foi?",
+    "getStamp": "Pegar meu carimbo",
+    "later": "Depois"
   },
   "story": {
     "title": "Story"
   },
   "noMatch": {
-    "title": "Nada bateu"
+    "title": "Nada bateu",
+    "relax": "Muda uma coisa só",
+    "changeAll": "Mudar tudo"
   },
   "offline": {
-    "title": "Sem internet"
+    "title": "Sem internet",
+    "retry": "Tentar de novo"
   },
   "report": {
     "title": "Informar problema"

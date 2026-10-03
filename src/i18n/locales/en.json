@@ -117,7 +117,8 @@
     "other": "Another",
     "reserve": "Book",
     "directions": "Get directions",
-    "title": "Suggestion"
+    "title": "Suggestion",
+    "details": "Details"
   },
   "stamp": {
     "title": "New stamp!",
@@ -142,7 +143,8 @@
     "streakTitle": "Weekly streak",
     "streakHint": "1 outing a week is enough",
     "bingoTitle": "City bingo",
-    "bingoCount": "{{done}} of {{total}}"
+    "bingoCount": "{{done}} of {{total}}",
+    "sampleStamp": "Sample stamp"
   },
   "plus": {
     "badge": "Rolê Plus",
@@ -166,22 +168,30 @@
   },
   "place": {
     "title": "Place details",
-    "placeholder": "Place {{id}}"
+    "placeholder": "Place {{id}}",
+    "go": "Let's go"
   },
   "onTheWay": {
-    "title": "On the way"
+    "title": "On the way",
+    "arrived": "I'm here!",
+    "changeMind": "Changed my mind"
   },
   "feedback": {
-    "title": "How was it?"
+    "title": "How was it?",
+    "getStamp": "Get my stamp",
+    "later": "Later"
   },
   "story": {
     "title": "Story"
   },
   "noMatch": {
-    "title": "No match"
+    "title": "No match",
+    "relax": "Change just one thing",
+    "changeAll": "Change everything"
   },
   "offline": {
-    "title": "No internet"
+    "title": "No internet",
+    "retry": "Try again"
   },
   "report": {
     "title": "Report a problem"
