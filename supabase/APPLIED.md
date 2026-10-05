@@ -12,11 +12,11 @@ Legenda: ✅ aplicado e confirmado · ⏳ pendente · — não se aplica.
 | `sql/004_profiles_trigger.sql` | ✅ 05/10/2026 | ⏳ Fase 13 |
 | `sql/005_storage_policies.sql` (cria o bucket `place-photos`) | ✅ 05/10/2026 | ⏳ Fase 13 |
 | `sql/seed_dev.sql` | ✅ 05/10/2026 | — nunca |
-| `functions/delete-my-data` (Edge Function) | ⏳ o `test:db` recebeu 404 (`Requested function was not found`) em 05/10/2026 | ⏳ Fase 13 |
-| `checks/001_quota_week_start.sql` | ⏳ resultado ainda não colado no chat | ⏳ Fase 13 |
+| `functions/delete-my-data` (Edge Function) | ✅ 05/10/2026 (primeiro `test:db` recebeu 404; publicada e validada depois) | ⏳ Fase 13 |
+| `checks/001_quota_week_start.sql` | ✅ 05/10/2026 (22 casos + `RESUMO`, todos `true`, colado no chat pelo usuário) | ⏳ Fase 13 |
 | Sign-in anônimo ligado | ✅ 05/10/2026 (o `test:db` criou usuários anônimos) | ⏳ Fase 13 |
 
 ## Como cada ✅ foi confirmado
 
-- **`sql/001`–`005` e `seed_dev.sql`, sign-in anônimo e bucket:** o usuário avisou no chat que aplicou tudo e o `npm run test:db` de 05/10/2026 passou em 55 testes, que cobrem esquema, RLS, grants, cota (3 por semana, idempotência por `request_id`), carimbos idempotentes, visibilidade de lugares inativos, gatilho do `profiles` e o bloqueio de upload no bucket. A falha restante é só a Edge Function (404).
+- **`sql/001`–`005` e `seed_dev.sql`, sign-in anônimo e bucket:** o usuário avisou no chat que aplicou tudo e o `npm run test:db` de 05/10/2026 passou em 55 testes, que cobrem esquema, RLS, grants, cota (3 por semana, idempotência por `request_id`), carimbos idempotentes, visibilidade de lugares inativos, gatilho do `profiles` e o bloqueio de upload no bucket. Na segunda rodada, com a Edge Function publicada, o `test:db` passou inteiro: **6 suítes, 58 testes**, incluindo a `delete-my-data` (cascata) e a limpeza dos usuários de teste.
 - Configurações que não são SQL (sign-in anônimo, rate limit, bucket) ficam no checklist de `docs/SUPABASE_SETUP.md`; o `role-mvp` repete tudo na Fase 13.
