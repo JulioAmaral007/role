@@ -29,6 +29,9 @@ describe('AuthProvider', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    // os logs de desenvolvimento do provider não devem poluir a saída dos testes
+    jest.spyOn(console, 'info').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
     appStateListeners = [];
     removeListener = jest.fn();
     jest.spyOn(AppState, 'addEventListener').mockImplementation(((
@@ -87,6 +90,16 @@ describe('AuthProvider', () => {
     });
     expect(service.calls).toBe(3);
     expect(probe()).toBe(`ready:${IN_MEMORY_USER_ID}`);
+  });
+
+  it('logs the reason of a failed attempt in development, so it is not silent', async () => {
+    const service = new InMemoryAuthService({ failures: 1 });
+    await renderProvider(service);
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('[auth] falha ao entrar (network)'),
+      expect.anything(),
+    );
   });
 
   it('stops retrying once the session is ready', async () => {

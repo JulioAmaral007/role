@@ -2,6 +2,7 @@ import { createContext, useEffect, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 
 import { authService as defaultAuthService, type AuthService } from '@/services/auth';
+import { AppError } from '@/utils/appError';
 import { getBackoffDelay } from '@/utils/backoff';
 
 // Sessão anônima do Supabase (docs/ARCHITECTURE.md, seção 8.3). Entra em segundo plano, no primeiro
@@ -43,9 +44,17 @@ export function AuthProvider({ children, service = defaultAuthService }: AuthPro
       try {
         const userId = await service.ensureSession();
         done = true;
+        if (__DEV__) console.info('[auth] sessão pronta, usuário', userId);
         if (!cancelled) setState({ status: 'ready', userId });
-      } catch {
+      } catch (error) {
         if (cancelled) return;
+        // só em desenvolvimento e sem dados pessoais: sem isto a falha ficaria invisível (a UI não
+        // mostra erro de sessão, por desenho)
+        if (__DEV__) {
+          const code = error instanceof AppError ? error.code : 'unknown';
+          const cause = error instanceof Error ? (error.cause ?? error) : error;
+          console.warn(`[auth] falha ao entrar (${code}), nova tentativa em breve:`, cause);
+        }
         setState({ status: 'error', userId: null });
         timer = setTimeout(run, getBackoffDelay(attempt, AUTH_RETRY_DELAYS_MS));
         attempt += 1;
