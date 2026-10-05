@@ -596,7 +596,7 @@ createClient(url, publishableKey, {
 2. **Grants mínimos:** como a doc manda, `revoke all` de `anon` e `authenticated` e `grant` só do necessário (por exemplo, `select` em `places`; `select, insert` em `stamps`). Tabela sem grant não é alcançável nem por engano.
 3. **Policies sempre `to authenticated`**, escritas com `(select auth.uid())` (avaliado uma vez por consulta, não por linha) e com índice em `user_id`.
 4. **O cliente nunca escolhe o dono:** `with check ((select auth.uid()) = user_id)` em todo insert, e `user_id` com default `auth.uid()`.
-5. **Colunas sensíveis protegidas:** `profiles.plan` **não** é gravável pelo cliente. Só `locale` e `timezone` entram no grant de `update`; o plano muda por RPC/webhook (Fase 14). Sem isso, qualquer um viraria Plus com um `update`.
+5. **Colunas sensíveis protegidas:** `profiles.plan` **não** é gravável pelo cliente. Só `locale`, `timezone` e `accepted_terms_at` (aceite dos Termos, Fase 7; não é sensível) entram no grant de `update`, por coluna; o plano muda por RPC/webhook (Fase 14). Sem isso, qualquer um viraria Plus com um `update`.
 6. **Funções `security definer`** (`consume_suggestion`, `quota_status`, o trigger de `profiles`): `set search_path = ''` com nomes qualificados, `revoke execute ... from public, anon` e `grant execute ... to authenticated`. Elas usam `auth.uid()` por dentro e **não recebem `user_id` como parâmetro**.
 7. **`suggestion_events` só por RPC** (sem `insert` direto), para a cota não ser burlada gravando eventos a mais ou a menos.
 8. **`events` e `plus_interest`: só insert**, sem leitura pelo cliente; `place_reports`: só insert pelo dono.
