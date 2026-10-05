@@ -76,9 +76,9 @@ O editor do dashboard **não tem versionamento** (a doc avisa). O repositório �
 2. Escolha começar do zero (ou "Hello World") e dê o nome exato **`delete-my-data`** (o nome vira a URL).
 3. Apague o conteúdo do editor e cole o arquivo `supabase/functions/delete-my-data/index.ts`.
 4. **Deploy function**.
-5. **Verify JWT:** a doc diz que o padrão é ligado (`verify_jwt = true`). **Deixe ligado**: a função só aceita quem está logado. (Onde fica a opção no dashboard: confira na tela, nas configurações da função.)
-6. **Variáveis de ambiente:** a função já recebe do Supabase `SUPABASE_URL`, `SUPABASE_SECRET_KEYS` (JSON com as secret keys) e, na versão legada, `SUPABASE_SERVICE_ROLE_KEY`. **Você não cria nem cola nada.** Segredos customizados, quando existirem (Fase 14), ficam em **Edge Function Secrets** (nomes não podem começar com `SUPABASE_`).
-7. Teste pelo botão **Test** da própria tela só com o usuário de teste, nunca com a sua conta.
+5. **Verify JWT:** a doc diz que o padrão é ligado (`verify_jwt = true`). **Deixe ligado**. O código também valida o token por conta própria (`auth.getUser`), então a função só apaga o dono do token, ligado ou não. Se a chamada do app voltar com `401 Invalid JWT` antes de chegar ao código (pode acontecer com as chaves novas), desligue a opção só nesta função, nas configurações dela (confira na tela): a segurança continua garantida pela validação do código.
+6. **Variáveis de ambiente:** a função já recebe do Supabase `SUPABASE_URL` e `SUPABASE_SECRET_KEYS` (JSON com a chave `default`) e, na forma legada, `SUPABASE_SERVICE_ROLE_KEY`. O código usa a primeira que existir. **Você não cria nem cola nenhuma chave.** Segredos customizados, quando existirem (Fase 14), ficam em **Edge Function Secrets** (nomes não podem começar com `SUPABASE_`).
+7. **Teste:** use o botão **Test** da tela só com o usuário de teste. A chamada exige um JWT de usuário no cabeçalho `Authorization`; sem ele a resposta é `401`. **Cuidado:** com um JWT válido a função APAGA aquele usuário de verdade, então nunca teste com a sua conta. O `test:db` já cobre isso com um usuário anônimo descartável.
 
 ## 7. Tipos TypeScript (opcional)
 

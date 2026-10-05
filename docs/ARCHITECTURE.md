@@ -621,7 +621,8 @@ createClient(url, publishableKey, {
 - **Código versionado em `supabase/functions/delete-my-data/index.ts`.** O editor do dashboard **não tem versionamento**, então o repositório é a fonte de verdade e o usuário cola o código lá. Cada mudança é um novo handoff.
 - **O que faz:** lê o usuário pelo JWT do `Authorization`, confere que existe e chama `auth.admin.deleteUser(id)` com a chave de serviço, que só existe **dentro da função** (variável de ambiente do próprio Supabase). A cascata (8.5, regra 10) apaga os dados.
 - **Cliente:** `deleteMyData()` em `services/account`, via `supabase.functions.invoke('delete-my-data')`; depois faz `signOut` local, limpa o cache do React Query e os stores e volta ao onboarding (novo usuário anônimo na próxima abertura).
-- **A conferir na Fase 4:** o nome exato da variável da chave de serviço (por causa da migração para secret keys), se a verificação de JWT vem ligada por padrão e como configurá-la no editor. A doc consultada não detalha esses pontos.
+- **Conferido na Fase 4 (doc atual de Edge Functions):** a chave vem de `SUPABASE_SECRET_KEYS` (JSON, chave `default`, `sb_secret_...`), com `SUPABASE_SERVICE_ROLE_KEY` como forma legada; o código usa a primeira que existir. `verify_jwt` vem **ligado** por padrão. A função **valida o token por conta própria** (`auth.getUser(token)` com o client de secret key) e usa o id do token, nunca um id do corpo da chamada, então não depende do gateway. **Não confirmado:** o rótulo exato da opção de Verify JWT no dashboard (o guia manda conferir na tela). O `withSupabase` (`npm:@supabase/server`) existe na doc, mas é recente e não foi adotado: o padrão `createClient` + `Deno.serve` é estável.
+- **Fora do tsc e do eslint:** `supabase/functions/` roda no Deno (`Deno`, imports `npm:`), então o `tsconfig.json` o exclui e o `eslint.config.js` já o ignorava. Quem confere a função é o `test:db`.
 
 ### 8.9 Camada de serviços
 
