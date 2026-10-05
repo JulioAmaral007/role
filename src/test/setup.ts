@@ -10,3 +10,11 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 setUpTests();
+
+// Auth: nenhum teste do app fala com o Supabase nem lê o .env (o `lib/supabase` valida as variáveis
+// ao ser importado). O `AuthProvider` do layout raiz recebe este service em memória; os testes do
+// service real importam `@/services/auth/supabaseAuthService` direto, que este mock não toca.
+jest.mock('@/services/auth', () => {
+  const { InMemoryAuthService } = jest.requireActual('@/services/auth/inMemoryAuthService');
+  return { authService: new InMemoryAuthService() };
+});

@@ -587,7 +587,7 @@ createClient(url, publishableKey, {
 
 - **AppState:** um único listener registrado no módulo (`active` → `supabase.auth.startAutoRefresh()`; qualquer outro estado → `stopAutoRefresh()`). No celular o refresh roda continuamente em segundo plano, então ele é amarrado ao primeiro plano, como pede a referência do `supabase-js`.
 - **Onde a sessão fica:** o tutorial do Supabase usa `LargeSecureStore` (SecureStore + criptografia em AsyncStorage, com `aesjs` e `react-native-get-random-values`). **No MVP usamos AsyncStorage puro:** a sessão é anônima, sem dado pessoal, e evita três dependências nativas/de polyfill. **Reserva:** trocar o `storage` pelo `LargeSecureStore` na Fase 15, quando a sessão passar a ter e-mail.
-- **Polyfill:** o guia lista `react-native-url-polyfill`. Conferir na Fase 4 se ainda é necessário no RN 0.86 antes de instalar.
+- **Polyfill (conferido na Fase 4):** `react-native-url-polyfill` **não** é necessário. O guia do Expo diz que o Expo já instala o `URL` global, e o SDK 57 confirma (`expo/src/winter/runtime.native.ts` instala `URL` e `URLSearchParams`). Nada a instalar.
 - **Chave e variáveis:** a doc atual manda usar a **publishable key** (`sb_publishable_...`) no cliente e avisa que `anon` e `service_role` serão descontinuadas até o fim de 2026. Variáveis: `EXPO_PUBLIC_SUPABASE_URL` e **`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** (nome que substitui o `..._ANON_KEY` citado antes no plano). O `supabase-js` aceita a nova chave sem mudar o código. A secret key nunca entra no app nem no repositório.
 
 ### 8.5 Schema e RLS: regras que valem para todos os scripts
