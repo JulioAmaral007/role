@@ -587,7 +587,7 @@ createClient(url, publishableKey, {
 
 - **AppState:** um único listener registrado no módulo (`active` → `supabase.auth.startAutoRefresh()`; qualquer outro estado → `stopAutoRefresh()`). No celular o refresh roda continuamente em segundo plano, então ele é amarrado ao primeiro plano, como pede a referência do `supabase-js`.
 - **Onde a sessão fica:** o tutorial do Supabase usa `LargeSecureStore` (SecureStore + criptografia em AsyncStorage, com `aesjs` e `react-native-get-random-values`). **No MVP usamos AsyncStorage puro:** a sessão é anônima, sem dado pessoal, e evita três dependências nativas/de polyfill. **Reserva:** trocar o `storage` pelo `LargeSecureStore` na Fase 15, quando a sessão passar a ter e-mail.
-- **Polyfill:** o guia lista `react-native-url-polyfill`. Conferir na Fase 4 se ainda é necessário no RN 0.86 antes de instalar.
+- **Polyfill (conferido na Fase 4):** `react-native-url-polyfill` **não** é necessário. O guia do Expo diz que o Expo já instala o `URL` global, e o SDK 57 confirma (`expo/src/winter/runtime.native.ts` instala `URL` e `URLSearchParams`). Nada a instalar.
 - **Chave e variáveis:** a doc atual manda usar a **publishable key** (`sb_publishable_...`) no cliente e avisa que `anon` e `service_role` serão descontinuadas até o fim de 2026. Variáveis: `EXPO_PUBLIC_SUPABASE_URL` e **`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** (nome que substitui o `..._ANON_KEY` citado antes no plano). O `supabase-js` aceita a nova chave sem mudar o código. A secret key nunca entra no app nem no repositório.
 
 ### 8.5 Schema e RLS: regras que valem para todos os scripts
@@ -596,7 +596,7 @@ createClient(url, publishableKey, {
 2. **Grants mínimos:** como a doc manda, `revoke all` de `anon` e `authenticated` e `grant` só do necessário (por exemplo, `select` em `places`; `select, insert` em `stamps`). Tabela sem grant não é alcançável nem por engano.
 3. **Policies sempre `to authenticated`**, escritas com `(select auth.uid())` (avaliado uma vez por consulta, não por linha) e com índice em `user_id`.
 4. **O cliente nunca escolhe o dono:** `with check ((select auth.uid()) = user_id)` em todo insert, e `user_id` com default `auth.uid()`.
-5. **Colunas sensíveis protegidas:** `profiles.plan` **não** é gravável pelo cliente. Só `locale` e `timezone` entram no grant de `update`; o plano muda por RPC/webhook (Fase 14). Sem isso, qualquer um viraria Plus com um `update`.
+5. **Colunas sensíveis protegidas:** `profiles.plan` **não** é gravável pelo cliente. Só `locale`, `timezone` e `accepted_terms_at` (aceite dos Termos, Fase 7; não é sensível) entram no grant de `update`, por coluna; o plano muda por RPC/webhook (Fase 14). Sem isso, qualquer um viraria Plus com um `update`.
 6. **Funções `security definer`** (`consume_suggestion`, `quota_status`, o trigger de `profiles`): `set search_path = ''` com nomes qualificados, `revoke execute ... from public, anon` e `grant execute ... to authenticated`. Elas usam `auth.uid()` por dentro e **não recebem `user_id` como parâmetro**.
 7. **`suggestion_events` só por RPC** (sem `insert` direto), para a cota não ser burlada gravando eventos a mais ou a menos.
 8. **`events` e `plus_interest`: só insert**, sem leitura pelo cliente; `place_reports`: só insert pelo dono.
@@ -621,7 +621,8 @@ createClient(url, publishableKey, {
 - **Código versionado em `supabase/functions/delete-my-data/index.ts`.** O editor do dashboard **não tem versionamento**, então o repositório é a fonte de verdade e o usuário cola o código lá. Cada mudança é um novo handoff.
 - **O que faz:** lê o usuário pelo JWT do `Authorization`, confere que existe e chama `auth.admin.deleteUser(id)` com a chave de serviço, que só existe **dentro da função** (variável de ambiente do próprio Supabase). A cascata (8.5, regra 10) apaga os dados.
 - **Cliente:** `deleteMyData()` em `services/account`, via `supabase.functions.invoke('delete-my-data')`; depois faz `signOut` local, limpa o cache do React Query e os stores e volta ao onboarding (novo usuário anônimo na próxima abertura).
-- **A conferir na Fase 4:** o nome exato da variável da chave de serviço (por causa da migração para secret keys), se a verificação de JWT vem ligada por padrão e como configurá-la no editor. A doc consultada não detalha esses pontos.
+- **Conferido na Fase 4 (doc atual de Edge Functions):** a chave vem de `SUPABASE_SECRET_KEYS` (JSON, chave `default`, `sb_secret_...`), com `SUPABASE_SERVICE_ROLE_KEY` como forma legada; o código usa a primeira que existir. `verify_jwt` vem **ligado** por padrão. A função **valida o token por conta própria** (`auth.getUser(token)` com o client de secret key) e usa o id do token, nunca um id do corpo da chamada, então não depende do gateway. **Não confirmado:** o rótulo exato da opção de Verify JWT no dashboard (o guia manda conferir na tela). O `withSupabase` (`npm:@supabase/server`) existe na doc, mas é recente e não foi adotado: o padrão `createClient` + `Deno.serve` é estável.
+- **Fora do tsc e do eslint:** `supabase/functions/` roda no Deno (`Deno`, imports `npm:`), então o `tsconfig.json` o exclui e o `eslint.config.js` já o ignorava. Quem confere a função é o `test:db`.
 
 ### 8.9 Camada de serviços
 
@@ -971,7 +972,7 @@ Lista **completa e fechada** do app no MVP (tudo público por natureza, porque �
 Regras (doc do Expo):
 
 1. **Só `EXPO_PUBLIC_*` entra no app** e **sempre por acesso estático** (`process.env.EXPO_PUBLIC_SUPABASE_URL`); `process.env[nome]` **não** é substituído no bundle.
-2. **Leitura em um único lugar:** `src/lib/env.ts` lê cada variável de forma literal, **valida** (presença, `APP_ENV` conhecido, URL com `https`) e exporta um objeto tipado `env`. Faltou variável → **erro claro e imediato** (em desenvolvimento, mensagem apontando o `.env.example`; em release, falha na abertura em vez de um app meio quebrado). `lib/supabase.ts` e o analytics usam `env`, nunca `process.env` direto.
+2. **Leitura em um único lugar:** `src/lib/env.ts` lê cada variável de forma literal, **valida** (presença, `APP_ENV` conhecido, URL com `https`, e recusa secret key e `service_role`) e exporta um objeto tipado `env`. A validação pura mora em `src/lib/envSchema.ts` (`parseEnv`, `EnvError`), separada para ser testável sem disparar a leitura: o `env.ts` lança ao ser importado. Faltou variável → **erro claro e imediato** (em desenvolvimento, mensagem apontando o `.env.example`; em release, falha na abertura em vez de um app meio quebrado). `lib/supabase.ts` e o analytics usam `env`, nunca `process.env` direto.
 3. **Tipos:** `src/types/env.d.ts` declara as três variáveis em `ProcessEnv`.
 4. **Mudou o `.env`?** Recarregar o app por completo (a doc avisa que o valor é inlinado).
 5. **Arquivos `.env`:** o Expo carrega `.env`, `.env.local` e variantes por ordem de prioridade. O projeto usa **só o `.env`** (já no `.gitignore`, junto de `.env.*`, exceto `.env.example`). Não se troca de ambiente por `NODE_ENV`, como a doc manda: para apontar o local para outro projeto, edita-se o `.env` ou usa-se `eas env:pull`.
