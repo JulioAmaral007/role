@@ -61,11 +61,12 @@
 
 ## 5. Bucket de fotos `place-photos`
 
-1. Menu lateral → **Storage** → **New bucket**.
-2. Nome exato: `place-photos`.
-3. Marque como **Public bucket** (confira na tela o nome da opção).
-4. **Create bucket**.
-5. Bucket público dispensa policy de **leitura**; upload, apagar e mover continuam protegidos. O `005_storage_policies.sql` não cria policy de escrita, então só você sobe fotos, pelo dashboard.
+O script `005_storage_policies.sql` **já cria o bucket** `place-photos` como público, então não é preciso criá-lo na mão. Depois de rodar o 005, confira:
+
+1. Menu lateral → **Storage**: o bucket `place-photos` aparece, marcado como público.
+2. Se preferir criar pela tela (ou o bucket sumiu), use **New bucket**, nome exato `place-photos`, com a opção de bucket público ligada (confira na tela o nome da opção). Rodar o 005 depois é seguro.
+3. Bucket público dispensa policy de **leitura**; upload, apagar e mover continuam protegidos, e o 005 não cria policy de escrita. Só você sobe fotos, pelo dashboard.
+4. Opcional: limite de tamanho e tipos de arquivo do bucket (a doc mostra essas opções pela biblioteca e pela tela; não há exemplo em SQL).
 
 ## 6. Edge Function `delete-my-data`
 
