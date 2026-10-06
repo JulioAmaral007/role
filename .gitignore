@@ -49,3 +49,6 @@ example
 
 # supabase local
 supabase/.temp
+
+# relatório do jest --coverage
+coverage/
