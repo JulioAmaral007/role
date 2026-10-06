@@ -40,6 +40,12 @@ jest.mock('@/services/stamps', () => {
   };
 });
 
+// Fotos: idem; um service em memória no lugar do que usa o `expo-file-system` (nativo).
+jest.mock('@/services/media', () => {
+  const { InMemoryMediaService } = jest.requireActual('@/services/media/inMemoryMediaService');
+  return { mediaService: new InMemoryMediaService() };
+});
+
 // Catálogo: pelo mesmo motivo, o `services/places` real (que liga o client do Supabase) é trocado por
 // um repositório em memória vazio. Os testes dos hooks passam o próprio repositório; os do
 // repositório real importam `@/services/places/supabasePlacesRepository` direto.
