@@ -12,6 +12,11 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 
 setUpTests();
 
+// expo-crypto é nativo e, no Jest, `randomUUID` devolve `undefined`: usa o do Node (UUID v4 de verdade).
+jest.mock('expo-crypto', () => ({
+  randomUUID: () => jest.requireActual('node:crypto').randomUUID(),
+}));
+
 // Auth: nenhum teste do app fala com o Supabase nem lê o .env (o `lib/supabase` valida as variáveis
 // ao ser importado). O `AuthProvider` do layout raiz recebe este service em memória; os testes do
 // service real importam `@/services/auth/supabaseAuthService` direto, que este mock não toca.
@@ -24,6 +29,15 @@ jest.mock('@/services/auth', () => {
 jest.mock('@/services/quota', () => {
   const { InMemoryQuotaService } = jest.requireActual('@/services/quota/inMemoryQuotaService');
   return { quotaService: new InMemoryQuotaService() };
+});
+
+// Carimbos: idem; o service em memória, mantendo `createStamp` (que não fala com a rede).
+jest.mock('@/services/stamps', () => {
+  const { InMemoryStampsService } = jest.requireActual('@/services/stamps/inMemoryStampsService');
+  return {
+    ...jest.requireActual('@/services/stamps/createStamp'),
+    stampsService: new InMemoryStampsService(),
+  };
 });
 
 // Catálogo: pelo mesmo motivo, o `services/places` real (que liga o client do Supabase) é trocado por

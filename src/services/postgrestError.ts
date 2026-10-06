@@ -9,7 +9,7 @@ export interface PostgrestErrorLike {
 }
 
 export function toPostgrestAppError(error: PostgrestErrorLike, status: number): AppError {
-  const options = { cause: error };
+  const options = { cause: error, status };
   if (status === 0) return new AppError('network', error.message, options);
   if (status === 429) return new AppError('rateLimited', error.message, options);
   // 401: sessão ausente ou vencida; 403: a RLS negou (permission denied)

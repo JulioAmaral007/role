@@ -26,6 +26,12 @@ describe('toPostgrestAppError', () => {
     expect(toPostgrestAppError(error, 400).code).toBe('unknown');
   });
 
+  it('keeps the HTTP status, so a permanent failure (4xx) can be told from a passing one (5xx)', () => {
+    expect(toPostgrestAppError(error, 0).status).toBe(0);
+    expect(toPostgrestAppError(error, 409).status).toBe(409);
+    expect(toPostgrestAppError(error, 503).status).toBe(503);
+  });
+
   it('keeps the original error as the cause', () => {
     expect(toPostgrestAppError(error, 500).cause).toBe(error);
   });
