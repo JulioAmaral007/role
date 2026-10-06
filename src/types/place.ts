@@ -39,6 +39,12 @@ export interface City {
   daylightCutoffMinute: number;
 }
 
+/** A cidade e todos os lugares dela, no idioma pedido: o que o app guarda em cache. */
+export interface Catalog {
+  city: City;
+  places: Place[];
+}
+
 /** Lugar do catálogo, com a tradução e os horários já resolvidos. */
 export interface Place {
   id: string;

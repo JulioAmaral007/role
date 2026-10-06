@@ -2,18 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-import { QueryProvider, createQueryClient } from './QueryProvider';
-
-describe('createQueryClient', () => {
-  it('keeps data fresh for a minute, retries once and ignores window focus', () => {
-    const defaults = createQueryClient().getDefaultOptions().queries;
-    expect(defaults).toMatchObject({ staleTime: 60_000, retry: 1, refetchOnWindowFocus: false });
-  });
-
-  it('creates a new client every time', () => {
-    expect(createQueryClient()).not.toBe(createQueryClient());
-  });
-});
+import { QueryProvider } from './QueryProvider';
 
 describe('QueryProvider', () => {
   it('gives its children a query client', async () => {

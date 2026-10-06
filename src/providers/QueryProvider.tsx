@@ -1,24 +1,18 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useState, type ReactNode } from 'react';
 
-// Cliente de estado de servidor (docs/ARCHITECTURE.md, seção 7.6). Por enquanto simples; o cache
-// persistido em AsyncStorage (só `places` e `stamps`) e o `onlineManager` entram na Fase 5.
-export function createQueryClient(): QueryClient {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        // o catálogo muda pouco: não refaz o pedido a cada tela que o lê
-        staleTime: 60_000,
-        retry: 1,
-        // no celular não existe "foco de janela"; o app volta ao primeiro plano com o AppState
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
-}
+import { createPersistOptions, createQueryClient } from '@/lib/queryClient';
 
+// Estado de servidor com cache persistido em AsyncStorage (docs/ARCHITECTURE.md, seções 7.6 e 9.3):
+// só as consultas que pedem (`meta: { persist: true }`) vão para o disco, e o app abre offline com
+// o último catálogo. Enquanto o cache é restaurado as consultas esperam (`useIsRestoring`).
 export function QueryProvider({ children }: { children: ReactNode }) {
   // um cliente por montagem do provider: nunca um singleton de módulo (testes e Fast Refresh)
   const [client] = useState(createQueryClient);
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  const [persistOptions] = useState(createPersistOptions);
+  return (
+    <PersistQueryClientProvider client={client} persistOptions={persistOptions}>
+      {children}
+    </PersistQueryClientProvider>
+  );
 }

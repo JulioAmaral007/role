@@ -202,7 +202,7 @@ src/
 ├── lib/
 │   └── supabase.ts                # client único; importado só por services/
 ├── services/                      # uma pasta por assunto; cada uma com index.ts como entrada pública
-│   ├── places/                    # placesRepository.ts (interface), supabasePlacesRepository.ts, inMemoryPlacesRepository.ts, index.ts
+│   ├── places/                    # placesRepository.ts (interface), supabasePlacesRepository.ts, inMemoryPlacesRepository.ts, index.ts, placesMapper.ts (linha do banco → `Place`)
 │   ├── stamps/  quota/  feedback/  reports/  analytics/
 │   ├── media/                     # fotos do usuário no armazenamento do app (D32)
 │   └── location.ts  notifications.ts  share.ts  haptics.ts   # módulos nativos: um arquivo cada
@@ -683,6 +683,7 @@ Pelo desenho do plano, **a sugestão é a única coisa que exige rede**, e ela s
 - **Idiomas:** a chave leva o `locale`, então trocar de idioma cria outra entrada. Ao trocar, as entradas de `places` de **outros** idiomas são removidas (`removeQueries`), para o cache não crescer com três cópias.
 - **Hidratação:** o `_layout` raiz segura a splash também até o cache ser restaurado (`useIsRestoring()` falso), somando-se ao que a seção 7.5 já exige (stores, fontes, i18n).
 - **Limpeza:** "apagar meus dados" (seção 8.8) chama `queryClient.clear()` e `persister.removeClient()`.
+- **Como ficou na Fase 5:** `src/lib/queryClient.ts` (`CACHE_VERSION`, `createQueryClient`, `shouldPersistQuery`, `createPersistOptions`, `removePlacesOfOtherLocales`) e `src/lib/queryKeys.ts`; o `QueryProvider` usa o `PersistQueryClientProvider`. O catálogo (`usePlaces(cityId, locale)`) e as cidades (`useCities`) já pedem `meta: { persist: true }` com `staleTime` de 6 h; a troca de idioma remove do cache os outros idiomas da cidade. **Ainda não feitos** (entram com a primeira tela que depende deles): a splash esperar `useIsRestoring()`, o `onlineManager` com o `expo-network` e o `useIsOnline` (seção 9.2); até lá o React Query trata o aparelho como sempre online, e `networkMode: 'offlineFirst'` já evita laço de tentativas. O `services/places/index.ts` é a raiz de composição: o `SupabasePlacesRepository` recebe o client no construtor e não importa o `lib/supabase`, por isso roda também nos testes do banco (`tests/db/places.test.ts`).
 - **Fotos:** `expo-image` com `cachePolicy="disk"` guarda no aparelho as fotos já vistas. **Não** se pré-baixa a cidade inteira no MVP; foto não vista e offline mostra o placeholder listrado.
 
 ### 9.4 Sugestão exige internet (e como não gastar cota à toa)

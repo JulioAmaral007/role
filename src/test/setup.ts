@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler/jestSetup';
+import { timeoutManager } from '@tanstack/react-query';
 import { setUpTests } from 'react-native-reanimated';
 
 // Worklets é nativo; no Jest usa-se o mock oficial (docs/ARCHITECTURE.md, seção 11.2).
@@ -17,4 +18,26 @@ setUpTests();
 jest.mock('@/services/auth', () => {
   const { InMemoryAuthService } = jest.requireActual('@/services/auth/inMemoryAuthService');
   return { authService: new InMemoryAuthService() };
+});
+
+// Catálogo: pelo mesmo motivo, o `services/places` real (que liga o client do Supabase) é trocado por
+// um repositório em memória vazio. Os testes dos hooks passam o próprio repositório; os do
+// repositório real importam `@/services/places/supabasePlacesRepository` direto.
+jest.mock('@/services/places', () => {
+  const { InMemoryPlacesRepository } = jest.requireActual('@/services/places/inMemoryPlacesRepository');
+  return { placesRepository: new InMemoryPlacesRepository() };
+});
+
+// React Query: o tempo de vida do cache (`gcTime`, 7 dias) e o `staleTime` viram temporizadores que
+// seguram o processo do Jest aberto depois dos testes. Os temporizadores do React Query passam a
+// ser `unref`, então não impedem a saída (o comportamento dentro do app não muda).
+function unrefTimer<T>(id: T): T {
+  (id as { unref?: () => void } | undefined)?.unref?.();
+  return id;
+}
+timeoutManager.setTimeoutProvider({
+  setTimeout: (callback, delay) => unrefTimer(setTimeout(callback, delay)) as unknown as number,
+  clearTimeout: (id) => clearTimeout(id as unknown as number),
+  setInterval: (callback, delay) => unrefTimer(setInterval(callback, delay)) as unknown as number,
+  clearInterval: (id) => clearInterval(id as unknown as number),
 });
