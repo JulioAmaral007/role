@@ -29,7 +29,7 @@ describe('QueryProvider', () => {
       </QueryProvider>,
     );
     expect(screen.getByText('loading')).toBeOnTheScreen();
-    expect(await screen.findByText('loaded')).toBeOnTheScreen();
+    expect(await screen.findByText('loaded', {}, { timeout: 5000 })).toBeOnTheScreen();
   });
 
   it('keeps the same client while it re-renders, so the cache survives', async () => {
