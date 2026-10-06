@@ -7,3 +7,6 @@ export interface QuotaStatus {
   /** Quando a semana vira e a cota renova (ISO 8601). */
   resetsAt: string;
 }
+
+/** Tamanho da cota grátis por semana. Espelha `free_weekly_quota()` do `003_quota.sql` (um teste confere). */
+export const FREE_WEEKLY_QUOTA = 3;

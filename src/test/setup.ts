@@ -20,6 +20,12 @@ jest.mock('@/services/auth', () => {
   return { authService: new InMemoryAuthService() };
 });
 
+// Cota: idem; um service em memória (cota grátis cheia) no lugar do que fala com as RPCs.
+jest.mock('@/services/quota', () => {
+  const { InMemoryQuotaService } = jest.requireActual('@/services/quota/inMemoryQuotaService');
+  return { quotaService: new InMemoryQuotaService() };
+});
+
 // Catálogo: pelo mesmo motivo, o `services/places` real (que liga o client do Supabase) é trocado por
 // um repositório em memória vazio. Os testes dos hooks passam o próprio repositório; os do
 // repositório real importam `@/services/places/supabasePlacesRepository` direto.
