@@ -18,6 +18,8 @@ module.exports = {
   rootDir: __dirname,
   testEnvironment: 'node',
   testMatch: ['<rootDir>/tests/db/**/*.test.ts'],
+  // o código do app (ex.: os repositórios de `services/`) usa o alias `@/`
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
   transform: {
     '^.+\\.ts$': [
       'babel-jest',

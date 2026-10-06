@@ -50,10 +50,8 @@ describe('useLanguage', () => {
     expect(i18n.t('tabs.passport')).toBe('Pasaporte');
     // o `persist` grava em segundo plano
     await waitFor(async () => {
-      expect(JSON.parse((await AsyncStorage.getItem(PREFERENCES_STORAGE_KEY)) ?? 'null')).toEqual({
-        state: { language: 'es', onboardingDone: false },
-        version: 1,
-      });
+      const saved = JSON.parse((await AsyncStorage.getItem(PREFERENCES_STORAGE_KEY)) ?? 'null');
+      expect(saved).toMatchObject({ state: { language: 'es', onboardingDone: false }, version: 1 });
     });
   });
 

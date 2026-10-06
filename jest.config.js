@@ -16,4 +16,10 @@ module.exports = {
   // o primeiro render de cada arquivo carrega react-native-svg e as fontes: com cache frio passa de 5 s
   testTimeout: 30000,
   testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/db/'],
+  // Cobertura (docs/ARCHITECTURE.md, seção 11): o relatório e o limite valem só para `src/domain/`,
+  // sem limite global, para não incentivar teste vazio. Arquivo sem teste entra com 0%.
+  collectCoverageFrom: ['src/domain/**/*.ts', '!src/domain/**/*.test.ts'],
+  coverageThreshold: {
+    './src/domain/': { lines: 90, branches: 90 },
+  },
 };
